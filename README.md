@@ -89,4 +89,4 @@ Within the project there is a file `/data/dbus-shelly-1pm-pvinverter/config.ini`
 
 ## Discussions on the web
 This module/repository has been posted on the following threads:
-- TODO
+- https://community.victronenergy.com/questions/127339/shelly-1pm-as-pv-inverter-in-venusos.html
