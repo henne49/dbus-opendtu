@@ -153,7 +153,8 @@ class DbusShelly1pmService:
            self._dbusservice[pre + '/Voltage'] = voltage
            self._dbusservice[pre + '/Current'] = current
            self._dbusservice[pre + '/Power'] = power
-           self._dbusservice[pre + '/Energy/Forward'] = total/1000/60 if power > 0 else 0 
+           if power > 0:
+             self._dbusservice[pre + '/Energy/Forward'] = total/1000/60 
            
          else:
            self._dbusservice[pre + '/Voltage'] = 0
