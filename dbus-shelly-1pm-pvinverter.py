@@ -217,7 +217,7 @@ def main():
       pvac_output = DbusShelly1pmService(
         servicename='com.victronenergy.pvinverter',
         paths={
-          '/Ac/Energy/Forward': {'initial': 0, 'textformat': _kwh}, # energy produced by pv inverter
+          '/Ac/Energy/Forward': {'initial': None, 'textformat': _kwh}, # energy produced by pv inverter
           '/Ac/Power': {'initial': 0, 'textformat': _w},
           
           '/Ac/Current': {'initial': 0, 'textformat': _a},
@@ -232,9 +232,9 @@ def main():
           '/Ac/L1/Power': {'initial': 0, 'textformat': _w},
           '/Ac/L2/Power': {'initial': 0, 'textformat': _w},
           '/Ac/L3/Power': {'initial': 0, 'textformat': _w},
-          '/Ac/L1/Energy/Forward': {'initial': 0, 'textformat': _kwh},
-          '/Ac/L2/Energy/Forward': {'initial': 0, 'textformat': _kwh},
-          '/Ac/L3/Energy/Forward': {'initial': 0, 'textformat': _kwh},
+          '/Ac/L1/Energy/Forward': {'initial': None, 'textformat': _kwh},
+          '/Ac/L2/Energy/Forward': {'initial': None, 'textformat': _kwh},
+          '/Ac/L3/Energy/Forward': {'initial': None, 'textformat': _kwh},
         })
      
       logging.info('Connected to dbus, and switching over to gobject.MainLoop() (= event based)')
