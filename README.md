@@ -1,5 +1,5 @@
 # dbus-opendtu inverter
-Integrate opendtu https://github.com/tbnobody/OpenDTU into Victron Energies Venus OS
+Integrate opendtu and with that all Hoymiles Interverter https://github.com/tbnobody/OpenDTU into Victron Energies Venus OS
 
 ## Purpose
 With the scripts in this repo it should be easy possible to install, uninstall, restart a service that connects the opendtu to the VenusOS and GX devices from Victron.
