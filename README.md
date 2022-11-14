@@ -12,8 +12,10 @@ This project is my first on GitHub and with the Victron Venus OS, so I took some
 - https://github.com/fabian-lauer/dbus-shelly-3em-smartmeter
 - https://shelly-api-docs.shelly.cloud/gen1/#shelly1-shelly1pm
 - https://github.com/victronenergy/venus/wiki/dbus#pv-inverters
+- https://github.com/vikt0rm/dbus-shelly-1pm-pvinverter
 - https://github.com/tbnobody/OpenDTU 
-- https://github.com/vikt0rm
+- https://github.com/tbnobody/OpenDTU/blob/master/docs/Web-API.md
+
 
 ## How it works
 
@@ -55,7 +57,7 @@ rm main.zip
 ⚠️ Check configuration after that - because service is already installed an running and with wrong connection data (host, username, pwd) you will spam the log-file
 
 ### Change config.ini
-Within the project there is a file `/data/dbus-shelly-1pm-pvinverter/config.ini` - just change the values - most important is the deviceinstance, custom name and phase under "DEFAULT" and host, username and password in section "ONPREMISE". More details below:
+Within the project there is a file `/data/dbus-opendtu/confighm.ini` - just change the values - most important is the deviceinstance, custom name and phase under "DEFAULT" and host, username and password in section "ONPREMISE". More details below:
 
 | Section  | Config vlaue | Explanation |
 | ------------- | ------------- | ------------- |
