@@ -47,23 +47,23 @@ After that call the install.sh script.
 
 The following script should do everything for you:
 ```
-wget https://github.com/vikt0rm/dbus-shelly-1pm-pvinverter/archive/refs/heads/main.zip
-unzip main.zip "dbus-shelly-1pm-pvinverter-main/*" -d /data
-mv /data/dbus-shelly-1pm-pvinverter-main /data/dbus-shelly-1pm-pvinverter
-chmod a+x /data/dbus-shelly-1pm-pvinverter/install.sh
-/data/dbus-shelly-1pm-pvinverter/install.sh
+wget https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
+unzip main.zip "dbus-opendtu-main/*" -d /data
+mv /data/dbus-opendtu-main /data/dbus-opendtu
+chmod a+x /data/dbus-opendtu/install.sh
+/data/dbus-opendtu/install.sh
 rm main.zip
 ```
 ⚠️ Check configuration after that - because service is already installed an running and with wrong connection data (host, username, pwd) you will spam the log-file
 
-### Change config.ini
+### Change confighm.ini
 Within the project there is a file `/data/dbus-opendtu/confighm.ini` - just change the values - most important is the deviceinstance, custom name and phase under "DEFAULT" and host, username and password in section "ONPREMISE". More details below:
 
 | Section  | Config vlaue | Explanation |
 | ------------- | ------------- | ------------- |
 | DEFAULT  | AccessType | Fixed value 'OnPremise' |
 | DEFAULT  | SignOfLifeLog  | Time in minutes how often a status is added to the log-file `current.log` with log-level INFO |
-| DEFAULT  | Deviceinstance | Unique ID identifying the shelly 1pm in Venus OS |
+| DEFAULT  | Deviceinstance | Unique ID identifying the OpenDTU in Venus OS |
 | DEFAULT  | CustomName | Name shown in Remote Console (e.g. name of pv inverter) |
 | DEFAULT  | Phase | Valid values L1, L2 or L3: represents the phase where pv inverter is feeding in |
 | ONPREMISE  | Host | IP or hostname of on-premise Shelly 3EM web-interface |
