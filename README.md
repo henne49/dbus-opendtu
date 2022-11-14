@@ -35,7 +35,7 @@ Thats it 😄
 
 ### Pictures
 ![Tile Overview](img/venus-os-tile-overview.PNG)
-![Remote Console - Overview](img/venus-os-remote-console-overview.PNG) 
+![Remote Console - Overview](img/venus-os-remote-console-overview.png) 
 ![SmartMeter - Values](img/venus-os-shelly1pm-pvinverter.PNG)
 ![SmartMeter - Device Details](img/venus-os-shelly1pm-pvinverter-devicedetails.PNG)
 
