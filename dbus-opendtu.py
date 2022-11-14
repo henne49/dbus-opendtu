@@ -78,7 +78,7 @@ class DbusShelly1pmService:
  
   def _getConfig(self):
     config = configparser.ConfigParser()
-    config.read("%s/confighm.ini" % (os.path.dirname(os.path.realpath(__file__))))
+    config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
     return config;
  
  

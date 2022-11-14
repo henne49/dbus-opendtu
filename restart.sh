@@ -1,4 +1,4 @@
 #!/bin/bash
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-kill $(pgrep -f "python $SCRIPT_DIR/dbus-opendtu.py")
+kill $(pgrep -f "python $SCRIPT_DIR/dbus-shelly-1pm-pvinverter.py")
