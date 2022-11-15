@@ -34,10 +34,10 @@ So what is the script doing:
 Thats it 😄
 
 ### Pictures
-![Tile Overview](img/venus-os-tile-overview.PNG)
-![Remote Console - Overview](img/venus-os-remote-console-overview.png) 
-![SmartMeter - Values](img/venus-os-shelly1pm-pvinverter.PNG)
-![SmartMeter - Device Details](img/venus-os-shelly1pm-pvinverter-devicedetails.PNG)
+![Tile Overview](img/overview.png)
+![Remote Console - Overview](img/devicelist.png) 
+![SmartMeter - Values](img/device.png)
+![SmartMeter - Device Details](img/devicedetails.png)
 
 
 ## Install & Configuration
@@ -56,7 +56,7 @@ rm main.zip
 ```
 ⚠️ Check configuration after that - because service is already installed an running and with wrong connection data (host, username, pwd) you will spam the log-file, also check to set right ⚠️minimal log level⚠️ as possible
 
-### Change confighm.ini
+### Change config.ini
 Within the project there is a file `/data/dbus-opendtu/config.ini` - just change the values - most important is the deviceinstance, custom name and phase under "DEFAULT" and host, username and password in section "ONPREMISE". More details below:
 
 | Section  | Config vlaue | Explanation |
