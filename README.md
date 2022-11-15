@@ -34,10 +34,8 @@ So what is the script doing:
 Thats it 😄
 
 ### Pictures
-<img src="img/overview.png" width="200" />
-<img src="img/devicelist.png" width="200" />
-<img src="img/device.png" width="200" />
-<img src="img/devicedetails.png" width="200" />
+<img src="img/overview.png" width="300" /> <img src="img/devicelist.png" width="300" />
+<img src="img/device.png" width="300" /><img src="img/devicedetails.png" width="300" />
 
 https://user-images.githubusercontent.com/link-to-your-image.png" width="200" />
 
