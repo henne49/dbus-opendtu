@@ -1,20 +1,22 @@
 #!/usr/bin/env python
  
 # import normal packages
-import platform 
 import logging
-import sys
 import os
+import platform
 import sys
+
 if sys.version_info.major == 2:
     import gobject
 else:
     from gi.repository import GLib as gobject
+
+import configparser  # for config/ini file
 import sys
 import time
-import requests # for http GET
-import configparser # for config/ini file
- 
+
+import requests  # for http GET
+
 # our own packages from victron
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/dbus-systemcalc-py/ext/velib_python'))
 from vedbus import VeDbusService
@@ -135,7 +137,6 @@ class DbusOpenDTUService:
        meter_data = self._getOpenDTUData()
        
        config = self._getConfig()
-       str(config['DEFAULT']['Phase'])
     
        pvinverter_phase = str(config['DEFAULT']['Phase'])
        
@@ -154,19 +155,19 @@ class DbusOpenDTUService:
            self._dbusservice[pre + '/Power'] = power
            if power > 0:
              self._dbusservice[pre + '/Energy/Forward'] = total
+
            
          else:
            self._dbusservice[pre + '/Voltage'] = 0
            self._dbusservice[pre + '/Current'] = 0
            self._dbusservice[pre + '/Power'] = 0
-           self._dbusservice[pre + '/Energy/Forward'] = 0
-           
+
        self._dbusservice['/Ac/Power'] = self._dbusservice['/Ac/' + pvinverter_phase + '/Power']
        self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/' + pvinverter_phase + '/Energy/Forward']
        
        #logging
-       logging.debug("House Consumption (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
-       logging.debug("House Forward (/Ac/Energy/Forward): %s" % (self._dbusservice['/Ac/Energy/Forward']))
+       logging.debug("OpenDTU Power (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
+       logging.debug("OpenDTU Energy (/Ac/Energy/Forward): %s" % (self._dbusservice['/Ac/Energy/Forward']))
        logging.debug("---");
        
        # increment UpdateIndex - to show that new data is available
@@ -191,9 +192,14 @@ class DbusOpenDTUService:
 
 def main():
   #configure logging
+
+  config_log = configparser.ConfigParser()
+  config_log.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
+  logging_level = config_log['DEFAULT']['Logging']
+
   logging.basicConfig(      format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S',
-                            level=logging.INFO,
+                            level= logging_level,
                             handlers=[
                                 logging.FileHandler("%s/current.log" % (os.path.dirname(os.path.realpath(__file__)))),
                                 logging.StreamHandler()
@@ -203,6 +209,7 @@ def main():
       logging.info("Start");
   
       from dbus.mainloop.glib import DBusGMainLoop
+
       # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
       DBusGMainLoop(set_as_default=True)
      
