@@ -34,11 +34,12 @@ So what is the script doing:
 Thats it 😄
 
 ### Pictures
-![Tile Overview](img/overview.png)
-![Remote Console - Overview](img/devicelist.png) 
-![SmartMeter - Values](img/device.png)
-![SmartMeter - Device Details](img/devicedetails.png)
+<img src="img/overview.png" width="200" />
+<img src="img/devicelist.png" width="200" />
+<img src="img/device.png" width="200" />
+<img src="img/devicedetails.png" width="200" />
 
+https://user-images.githubusercontent.com/link-to-your-image.png" width="200" />
 
 ## Install & Configuration
 ### Get the code
