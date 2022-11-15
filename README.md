@@ -77,4 +77,4 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 
 ## Discussions on the web
 This module/repository has been posted on the following threads:
-- 
+- https://community.victronenergy.com/questions/169076/opendtu-as-pv-inverter-in-venusos.html
