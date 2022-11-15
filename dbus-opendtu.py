@@ -20,8 +20,8 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/d
 from vedbus import VeDbusService
 
 
-class DbusShelly1pmService:
-  def __init__(self, servicename, paths, productname='Shelly 1PM', connection='Shelly 1PM HTTP JSON service'):
+class DbusOpenDTUService:
+  def __init__(self, servicename, paths, productname='OpenDTU', connection='OpenDTU HTTP JSON service'):
     config = self._getConfig()
     deviceinstance = int(config['DEFAULT']['Deviceinstance'])
     customname = config['DEFAULT']['CustomName']
@@ -48,7 +48,7 @@ class DbusShelly1pmService:
     self._dbusservice.add_path('/FirmwareVersion', 0.1)
     self._dbusservice.add_path('/HardwareVersion', 0)
     self._dbusservice.add_path('/Position', 0) # normaly only needed for pvinverter
-    self._dbusservice.add_path('/Serial', self._getShellySerial())
+    self._dbusservice.add_path('/Serial', self._getOpenDTUSerial())
     self._dbusservice.add_path('/UpdateIndex', 0)
     self._dbusservice.add_path('/StatusCode', 0)  # Dummy path so VRM detects us as a PV-inverter.
     
@@ -66,8 +66,8 @@ class DbusShelly1pmService:
     # add _signOfLife 'timer' to get feedback in log every 5minutes
     gobject.timeout_add(self._getSignOfLifeInterval()*60*1000, self._signOfLife)
  
-  def _getShellySerial(self):
-    meter_data = self._getShellyData()  
+  def _getOpenDTUSerial(self):
+    meter_data = self._getOpenDTUData()  
     
     if not meter_data['inverters'][0]['serial']:
         raise ValueError("Response does not contain 'mac' attribute")
@@ -78,7 +78,7 @@ class DbusShelly1pmService:
  
   def _getConfig(self):
     config = configparser.ConfigParser()
-    config.read("%s/confighm.ini" % (os.path.dirname(os.path.realpath(__file__))))
+    config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
     return config;
  
  
@@ -92,7 +92,7 @@ class DbusShelly1pmService:
     return int(value)
   
   
-  def _getShellyStatusUrl(self):
+  def _getOpenDTUStatusUrl(self):
     config = self._getConfig()
     accessType = config['DEFAULT']['AccessType']
     
@@ -104,13 +104,13 @@ class DbusShelly1pmService:
     return URL
     
  
-  def _getShellyData(self):
-    URL = self._getShellyStatusUrl()
+  def _getOpenDTUData(self):
+    URL = self._getOpenDTUStatusUrl()
     meter_r = requests.get(url = URL)
     
     # check for response
     if not meter_r:
-        raise ConnectionError("No response from Shelly 1PM - %s" % (URL))
+        raise ConnectionError("No response from OpenDTU - %s" % (URL))
     
     meter_data = meter_r.json()     
     
@@ -131,8 +131,8 @@ class DbusShelly1pmService:
  
   def _update(self):   
     try:
-       #get data from Shelly 1pm
-       meter_data = self._getShellyData()
+       #get data from OpenDTU
+       meter_data = self._getOpenDTUData()
        
        config = self._getConfig()
        str(config['DEFAULT']['Phase'])
@@ -146,8 +146,8 @@ class DbusShelly1pmService:
          if phase == pvinverter_phase:
            power = meter_data['total']['Power']['v']
            total = meter_data['total']['YieldTotal']['v']
-           voltage = 230
-           current = power / voltage
+           voltage = meter_data['inverters'][0]['0']['Voltage']['v']
+           current = meter_data['inverters'][0]['0']['Current']['v']
            
            self._dbusservice[pre + '/Voltage'] = voltage
            self._dbusservice[pre + '/Current'] = current
@@ -213,7 +213,7 @@ def main():
       _v = lambda p, v: (str(round(v, 1)) + 'V')   
      
       #start our main-service
-      pvac_output = DbusShelly1pmService(
+      pvac_output = DbusOpenDTUService(
         servicename='com.victronenergy.pvinverter',
         paths={
           '/Ac/Energy/Forward': {'initial': None, 'textformat': _kwh}, # energy produced by pv inverter
