@@ -21,7 +21,7 @@ from vedbus import VeDbusService
 
 
 class DbusShelly1pmService:
-  def __init__(self, servicename, paths, productname='OpenDTU', connection='OpenDTU HTTP JSON service'):
+  def __init__(self, servicename, paths, productname='Shelly 1PM', connection='Shelly 1PM HTTP JSON service'):
     config = self._getConfig()
     deviceinstance = int(config['DEFAULT']['Deviceinstance'])
     customname = config['DEFAULT']['CustomName']
@@ -78,7 +78,7 @@ class DbusShelly1pmService:
  
   def _getConfig(self):
     config = configparser.ConfigParser()
-    config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
+    config.read("%s/confighm.ini" % (os.path.dirname(os.path.realpath(__file__))))
     return config;
  
  
