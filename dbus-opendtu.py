@@ -146,8 +146,8 @@ class DbusOpenDTUService:
          pre = '/Ac/' + phase
          
          if phase == pvinverter_phase:
-           power = meter_data['total']['Power']['v']
-           total = meter_data['total']['YieldTotal']['v']
+           power = meter_data['inverters'][0]['0']['Power']['v']
+           total = meter_data['inverters'][0]['0']['YieldTotal']['v'] 
            voltage = meter_data['inverters'][0]['0']['Voltage']['v']
            current = meter_data['inverters'][0]['0']['Current']['v']
            
@@ -163,8 +163,8 @@ class DbusOpenDTUService:
            self._dbusservice[pre + '/Current'] = 0
            self._dbusservice[pre + '/Power'] = 0
 
-       self._dbusservice['/Ac/Power'] = self._dbusservice['/Ac/' + pvinverter_phase + '/Power']
-       self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/' + pvinverter_phase + '/Energy/Forward']
+       self._dbusservice['/Ac/Power'] = meter_data['total']['Power']['v']
+       self._dbusservice['/Ac/Energy/Forward'] = meter_data['total']['YieldTotal']['v']
        
        #logging
        logging.debug("OpenDTU Power (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
