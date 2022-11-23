@@ -1,0 +1,163 @@
+//christian@docker-server:~$ curl --no-progress-meter http://172.16.4.212/api/live | jq
+{
+  "menu": {
+    "name": [
+      "Live",
+      "Serial Console",
+      "Settings",
+      "-",
+      "REST API",
+      "-",
+      "Update",
+      "System"
+    ],
+    "link": [
+      "/live",
+      "/serial",
+      "/setup",
+      null,
+      "/api",
+      null,
+      "/update",
+      "/system"
+    ],
+    "trgt": [
+      null,
+      null,
+      null,
+      null,
+      "_blank"
+    ]
+  },
+  "system": {
+    "ssid": "wifi",
+    "device_name": "AHOY-DTU",
+    "version": "0.5.41",
+    "build": "dec333f",
+    "ts_uptime": 37285,
+    "ts_now": 1669230194,
+    "ts_sunrise": 0,
+    "ts_sunset": 0,
+    "ts_sun_upd": 0,
+    "wifi_rssi": -77,
+    "mac": "78:21:84:87:AA:EE",
+    "hostname": "AHOY-DTU",
+    "pwd_set": false,
+    "sdk": "v4.4.2",
+    "cpu_freq": 240,
+    "heap_free": 192704,
+    "sketch_total": 1310720,
+    "sketch_used": 952,
+    "heap_total": 317184,
+    "chip_revision": 3,
+    "chip_model": "ESP32-D0WDQ6",
+    "chip_cores": 2,
+    "esp_type": "ESP32"
+  },
+  "inverter": [
+    {
+      "name": "HM-1500",
+      "channels": 4,
+      "power_limit_read": 100,
+      "last_alarm": "Inverter start",
+      "ts_last_success": 1669218582,
+      "ch": [
+        [
+          222.6,
+          0,
+          0,
+          49.93,
+          0,
+          7.5,
+          34.46,
+          4790,
+          1.8,
+          0,
+          19.3
+        ],
+        [
+          18.6,
+          0.02,
+          0.4,
+          1192,
+          10.617,
+          0.087
+        ],
+        [
+          18.6,
+          0.02,
+          0.4,
+          1169,
+          10.557,
+          0.087
+        ],
+        [
+          18.6,
+          0.03,
+          0.6,
+          1215,
+          6.652,
+          0.13
+        ],
+        [
+          18.6,
+          0.02,
+          0.4,
+          1214,
+          6.634,
+          0.087
+        ]
+      ],
+      "ch_names": [
+        "AC",
+        "",
+        "",
+        "",
+        ""
+      ]
+    }
+  ],
+  "refresh_interval": 30,
+  "ch0_fld_units": [
+    "V",
+    "A",
+    "W",
+    "Hz",
+    "",
+    "°C",
+    "kWh",
+    "Wh",
+    "W",
+    "%",
+    "var"
+  ],
+  "ch0_fld_names": [
+    "U_AC",
+    "I_AC",
+    "P_AC",
+    "F_AC",
+    "PF_AC",
+    "Temp",
+    "YieldTotal",
+    "YieldDay",
+    "P_DC",
+    "Efficiency",
+    "Q_AC"
+  ],
+  "fld_units": [
+    "V",
+    "A",
+    "W",
+    "Wh",
+    "kWh",
+    "%"
+  ],
+  "fld_names": [
+    "U_DC",
+    "I_DC",
+    "P_DC",
+    "YieldDay",
+    "YieldTotal",
+    "Irradiation"
+  ]
+}
