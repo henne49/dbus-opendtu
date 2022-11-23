@@ -1,5 +1,5 @@
-# dbus-opendtu inverter
-Integrate opendtu and with that all Hoymiles Interverter https://github.com/tbnobody/OpenDTU into Victron Energies Venus OS
+# dbus-opendtu/ahoydtu inverter
+Integrate openDTUor ahoyDTU and with that all Hoymiles Interverter https://github.com/tbnobody/OpenDTU into Victron Energies Venus OS
 
 ## Purpose
 With the scripts in this repo it should be easy possible to install, uninstall, restart a service that connects the opendtu to the VenusOS and GX devices from Victron.
@@ -15,6 +15,7 @@ This project is my first on GitHub and with the Victron Venus OS, so I took some
 - https://github.com/vikt0rm/dbus-shelly-1pm-pvinverter
 - https://github.com/tbnobody/OpenDTU 
 - https://github.com/tbnobody/OpenDTU/blob/master/docs/Web-API.md
+- https://ahoydtu.de/
 
 
 ## How it works
@@ -25,11 +26,11 @@ As mentioned above the script is inspired by @fabian-lauer dbus-shelly-3em-smart
 So what is the script doing:
 - Running as a service
 - connecting to DBus of the Venus OS `com.victronenergy.pvinverter.http_{DeviceInstanceID_from_config}`
-- After successful DBus connection OpenDTU is accessed via REST-API - simply the /status is called and a JSON is returned with all details
-  A sample JSON file from OpenDTU can be found [here](docs/OpenDTU.json)
-- Serial/MAC is taken from the response as device serial
+- After successful DBus connection OpenDTU/ahoyDTU is accessed via REST-API - simply the /status is called and a JSON is returned with all details
+  A sample JSON file from OpenDTU can be found [here](docs/OpenDTU.json). A sample JSON file from OpenDTU can be found [here](docs/ahoy.json)
+- Serial/devicename is taken from the response as device serial
 - Paths are added to the DBus with default value 0 - including some settings like name, etc
-- After that a "loop" is started which pulls OpenDTU data every 750ms from the REST-API and updates the values in the DBus
+- After that a "loop" is started which pulls OpenDTU/AhoyDTU data every 750ms from the REST-API and updates the values in the DBus
 
 Thats it 😄
 
@@ -67,6 +68,7 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 | DEFAULT  | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC output 2) |
 | DEFAULT  | Phase | Valid values L1, L2 or L3: represents the phase where pv inverter is feeding in |
 | DEFAULT  | Logging | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL |
+| DEFAULT  | dtu |  Which DTU to be used ahoy or opendtu Valid options: opendtu, ahoy |
 | ONPREMISE  | Host | IP or hostname of OpenDTU web-interface |
 
 
