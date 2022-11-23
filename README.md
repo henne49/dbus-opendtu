@@ -51,6 +51,12 @@ wget https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
 mv /data/dbus-opendtu-main /data/dbus-opendtu
 chmod a+x /data/dbus-opendtu/install.sh
+nano /data/dbus-opendtu/config.ini
+```
+
+⚠️Edit and change the config file to your needs and save⚠️
+
+```
 /data/dbus-opendtu/install.sh
 rm main.zip
 ```
