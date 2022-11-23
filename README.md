@@ -70,6 +70,9 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 | DEFAULT  | Logging | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL |
 | DEFAULT  | dtu |  Which DTU to be used ahoy or opendtu Valid options: opendtu, ahoy |
 | ONPREMISE  | Host | IP or hostname of OpenDTU web-interface |
+| INVERTER0  | Phase | 1st Inverter added to which Phase L1, L2, L3|
+| INVERTER1  | Phase | 2nd Inverter added to which Phase L1, L2, L3|
+| INVERTER2  | Phase | 3rd Inverter added to which Phase L1, L2, L3|
 
 
 ## Used documentation
