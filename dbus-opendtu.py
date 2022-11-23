@@ -70,12 +70,21 @@ class DbusOpenDTUService:
     gobject.timeout_add(self._getSignOfLifeInterval()*60*1000, self._signOfLife)
  
   def _getOpenDTUSerial(self):
+    config = self._getConfig()
+    dtu = str(config['DEFAULT']['DTU'])
     meter_data = self._getOpenDTUData()  
+
+    #inverters = len(meter_data['inverters'])
+    #logging.info("Numer of Inverter: %s" % (inverters))
+    if dtu == 'ahoy':
+      if not meter_data['inverter'][0]['name']:
+        raise ValueError("Response does not contain name")
+      serial = meter_data['inverter'][0]['name']
+    else:
+      if not meter_data['inverters'][0]['serial']:
+        raise ValueError("Response does not contain serial attribute try name")
+      serial = meter_data['inverters'][0]['serial']
     
-    if not meter_data['inverters'][0]['serial']:
-        raise ValueError("Response does not contain 'mac' attribute")
-    
-    serial = meter_data['inverters'][0]['serial']
     return serial
  
  
@@ -98,8 +107,12 @@ class DbusOpenDTUService:
   def _getOpenDTUStatusUrl(self):
     config = self._getConfig()
     accessType = config['DEFAULT']['AccessType']
-    
-    if accessType == 'OnPremise': 
+    dtu = str(config['DEFAULT']['DTU'])
+
+    if accessType == 'OnPremise':
+      if dtu == 'ahoy':
+        URL = "http://%s/api/live" % ( config['ONPREMISE']['Host'])
+      else:
         URL = "http://%s/api/livedata/status" % ( config['ONPREMISE']['Host'])
     else:
         raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
@@ -108,22 +121,23 @@ class DbusOpenDTUService:
     
  
   def _getOpenDTUData(self):
+    config = self._getConfig()
     URL = self._getOpenDTUStatusUrl()
+
     meter_r = requests.get(url = URL)
     
     # check for response
     if not meter_r:
         raise ConnectionError("No response from OpenDTU - %s" % (URL))
-    
+ 
     meter_data = meter_r.json()     
-    
+
     # check for Json
     if not meter_data:
         raise ValueError("Converting response to JSON failed")
     
-    
     return meter_data
- 
+
  
   def _signOfLife(self):
     logging.info("--- Start: sign of life ---")
@@ -140,22 +154,30 @@ class DbusOpenDTUService:
        config = self._getConfig()
     
        pvinverter_phase = str(config['DEFAULT']['Phase'])
-       
+       dtu              = str(config['DEFAULT']['DTU'])
+
        #send data to DBus
        for phase in ['L1', 'L2', 'L3']:
          pre = '/Ac/' + phase
          
          if phase == pvinverter_phase:
-           power = meter_data['inverters'][0]['0']['Power']['v']
-           total = meter_data['inverters'][0]['0']['YieldTotal']['v'] 
-           voltage = meter_data['inverters'][0]['0']['Voltage']['v']
-           current = meter_data['inverters'][0]['0']['Current']['v']
-           
-           self._dbusservice[pre + '/Voltage'] = voltage
-           self._dbusservice[pre + '/Current'] = current
-           self._dbusservice[pre + '/Power'] = power
-           if power > 0:
-             self._dbusservice[pre + '/Energy/Forward'] = total
+          if dtu == 'ahoy':
+            power = meter_data['inverter'][0]['ch'][0][2]
+            total = meter_data['inverter'][0]['ch'][0][6]
+            voltage = meter_data['inverter'][0]['ch'][0][0]
+            current = meter_data['inverter'][0]['ch'][0][1]
+          else:
+            power = meter_data['inverters'][0]['0']['Power']['v']
+            total = meter_data['inverters'][0]['0']['YieldTotal']['v'] 
+            voltage = meter_data['inverters'][0]['0']['Voltage']['v']
+            current = meter_data['inverters'][0]['0']['Current']['v']
+
+
+          self._dbusservice[pre + '/Voltage'] = voltage
+          self._dbusservice[pre + '/Current'] = current
+          self._dbusservice[pre + '/Power'] = power
+          if power > 0:
+            self._dbusservice[pre + '/Energy/Forward'] = total
 
            
          else:
@@ -163,8 +185,8 @@ class DbusOpenDTUService:
            self._dbusservice[pre + '/Current'] = 0
            self._dbusservice[pre + '/Power'] = 0
 
-       self._dbusservice['/Ac/Power'] = meter_data['total']['Power']['v']
-       self._dbusservice['/Ac/Energy/Forward'] = meter_data['total']['YieldTotal']['v']
+       self._dbusservice['/Ac/Power'] = power
+       self._dbusservice['/Ac/Energy/Forward'] = total
        
        #logging
        logging.debug("OpenDTU Power (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
