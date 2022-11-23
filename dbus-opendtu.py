@@ -149,48 +149,59 @@ class DbusOpenDTUService:
   def _update(self):   
     try:
        #get data from OpenDTU
-       meter_data = self._getOpenDTUData()
-       
+       meter_data = self._getOpenDTUData()   
        config = self._getConfig()
     
-       pvinverter_phase = str(config['DEFAULT']['Phase'])
        dtu              = str(config['DEFAULT']['DTU'])
+       number_of_inverters = int(config['DEFAULT']['NumberOfInverters'])
 
        #send data to DBus
+       
+       power = 0.0
+       total = 0.0
+       voltage = 0.0
+       current = 0.0
+       total_power = 0.0 
+       total_yield = 0.0 
+       
        for phase in ['L1', 'L2', 'L3']:
-         pre = '/Ac/' + phase
-         
-         if phase == pvinverter_phase:
-          if dtu == 'ahoy':
-            power = meter_data['inverter'][0]['ch'][0][2]
-            total = meter_data['inverter'][0]['ch'][0][6]
-            voltage = meter_data['inverter'][0]['ch'][0][0]
-            current = meter_data['inverter'][0]['ch'][0][1]
-          else:
-            power = meter_data['inverters'][0]['0']['Power']['v']
-            total = meter_data['inverters'][0]['0']['YieldTotal']['v'] 
-            voltage = meter_data['inverters'][0]['0']['Voltage']['v']
-            current = meter_data['inverters'][0]['0']['Current']['v']
-
+          pre = '/Ac/' + phase
+          for actual_inverter in range(number_of_inverters):
+            pvinverter_phase = str(config['INVERTER{}'.format(actual_inverter)]['Phase'])# Take phase of actual inverter from config
+            if phase == pvinverter_phase: 
+              if dtu == 'ahoy':
+                power += meter_data['inverter'][actual_inverter]['ch'][0][2]
+                total += meter_data['inverter'][actual_inverter]['ch'][0][6]
+                voltage = meter_data['inverter'][actual_inverter]['ch'][0][0]
+                current += meter_data['inverter'][actual_inverter]['ch'][0][1]
+              else:
+                power = +meter_data['inverters'][actual_inverter]['0']['Power']['v']
+                total = +meter_data['inverters'][actual_inverter]['0']['YieldTotal']['v'] 
+                voltage = meter_data['inverters'][actual_inverter]['0']['Voltage']['v']
+                current = +meter_data['inverters'][actual_inverter]['0']['Current']['v']
+              total_power += power
+              total_yield += total
 
           self._dbusservice[pre + '/Voltage'] = voltage
           self._dbusservice[pre + '/Current'] = current
           self._dbusservice[pre + '/Power'] = power
-          if power > 0:
-            self._dbusservice[pre + '/Energy/Forward'] = total
+          self._dbusservice[pre + '/Energy/Forward'] = total
+          
+          power = 0.0
+          total = 0.0
+          voltage = 0.0
+          current = 0.0
 
-           
-         else:
-           self._dbusservice[pre + '/Voltage'] = 0
-           self._dbusservice[pre + '/Current'] = 0
-           self._dbusservice[pre + '/Power'] = 0
+       if dtu == 'opendtu':
+          total_power = meter_data['total']['Power']['v'] 
+          total_yield = meter_data['total']['YieldTotal']['v']
 
-       self._dbusservice['/Ac/Power'] = power
-       self._dbusservice['/Ac/Energy/Forward'] = total
+       self._dbusservice['/Ac/Power'] = total_power
+       self._dbusservice['/Ac/Energy/Forward'] = total_yield
        
        #logging
-       logging.debug("OpenDTU Power (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
-       logging.debug("OpenDTU Energy (/Ac/Energy/Forward): %s" % (self._dbusservice['/Ac/Energy/Forward']))
+       logging.debug("OpenDTU Power (/Ac/Power): %s" % total_power)
+       logging.debug("OpenDTU Energy (/Ac/Energy/Forward): %s" % total_yield)
        logging.debug("---");
        
        # increment UpdateIndex - to show that new data is available
