@@ -179,14 +179,18 @@ class DbusOpenDTUService:
                 total = +meter_data['inverters'][actual_inverter]['0']['YieldTotal']['v'] 
                 voltage = meter_data['inverters'][actual_inverter]['0']['Voltage']['v']
                 current = +meter_data['inverters'][actual_inverter]['0']['Current']['v']
-              total_power += power
-              total_yield += total
 
+        #write values per Phase into dbus
           self._dbusservice[pre + '/Voltage'] = voltage
           self._dbusservice[pre + '/Current'] = current
           self._dbusservice[pre + '/Power'] = power
           self._dbusservice[pre + '/Energy/Forward'] = total
-          
+
+        #carry over Total Power and Energy for Total view
+          total_power += power
+          total_yield += total
+
+        #reset values for next phase
           power = 0.0
           total = 0.0
           voltage = 0.0
