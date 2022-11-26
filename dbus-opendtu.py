@@ -189,7 +189,8 @@ class DbusOpenDTUService:
           self._dbusservice[pre + '/Voltage'] = voltage
           self._dbusservice[pre + '/Current'] = current
           self._dbusservice[pre + '/Power'] = power
-          self._dbusservice[pre + '/Energy/Forward'] = total
+          if power > 0 :
+            self._dbusservice[pre + '/Energy/Forward'] = total
 
         #carry over Total Power and Energy for Total view
           total_power += power
@@ -206,7 +207,8 @@ class DbusOpenDTUService:
           total_yield = meter_data['total']['YieldTotal']['v']
 
        self._dbusservice['/Ac/Power'] = total_power
-       self._dbusservice['/Ac/Energy/Forward'] = total_yield
+       if total_power > 0 :
+        self._dbusservice['/Ac/Energy/Forward'] = total_yield
        
        #logging
        logging.debug("OpenDTU Power (/Ac/Power): %s" % total_power)
