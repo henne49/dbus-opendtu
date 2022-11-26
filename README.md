@@ -73,8 +73,9 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 | DEFAULT  | CustomName | Name shown in Remote Console (e.g. name of pv inverter) |
 | DEFAULT  | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
 | DEFAULT  | Phase | Valid values L1, L2 or L3: represents the phase where pv inverter is feeding in |
-| DEFAULT  | Logging | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL |
 | DEFAULT  | dtu |  Which DTU to be used ahoy or opendtu Valid options: opendtu, ahoy |
+| DEFAULT  | ESP8266PollingIntervall |  For ESP8266 reduce polling intervall to reduce load, default 1000ms|
+| DEFAULT  | Logging | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL |
 | ONPREMISE  | Host | IP or hostname of OpenDTU web-interface |
 | INVERTER0  | Phase | 1st Inverter added to which Phase L1, L2, L3|
 | INVERTER1  | Phase | 2nd Inverter added to which Phase L1, L2, L3|
