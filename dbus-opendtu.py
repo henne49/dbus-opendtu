@@ -64,7 +64,7 @@ class DbusOpenDTUService:
     self._lastUpdate = 0
 
     # add _update function 'timer'
-    gobject.timeout_add(250, self._update) # pause 250ms before the next request
+    #gobject.timeout_add(1000, self._update) # pause 250ms before the next request
     
     # add _signOfLife 'timer' to get feedback in log every 5minutes
     gobject.timeout_add(self._getSignOfLifeInterval()*60*1000, self._signOfLife)
@@ -80,6 +80,10 @@ class DbusOpenDTUService:
       if not meter_data['inverter'][0]['name']:
         raise ValueError("Response does not contain name")
       serial = meter_data['inverter'][0]['name']
+      if meter_data['system']['esp_type']=='ESP8266':
+        polling_interval = int(config['DEFAULT']['ESP8266PollingIntervall'])
+        logging.info("ESP8266 detected, reducing polling to %s" , polling_interval)
+        gobject.timeout_add(polling_interval, self._update) # pause before the next request
     else:
       if not meter_data['inverters'][0]['serial']:
         raise ValueError("Response does not contain serial attribute try name")
@@ -116,7 +120,6 @@ class DbusOpenDTUService:
         URL = "http://%s/api/livedata/status" % ( config['ONPREMISE']['Host'])
     else:
         raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
-    
     return URL
     
  
