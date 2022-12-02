@@ -132,18 +132,19 @@ class DbusOpenDTUService:
     config = self._getConfig()
     URL = self._getOpenDTUStatusUrl()
 
-    meter_r = requests.get(url = URL)
+    meter_r = requests.get(url = URL, timeout=2.50)
     
     # check for response
     if not meter_r:
-        raise ConnectionError("No response from OpenDTU - %s" % (URL))
+      logging.info("No Response from OpenDTU/Ahoy")
+      raise ConnectionError("No response from OpenDTU - %s" % (URL))
  
     meter_data = meter_r.json()     
 
     # check for Json
     if not meter_data:
-        raise ValueError("Converting response to JSON failed")
-    
+      logging.info("Converting response to JSON failed")
+      raise ValueError("Converting response to JSON failed")
     return meter_data
 
  
