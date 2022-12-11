@@ -57,6 +57,7 @@ nano /data/dbus-opendtu/config.ini
 ```
 opkg install python3-pip 
 pip3 install suntime
+pip3 install pytz
 ```
 
 ⚠️Edit and change the config file to your needs and save⚠️
