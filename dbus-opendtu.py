@@ -86,7 +86,9 @@ class DbusOpenDTUService:
       if meter_data['system']['esp_type']=='ESP8266':
         polling_interval = int(config['DEFAULT']['ESP8266PollingIntervall'])
         logging.info("ESP8266 detected, reducing polling to %s" , polling_interval)
-        
+      else:
+      polling_interval = 250
+      
     else:
       if not meter_data['inverters'][0]['serial']:
         raise ValueError("Response does not contain serial attribute try name")
