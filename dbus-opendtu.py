@@ -87,7 +87,7 @@ class DbusOpenDTUService:
         polling_interval = int(config['DEFAULT']['ESP8266PollingIntervall'])
         logging.info("ESP8266 detected, reducing polling to %s" , polling_interval)
       else:
-      polling_interval = 250
+       polling_interval = 250
       
     else:
       if not meter_data['inverters'][0]['serial']:
