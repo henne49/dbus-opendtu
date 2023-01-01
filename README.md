@@ -90,5 +90,6 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 This module/repository has been posted on the following threads:
 - https://community.victronenergy.com/questions/169076/opendtu-as-pv-inverter-in-venusos.html
 
-## Video on how to install and use from Meine Energiewende https://www.youtube.com/@MeineEnergiewende
-- https://youtu.be/PpjCz33pGkk
+## Video on how to install and use:
+- https://youtu.be/PpjCz33pGkk Meine Energiewende
+- https://youtu.be/UNuIOa72eP4 Schatten PV
