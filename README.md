@@ -38,8 +38,6 @@ Thats it 😄
 <img src="img/overview.png" width="400" /> <img src="img/devicelist.png" width="400" />
 <img src="img/device.png" width="400" /> <img src="img/devicedetails.png" width="400" />
 
-https://user-images.githubusercontent.com/link-to-your-image.png" width="200" />
-
 ## Install & Configuration
 ### Get the code
 Just grap a copy of the main branche and copy them to a folder under `/data/` e.g. `/data/dbus-opendtu`.
