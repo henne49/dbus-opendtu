@@ -30,7 +30,7 @@ So what is the script doing:
   A sample JSON file from OpenDTU can be found [here](docs/OpenDTU.json). A sample JSON file from OpenDTU can be found [here](docs/ahoy.json)
 - Serial/devicename is taken from the response as device serial
 - Paths are added to the DBus with default value 0 - including some settings like name, etc
-- After that a "loop" is started which pulls OpenDTU/AhoyDTU data every 750ms from the REST-API and updates the values in the DBus
+- After that a "loop" is started which pulls OpenDTU/AhoyDTU data every 5s from the REST-API and updates the values in the DBus, for ESP 8266 based ahoy systems we even pull data only every 10seconds
 
 Thats it 😄
 
