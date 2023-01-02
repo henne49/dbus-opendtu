@@ -83,7 +83,12 @@ class DbusOpenDTUService:
 
       #Check for ESP8266 and limit polling
 
-      if meter_data['system']['esp_type']=='ESP8266':
+      try:
+        esp_type = meter_data['generic']['esp_type']
+      except:
+        esp_type = meter_data['system']['esp_type']
+
+      if esp_type=='ESP8266':
         polling_interval = int(config['DEFAULT']['ESP8266PollingIntervall'])
         logging.info("ESP8266 detected, reducing polling to %s" , polling_interval)
       else:
