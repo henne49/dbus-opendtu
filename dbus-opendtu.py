@@ -23,7 +23,10 @@ from vedbus import VeDbusService
 
 def get_nested(value, path):
   for p in path:
-    value = value[p]
+    try:
+      value = value[p]
+    except KeyError:
+      value = 0
   return value
 
 
