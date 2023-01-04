@@ -25,8 +25,11 @@ def get_nested(value, path):
   for p in path:
     try:
       value = value[p]
-    except KeyError:
-      value = 0
+    except:
+      try: 
+        value = value[int(p)]
+      except:
+        value = 0
   return value
 
 
@@ -211,8 +214,8 @@ class DbusOpenDTUService:
                 current += meter_data['inverters'][actual_inverter]['0']['Current']['v']
               elif dtu == 'template':
                 #logging.debug("JSON data: %s" % meter_data)
-                power += float(get_nested( meter_data, config['TEMPLATE']['CUST_Power'].split("/") ))
-                total += float(get_nested( meter_data, config['TEMPLATE']['CUST_Total'].split("/") ))
+                power += float(get_nested( meter_data, config['TEMPLATE']['CUST_Power'].split("/") )) * float(config['TEMPLATE']['CUST_Power_Mult'])
+                total += float(get_nested( meter_data, config['TEMPLATE']['CUST_Total'].split("/") )) * float( config['TEMPLATE']['CUST_Total_Mult'])
                 voltage = float(get_nested( meter_data, config['TEMPLATE']['CUST_Voltage'].split("/") ))
                 current += float(get_nested( meter_data, config['TEMPLATE']['CUST_Current'].split("/") ))
 
