@@ -3,7 +3,7 @@ Integrate openDTU or ahoyDTU and with that all Hoymiles Interverter https://gith
 
 Tested Examples:
 
-    * Tasmota unathenticated
+    * Tasmota unauthenticated
     * Shelly 1 PM authenticated/unauthenticated
     * Shelly Plus 1 PM unathenticated
 
