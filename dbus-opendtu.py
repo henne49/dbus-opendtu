@@ -21,6 +21,17 @@ import requests  # for http GET
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/dbus-systemcalc-py/ext/velib_python'))
 from vedbus import VeDbusService
 
+def get_nested(value, path):
+  for p in path:
+    try:
+      value = value[p]
+    except:
+      try: 
+        value = value[int(p)]
+      except:
+        value = 0
+  return value
+
 
 class DbusOpenDTUService:
   def __init__(self, servicename, paths, productname='OpenDTU', connection='OpenDTU HTTP JSON service'):
@@ -68,7 +79,7 @@ class DbusOpenDTUService:
     
     # add _signOfLife 'timer' to get feedback in log every 5minutes
     gobject.timeout_add(self._getSignOfLifeInterval()*60*1000, self._signOfLife)
- 
+
   def _getOpenDTUSerial(self):
     config = self._getConfig()
     dtu = str(config['DEFAULT']['DTU'])
@@ -92,14 +103,18 @@ class DbusOpenDTUService:
         polling_interval = int(config['DEFAULT']['ESP8266PollingIntervall'])
         logging.info("ESP8266 detected, reducing polling to %s" , polling_interval)
       else:
-       polling_interval = 750
+       polling_interval = 5000
       
-    else:
+    elif dtu =='opendtu':
       if not meter_data['inverters'][0]['serial']:
         raise ValueError("Response does not contain serial attribute try name")
       serial = meter_data['inverters'][0]['serial']
-      polling_interval = 750
+      polling_interval = 5000
+
     
+    elif dtu =='template':
+      serial = str(config['TEMPLATE']['CUST_SN'])
+      polling_interval = int(config['TEMPLATE']['CUST_POLLING'])
     gobject.timeout_add(polling_interval, self._update)
 
     return serial
@@ -119,19 +134,22 @@ class DbusOpenDTUService:
         value = 0
     return int(value)
   
-  
   def _getOpenDTUStatusUrl(self):
     config = self._getConfig()
     accessType = config['DEFAULT']['AccessType']
     dtu = str(config['DEFAULT']['DTU'])
 
     if accessType == 'OnPremise':
-      if dtu == 'ahoy':
-        URL = "http://%s/api/live" % ( config['ONPREMISE']['Host'])
-      else:
+      if dtu == 'opendtu':
         URL = "http://%s/api/livedata/status" % ( config['ONPREMISE']['Host'])
+      elif dtu == 'ahoy':
+        URL = "http://%s/api/live" % ( config['ONPREMISE']['Host'])
+      elif dtu == 'template':
+        URL = "http://%s:%s@%s/%s" % ( config['ONPREMISE']['Username'], config['ONPREMISE']['Password'], config['ONPREMISE']['Host'], config['TEMPLATE']['CUST_API_PATH'])
+        URL = URL.replace(":@", "")
     else:
         raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
+  
     return URL
     
  
@@ -190,17 +208,23 @@ class DbusOpenDTUService:
                 total += meter_data['inverter'][actual_inverter]['ch'][0][6]
                 voltage = meter_data['inverter'][actual_inverter]['ch'][0][0]
                 current += meter_data['inverter'][actual_inverter]['ch'][0][1]
-              else:
+              elif dtu == 'opendtu':
                 power += meter_data['inverters'][actual_inverter]['0']['Power']['v']
                 total += meter_data['inverters'][actual_inverter]['0']['YieldTotal']['v'] 
                 voltage = meter_data['inverters'][actual_inverter]['0']['Voltage']['v']
                 current += meter_data['inverters'][actual_inverter]['0']['Current']['v']
+              elif dtu == 'template':
+                #logging.debug("JSON data: %s" % meter_data)
+                power += float(get_nested( meter_data, config['TEMPLATE']['CUST_Power'].split("/") )) * float(config['TEMPLATE']['CUST_Power_Mult'])
+                total += float(get_nested( meter_data, config['TEMPLATE']['CUST_Total'].split("/") )) * float( config['TEMPLATE']['CUST_Total_Mult'])
+                voltage = float(get_nested( meter_data, config['TEMPLATE']['CUST_Voltage'].split("/") ))
+                current += float(get_nested( meter_data, config['TEMPLATE']['CUST_Current'].split("/") ))
 
         #write values per Phase into dbus
           self._dbusservice[pre + '/Voltage'] = voltage
           self._dbusservice[pre + '/Current'] = current
           self._dbusservice[pre + '/Power'] = power
-          if power > 0 :
+          if power > 0 or dtu == 'template':
             self._dbusservice[pre + '/Energy/Forward'] = total
 
         #carry over Total Power and Energy for Total view
@@ -218,7 +242,7 @@ class DbusOpenDTUService:
           total_yield = meter_data['total']['YieldTotal']['v']
 
        self._dbusservice['/Ac/Power'] = total_power
-       if total_power > 0 :
+       if total_power > 0 or dtu == 'template':
         self._dbusservice['/Ac/Energy/Forward'] = total_yield
        
        #logging
@@ -281,10 +305,10 @@ def main():
         paths={
           '/Ac/Energy/Forward': {'initial': None, 'textformat': _kwh}, # energy produced by pv inverter
           '/Ac/Power': {'initial': 0, 'textformat': _w},
-          
-          '/Ac/Current': {'initial': 0, 'textformat': _a},
-          '/Ac/Voltage': {'initial': 0, 'textformat': _v},
-          
+#          
+#          '/Ac/Current': {'initial': 0, 'textformat': _a},
+#          '/Ac/Voltage': {'initial': 0, 'textformat': _v},
+#          
           '/Ac/L1/Voltage': {'initial': 0, 'textformat': _v},
           '/Ac/L2/Voltage': {'initial': 0, 'textformat': _v},
           '/Ac/L3/Voltage': {'initial': 0, 'textformat': _v},
