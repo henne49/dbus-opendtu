@@ -1,5 +1,13 @@
 # dbus-opendtu/ahoydtu inverter
-Integrate openDTUor ahoyDTU and with that all Hoymiles Interverter https://github.com/tbnobody/OpenDTU into Victron Energies Venus OS
+Integrate openDTU or ahoyDTU and with that all Hoymiles Interverter https://github.com/tbnobody/OpenDTU into Victron Energies Venus OS. This also allows for template configuration to include other generic REST Devices. 
+
+Tested Examples:
+
+    * Tasmota unathenticated
+    * Shelly 1 PM authenticated/unauthenticated
+    * Shelly Plus 1 PM unathenticated
+
+All configuration is done via config.ini examples are commented in config.ini
 
 ## Purpose
 With the scripts in this repo it should be easy possible to install, uninstall, restart a service that connects the opendtu to the VenusOS and GX devices from Victron.
@@ -70,15 +78,28 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 | DEFAULT  | Deviceinstance | Unique ID identifying the OpenDTU in Venus OS |
 | DEFAULT  | CustomName | Name shown in Remote Console (e.g. name of pv inverter) |
 | DEFAULT  | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
-| DEFAULT  | Phase | Valid values L1, L2 or L3: represents the phase where pv inverter is feeding in |
-| DEFAULT  | dtu |  Which DTU to be used ahoy or opendtu Valid options: opendtu, ahoy |
-| DEFAULT  | ESP8266PollingIntervall |  For ESP8266 reduce polling intervall to reduce load, default 1000ms|
+| DEFAULT  | NumberOfInverters | How Many inverters to check, up 10 for ahoy and opendtu, template can only monitor 1 device |
+| DEFAULT  | dtu |  Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template |
+| DEFAULT  | ESP8266PollingIntervall |  For ESP8266 reduce polling intervall to reduce load, default 10000ms|
 | DEFAULT  | Logging | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL |
 | ONPREMISE  | Host | IP or hostname of OpenDTU web-interface |
+| ONPREMISE  | Username | use for template device, if authenticaed, leave empty if no authentication needed |
+| ONPREMISE  | Password | use for template device, if authenticaed, leave empty if no authentication needed |
 | INVERTER0  | Phase | 1st Inverter added to which Phase L1, L2, L3|
 | INVERTER1  | Phase | 2nd Inverter added to which Phase L1, L2, L3|
-| INVERTER2  | Phase | 3rd Inverter added to which Phase L1, L2, L3|
+| .........  |       | ........... |
+| INVERTER9  | Phase | 3rd Inverter added to which Phase L1, L2, L3|
+| TEMPLATE  | CUST_SN | Serialnumber to register device in VenusOS|
+| TEMPLATE  | CUST_API_PATH | Location of REST API Path for JSON to be used |
+| TEMPLATE  | CUST_POLLING | Polling for Device |
+| TEMPLATE  | CUST_Total | Path in JSON where to find total Energy |
+| TEMPLATE  | CUST_Total_Mult | Multiplier to convert W per minute for example in kWh|
+| TEMPLATE  | CUST_Power | Path in JSON where to find actual Power |
+| TEMPLATE  | CUST_Power_Mult | Multiplier to convert W in negative or positive |
+| TEMPLATE  | CUST_Voltage | Path in JSON where to find actual Voltage |
+| TEMPLATE  | CUST_Current | Path in JSON where to find actual Current |
 
+Example for JSON PATH: use keywords separated by /
 
 ## Used documentation
 - https://github.com/victronenergy/venus/wiki/dbus#pv-inverters   DBus paths for Victron namespace
