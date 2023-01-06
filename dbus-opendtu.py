@@ -110,6 +110,7 @@ class DbusOpenDTUService:
         raise ValueError("Response does not contain serial attribute try name")
       serial = meter_data['inverters'][0]['serial']
       polling_interval = 5000
+
     
     elif dtu =='template':
       serial = str(config['TEMPLATE']['CUST_SN'])

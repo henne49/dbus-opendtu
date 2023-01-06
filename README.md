@@ -30,15 +30,13 @@ So what is the script doing:
   A sample JSON file from OpenDTU can be found [here](docs/OpenDTU.json). A sample JSON file from OpenDTU can be found [here](docs/ahoy.json)
 - Serial/devicename is taken from the response as device serial
 - Paths are added to the DBus with default value 0 - including some settings like name, etc
-- After that a "loop" is started which pulls OpenDTU/AhoyDTU data every 750ms from the REST-API and updates the values in the DBus
+- After that a "loop" is started which pulls OpenDTU/AhoyDTU data every 5s from the REST-API and updates the values in the DBus, for ESP 8266 based ahoy systems we even pull data only every 10seconds
 
 Thats it 😄
 
 ### Pictures
 <img src="img/overview.png" width="400" /> <img src="img/devicelist.png" width="400" />
 <img src="img/device.png" width="400" /> <img src="img/devicedetails.png" width="400" />
-
-https://user-images.githubusercontent.com/link-to-your-image.png" width="200" />
 
 ## Install & Configuration
 ### Get the code
@@ -92,5 +90,6 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 This module/repository has been posted on the following threads:
 - https://community.victronenergy.com/questions/169076/opendtu-as-pv-inverter-in-venusos.html
 
-## Video on how to install and use from Meine Energiewende https://www.youtube.com/@MeineEnergiewende
-- https://youtu.be/PpjCz33pGkk
+## Video on how to install and use:
+- https://youtu.be/PpjCz33pGkk Meine Energiewende
+- https://youtu.be/UNuIOa72eP4 Schatten PV
