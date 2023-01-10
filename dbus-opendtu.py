@@ -32,6 +32,11 @@ def get_nested(value, path):
         value = 0
   return value
 
+def getAhoyFieldByName(meter_data, actual_inverter, fieldname):
+  ac_data_field_names = meter_data['ch0_fld_names']
+  data_index = ac_data_field_names.index(fieldname)
+  ac_channel_index = 0
+  return meter_data['inverter'][actual_inverter]['ch'][ac_channel_index][data_index]
 
 class DbusOpenDTUService:
   def __init__(self, servicename, paths, productname='OpenDTU', connection='OpenDTU HTTP JSON service'):
@@ -186,8 +191,9 @@ class DbusOpenDTUService:
        meter_data = self._getOpenDTUData()   
        config = self._getConfig()
     
-       dtu              = str(config['DEFAULT']['DTU'])
+       dtu                 = str(config['DEFAULT']['DTU'])
        number_of_inverters = int(config['DEFAULT']['NumberOfInverters'])
+       useYieldDay         = int(config['DEFAULT']['useYieldDay'])
 
        #send data to DBus
        
@@ -200,17 +206,25 @@ class DbusOpenDTUService:
        
        for phase in ['L1', 'L2', 'L3']:
           pre = '/Ac/' + phase
+          got_some_values_for_phase = False
           for actual_inverter in range(number_of_inverters):
             pvinverter_phase = str(config['INVERTER{}'.format(actual_inverter)]['Phase'])# Take phase of actual inverter from config
-            if phase == pvinverter_phase: 
+            if phase == pvinverter_phase:
+              got_some_values_for_phase = True
               if dtu == 'ahoy':
-                power += meter_data['inverter'][actual_inverter]['ch'][0][2]
-                total += meter_data['inverter'][actual_inverter]['ch'][0][6]
-                voltage = meter_data['inverter'][actual_inverter]['ch'][0][0]
-                current += meter_data['inverter'][actual_inverter]['ch'][0][1]
+                power += getAhoyFieldByName(meter_data, actual_inverter, 'P_AC')
+                if useYieldDay:
+                  total += getAhoyFieldByName(meter_data, actual_inverter, 'YieldDay') / 1000
+                else:
+                  total += getAhoyFieldByName(meter_data, actual_inverter, 'YieldTotal')
+                voltage = getAhoyFieldByName(meter_data, actual_inverter, 'U_AC')
+                current += getAhoyFieldByName(meter_data, actual_inverter, 'I_AC')
               elif dtu == 'opendtu':
                 power += meter_data['inverters'][actual_inverter]['0']['Power']['v']
-                total += meter_data['inverters'][actual_inverter]['0']['YieldTotal']['v'] 
+                if useYieldDay:
+                  total += meter_data['inverters'][actual_inverter]['0']['YieldDay']['v'] / 1000
+                else:
+                  total += meter_data['inverters'][actual_inverter]['0']['YieldTotal']['v'] 
                 voltage = meter_data['inverters'][actual_inverter]['0']['Voltage']['v']
                 current += meter_data['inverters'][actual_inverter]['0']['Current']['v']
               elif dtu == 'template':
@@ -221,11 +235,12 @@ class DbusOpenDTUService:
                 current += float(get_nested( meter_data, config['TEMPLATE']['CUST_Current'].split("/") ))
 
         #write values per Phase into dbus
-          self._dbusservice[pre + '/Voltage'] = voltage
-          self._dbusservice[pre + '/Current'] = current
-          self._dbusservice[pre + '/Power'] = power
-          if power > 0 or dtu == 'template':
-            self._dbusservice[pre + '/Energy/Forward'] = total
+          if got_some_values_for_phase:
+            self._dbusservice[pre + '/Voltage'] = voltage
+            self._dbusservice[pre + '/Current'] = current
+            self._dbusservice[pre + '/Power'] = power
+            if power > 0 or dtu == 'template':
+                self._dbusservice[pre + '/Energy/Forward'] = total
 
         #carry over Total Power and Energy for Total view
           total_power += power
@@ -239,11 +254,14 @@ class DbusOpenDTUService:
 
        if dtu == 'opendtu':
           total_power = meter_data['total']['Power']['v'] 
-          total_yield = meter_data['total']['YieldTotal']['v']
+          if useYieldDay:
+            total_yield = meter_data['total']['YieldDay']['v'] / 1000
+          else:
+            total_yield = meter_data['total']['YieldTotal']['v']
 
        self._dbusservice['/Ac/Power'] = total_power
        if total_power > 0 or dtu == 'template':
-        self._dbusservice['/Ac/Energy/Forward'] = total_yield
+         self._dbusservice['/Ac/Energy/Forward'] = total_yield
        
        #logging
        logging.debug("OpenDTU Power (/Ac/Power): %s" % total_power)
@@ -267,7 +285,7 @@ class DbusOpenDTUService:
   def _handlechangedvalue(self, path, value):
     logging.debug("someone else updated %s to %s" % (path, value))
     return True # accept the change
- 
+
 
 
 def main():
@@ -304,20 +322,20 @@ def main():
         servicename='com.victronenergy.pvinverter',
         paths={
           '/Ac/Energy/Forward': {'initial': None, 'textformat': _kwh}, # energy produced by pv inverter
-          '/Ac/Power': {'initial': 0, 'textformat': _w},
+          '/Ac/Power': {'initial': None, 'textformat': _w},
 #          
 #          '/Ac/Current': {'initial': 0, 'textformat': _a},
 #          '/Ac/Voltage': {'initial': 0, 'textformat': _v},
 #          
-          '/Ac/L1/Voltage': {'initial': 0, 'textformat': _v},
-          '/Ac/L2/Voltage': {'initial': 0, 'textformat': _v},
-          '/Ac/L3/Voltage': {'initial': 0, 'textformat': _v},
-          '/Ac/L1/Current': {'initial': 0, 'textformat': _a},
-          '/Ac/L2/Current': {'initial': 0, 'textformat': _a},
-          '/Ac/L3/Current': {'initial': 0, 'textformat': _a},
-          '/Ac/L1/Power': {'initial': 0, 'textformat': _w},
-          '/Ac/L2/Power': {'initial': 0, 'textformat': _w},
-          '/Ac/L3/Power': {'initial': 0, 'textformat': _w},
+          '/Ac/L1/Voltage': {'initial': None, 'textformat': _v},
+          '/Ac/L2/Voltage': {'initial': None, 'textformat': _v},
+          '/Ac/L3/Voltage': {'initial': None, 'textformat': _v},
+          '/Ac/L1/Current': {'initial': None, 'textformat': _a},
+          '/Ac/L2/Current': {'initial': None, 'textformat': _a},
+          '/Ac/L3/Current': {'initial': None, 'textformat': _a},
+          '/Ac/L1/Power': {'initial': None, 'textformat': _w},
+          '/Ac/L2/Power': {'initial': None, 'textformat': _w},
+          '/Ac/L3/Power': {'initial': None, 'textformat': _w},
           '/Ac/L1/Energy/Forward': {'initial': None, 'textformat': _kwh},
           '/Ac/L2/Energy/Forward': {'initial': None, 'textformat': _kwh},
           '/Ac/L3/Energy/Forward': {'initial': None, 'textformat': _kwh},
