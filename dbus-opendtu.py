@@ -5,6 +5,7 @@ import logging
 import os
 import platform
 import sys
+import time
 
 if sys.version_info.major == 2:
     import gobject
@@ -37,6 +38,15 @@ def getAhoyFieldByName(meter_data, actual_inverter, fieldname):
   data_index = ac_data_field_names.index(fieldname)
   ac_channel_index = 0
   return meter_data['inverter'][actual_inverter]['ch'][ac_channel_index][data_index]
+
+def isDataUpToDate(dtu, meter_data, actual_inverter):
+  if dtu == 'ahoy':
+    ts_last_success = meter_data['inverter'][actual_inverter]['ts_last_success']
+    age_seconds = time.time() - ts_last_success
+    return age_seconds < 10*60
+  else:
+    # anything to do here?
+    return True
 
 class DbusOpenDTUService:
   def __init__(self, servicename, paths, productname='OpenDTU', connection='OpenDTU HTTP JSON service'):
@@ -209,8 +219,8 @@ class DbusOpenDTUService:
           got_some_values_for_phase = False
           for actual_inverter in range(number_of_inverters):
             pvinverter_phase = str(config['INVERTER{}'.format(actual_inverter)]['Phase'])# Take phase of actual inverter from config
-            if phase == pvinverter_phase:
-              got_some_values_for_phase = True
+            got_some_values_for_phase = isDataUpToDate(dtu, meter_data, actual_inverter)
+            if got_some_values_for_phase and phase == pvinverter_phase:
               if dtu == 'ahoy':
                 power += getAhoyFieldByName(meter_data, actual_inverter, 'P_AC')
                 if useYieldDay:
