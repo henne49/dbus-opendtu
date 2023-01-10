@@ -79,7 +79,8 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 | DEFAULT  | CustomName | Name shown in Remote Console (e.g. name of pv inverter) |
 | DEFAULT  | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
 | DEFAULT  | NumberOfInverters | How Many inverters to check, up 10 for ahoy and opendtu, template can only monitor 1 device |
-| DEFAULT  | dtu |  Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template |
+| DEFAULT  | DTU |  Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template |
+| DEFAULT  | useYieldDay | send YieldDay instead of YieldTotal. Set this to 1 to prevent VRM from adding the total value to the history on one day. E.g. if you don't start using the inverter at 0. |
 | DEFAULT  | ESP8266PollingIntervall |  For ESP8266 reduce polling intervall to reduce load, default 10000ms|
 | DEFAULT  | Logging | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL |
 | ONPREMISE  | Host | IP or hostname of OpenDTU web-interface |
