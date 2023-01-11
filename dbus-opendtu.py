@@ -219,8 +219,8 @@ class DbusOpenDTUService:
           got_some_values_for_phase = False
           for actual_inverter in range(number_of_inverters):
             pvinverter_phase = str(config['INVERTER{}'.format(actual_inverter)]['Phase'])# Take phase of actual inverter from config
-            got_some_values_for_phase = isDataUpToDate(dtu, meter_data, actual_inverter)
-            if got_some_values_for_phase and phase == pvinverter_phase:
+            got_some_values_for_phase = phase == pvinverter_phase and isDataUpToDate(dtu, meter_data, actual_inverter)
+            if got_some_values_for_phase:
               if dtu == 'ahoy':
                 power += getAhoyFieldByName(meter_data, actual_inverter, 'P_AC')
                 if useYieldDay:
