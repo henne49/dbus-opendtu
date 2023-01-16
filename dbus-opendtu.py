@@ -107,14 +107,28 @@ class DbusService:
       self.acposition         = int(config['INVERTER{}'.format(self.pvinverternumber)]['AcPosition'])
     except:
       self.acposition         = int(config['DEFAULT']['AcPosition'])
+      logging.error("Deprecated AcPosition DEFAULT entries must be moved to INVERTER section")
     self.signofliveinterval = config['DEFAULT']['SignOfLifeLog']
     #self.numberofinverters  = self._getNumberOfInverters()
     #self.numberofinverters  = int(config['DEFAULT']['NumberOfInverters'])
     self.useyieldday        = int(config['DEFAULT']['useYieldDay'])
     self.pvinverterphase    = str(config['INVERTER{}'.format(self.pvinverternumber)]['Phase'])
-    self.host               = config['DEFAULT']['Host']
-    self.username           = config['DEFAULT']['Username']
-    self.password           = config['DEFAULT']['Password']
+    try:
+      self.host               = config['DEFAULT']['Host']
+    except:
+      logging.error("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
+      self.host               = config['ONPREMISE']['Host']
+    try:  
+      self.username           = config['DEFAULT']['Username']
+    except:
+      logging.error("Deprecated Username ONPREMISE entries must be moved to DEFAULT section")
+      self.username           = config['ONPREMISE']['Username']
+    try:
+      self.password           = config['DEFAULT']['Password']
+    except:
+      logging.error("Deprecated: Password ONPREMISE entries must be moved to DEFAULT section")
+      self.password           = config['ONPREMISE']['Password']
+    
     self.pollinginterval    = int(config['DEFAULT']['ESP8266PollingIntervall'])
 
     if self.dtuvariant == "template":
