@@ -7,6 +7,7 @@ import platform
 import sys
 import time
 import dbus
+import time
 
 if sys.version_info.major == 2:
     import gobject
@@ -246,7 +247,15 @@ class DbusService:
       raise ValueError("Converting response to JSON failed")
     return meter_data
 
- 
+  def _isDataUpToDate(self, meter_data, actual_inverter):
+    if self.dtuvariant == 'ahoy':
+      ts_last_success = meter_data['inverter'][actual_inverter]['ts_last_success']
+      age_seconds = time.time() - ts_last_success
+      return age_seconds < 10*60
+    else:
+      # anything to do for other dtus?
+      return True
+
   def _signOfLife(self):
     logging.info("--- Start: sign of life ---")
     logging.info("Last _update() call: %s" % (self._lastUpdate))
