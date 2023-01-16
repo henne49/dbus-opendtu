@@ -232,11 +232,8 @@ class DbusService:
       URL = URL.replace(":@", "")
     return URL
   
-  def _getData(self):
-    config = self._getConfig()
-    URL = self._getStatusUrl()
-
-    meter_r = requests.get(url = URL, timeout=2.50)
+  def _refreshData(self):
+    meter_r = requests.get(url = self._getStatusUrl(), timeout=2.50)
     
     # check for response
     if not meter_r:
@@ -249,15 +246,22 @@ class DbusService:
     if not meter_data:
       logging.info("Converting response to JSON failed")
       raise ValueError("Converting response to JSON failed")
-    return meter_data
 
-  def _isDataUpToDate(self, meter_data, actual_inverter):
+    # store valid data for later use
+    self.meter_data = meter_data
+
+  def _getData(self):
+    if not self.meter_data:
+      self._refreshData()
+    return self.meter_data
+
+  def _isDataUpToDate(self, actual_inverter):
     if self.dtuvariant == 'ahoy':
-      ts_last_success = meter_data['inverter'][actual_inverter]['ts_last_success']
+      ts_last_success = self.meter_data['inverter'][actual_inverter]['ts_last_success']
       age_seconds = time.time() - ts_last_success
       return age_seconds < 10*60
     else:
-      # anything to do for other dtus?
+      # anything to do for other DTUs?
       return True
 
   def _signOfLife(self):
@@ -269,86 +273,66 @@ class DbusService:
  
   def _update(self):   
     try:
-       #get data from OpenDTU
-       meter_data = self._getData()   
+      # update data from DTU once per _update call:
+      self._refreshData()   
        
-       #send data to DBus
-       power = 0.0
-       total = 0.0
-       voltage = 0.0
-       current = 0.0
-       total_power = 0.0 
-       total_yield = 0.0 
+      pre = '/Ac/' + self.pvinverter_phase
+      if self._isDataUpToDate(self.pvinverternumber):
+        (power, pvyield, current, voltage) = self.get_values_for_phase(self.pvinverternumber)
+
+        self._dbusservice[pre + '/Voltage'] = voltage
+        self._dbusservice[pre + '/Current'] = current
+        self._dbusservice[pre + '/Power'] = power
+        self._dbusservice['/Ac/Power'] = power
+        if power > 0:
+          self._dbusservice[pre + '/Energy/Forward'] = pvyield
+          self._dbusservice['/Ac/Energy/Forward'] = pvyield
        
-       for phase in ['L1', 'L2', 'L3']:
-          pre = '/Ac/' + phase
-          got_some_values_for_phase = False
-          for actual_inverter in range(self.numberofinverters):
-            got_some_values_for_phase = phase == self.pvinverter_phase and self._isDataUpToDate(self.dtuvariant, meter_data, actual_inverter)
-            if got_some_values_for_phase:
-              if self.dtuvariant == 'ahoy':
-                power += getAhoyFieldByName(meter_data, actual_inverter, 'P_AC')
-                if self.useyieldday:
-                  total += getAhoyFieldByName(meter_data, actual_inverter, 'YieldDay') / 1000
-                else:
-                  total += getAhoyFieldByName(meter_data, actual_inverter, 'YieldTotal')
-                voltage = getAhoyFieldByName(meter_data, actual_inverter, 'U_AC')
-                current += getAhoyFieldByName(meter_data, actual_inverter, 'I_AC')
-              elif self.dtuvariant == 'opendtu':
-                power += meter_data['inverters'][actual_inverter]['0']['Power']['v']
-                if self.useyieldday:
-                  total += meter_data['inverters'][actual_inverter]['0']['YieldDay']['v'] / 1000
-                else:
-                  total += meter_data['inverters'][actual_inverter]['0']['YieldTotal']['v']
-                voltage = meter_data['inverters'][actual_inverter]['0']['Voltage']['v']
-                current += meter_data['inverters'][actual_inverter]['0']['Current']['v']
-              elif self.dtuvariant == 'template':
-                #logging.debug("JSON data: %s" % meter_data)
-                power += float(get_nested( meter_data, self.custpower) * float(self.custpower_factor))
-                total += float(get_nested( meter_data, self.custtotal) * float(self.custtotal_factor))
-                voltage = float(get_nested( meter_data, self.custvoltage))
-                current += float(get_nested( meter_data, self.custcurrent))
-
-        #write values per Phase into dbus
-          if got_some_values_for_phase:
-            self._dbusservice[pre + '/Voltage'] = voltage
-            self._dbusservice[pre + '/Current'] = current
-            self._dbusservice[pre + '/Power'] = power
-            if power > 0:
-                self._dbusservice[pre + '/Energy/Forward'] = total
-
-        #carry over Total Power and Energy for Total view
-          total_power += power
-          total_yield += total
-
-        #reset values for next phase
-          power = 0.0
-          total = 0.0
-          voltage = 0.0
-          current = 0.0
-
-       self._dbusservice['/Ac/Power'] = total_power
-       if total_power > 0:
-         self._dbusservice['/Ac/Energy/Forward'] = total_yield
-       
-       #logging
-       logging.debug("OpenDTU Power (/Ac/Power): %s" % total_power)
-       logging.debug("OpenDTU Energy (/Ac/Energy/Forward): %s" % total_yield)
-       logging.debug("---");
-       
-       # increment UpdateIndex - to show that new data is available
-       index = self._dbusservice['/UpdateIndex'] + 1  # increment index
-       if index > 255:   # maximum value of the index
-         index = 0       # overflow from 255 to 0
-       self._dbusservice['/UpdateIndex'] = index
-
-       #update lastupdate vars
-       self._lastUpdate = time.time()              
+      logging.debug("OpenDTU Power (/Ac/Power): %s" % power)
+      logging.debug("OpenDTU Energy (/Ac/Energy/Forward): %s" % pvyield)
+      logging.debug("---");
+      
+      self._update_index()
+      self._lastUpdate = time.time()              
     except Exception as e:
        logging.critical('Error at %s', '_update', exc_info=e)
        
     # return true, otherwise add_timeout will be removed from GObject - see docs http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
     return True
+
+  def _update_index(self):
+    # increment UpdateIndex - to show that new data is available
+    index = self._dbusservice['/UpdateIndex'] + 1  # increment index
+    if index > 255:   # maximum value of the index
+      index = 0       # overflow from 255 to 0
+    self._dbusservice['/UpdateIndex'] = index
+
+  def get_values_for_phase(self, actual_inverter):
+    meter_data = self._getData()
+    (power, pvyield, current, voltage) = (None, None, None, None)
+    if self.dtuvariant == 'ahoy':
+      power = getAhoyFieldByName(meter_data, actual_inverter, 'P_AC')
+      if self.useyieldday:
+        pvyield = getAhoyFieldByName(meter_data, actual_inverter, 'YieldDay') / 1000
+      else:
+        pvyield = getAhoyFieldByName(meter_data, actual_inverter, 'YieldTotal')
+      voltage = getAhoyFieldByName(meter_data, actual_inverter, 'U_AC')
+      current = getAhoyFieldByName(meter_data, actual_inverter, 'I_AC')
+    elif self.dtuvariant == 'opendtu':
+      power = meter_data['inverters'][actual_inverter]['0']['Power']['v']
+      if self.useyieldday:
+        pvyield = meter_data['inverters'][actual_inverter]['0']['YieldDay']['v'] / 1000
+      else:
+        pvyield = meter_data['inverters'][actual_inverter]['0']['YieldTotal']['v']
+      voltage = meter_data['inverters'][actual_inverter]['0']['Voltage']['v']
+      current = meter_data['inverters'][actual_inverter]['0']['Current']['v']
+    elif self.dtuvariant == 'template':
+              #logging.debug("JSON data: %s" % meter_data)
+      power = float(get_nested( meter_data, self.custpower) * float(self.custpower_factor))
+      pvyield = float(get_nested( meter_data, self.custtotal) * float(self.custtotal_factor))
+      voltage = float(get_nested( meter_data, self.custvoltage))
+      current = float(get_nested( meter_data, self.custcurrent))
+    return (power, pvyield, current, voltage)
  
   def _handlechangedvalue(self, path, value):
     logging.debug("someone else updated %s to %s" % (path, value))
