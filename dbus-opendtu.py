@@ -5,7 +5,6 @@ import logging
 import os
 import platform
 import sys
-import time
 import dbus
 import time
 
@@ -40,15 +39,6 @@ def getAhoyFieldByName(meter_data, actual_inverter, fieldname):
   data_index = ac_data_field_names.index(fieldname)
   ac_channel_index = 0
   return meter_data['inverter'][actual_inverter]['ch'][ac_channel_index][data_index]
-
-def isDataUpToDate(dtu, meter_data, actual_inverter):
-  if dtu == 'ahoy':
-    ts_last_success = meter_data['inverter'][actual_inverter]['ts_last_success']
-    age_seconds = time.time() - ts_last_success
-    return age_seconds < 10*60
-  else:
-    # anything to do here?
-    return True
 
 ## register every PV Inverter as registry to iterate over it
 class PvInverterRegistry(type):
@@ -118,14 +108,28 @@ class DbusService:
       self.acposition         = int(config['INVERTER{}'.format(self.pvinverternumber)]['AcPosition'])
     except:
       self.acposition         = int(config['DEFAULT']['AcPosition'])
+      logging.error("Deprecated AcPosition DEFAULT entries must be moved to INVERTER section")
     self.signofliveinterval = config['DEFAULT']['SignOfLifeLog']
     #self.numberofinverters  = self._getNumberOfInverters()
     #self.numberofinverters  = int(config['DEFAULT']['NumberOfInverters'])
     self.useyieldday        = int(config['DEFAULT']['useYieldDay'])
     self.pvinverterphase    = str(config['INVERTER{}'.format(self.pvinverternumber)]['Phase'])
-    self.host               = config['DEFAULT']['Host']
-    self.username           = config['DEFAULT']['Username']
-    self.password           = config['DEFAULT']['Password']
+    try:
+      self.host               = config['DEFAULT']['Host']
+    except:
+      logging.error("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
+      self.host               = config['ONPREMISE']['Host']
+    try:  
+      self.username           = config['DEFAULT']['Username']
+    except:
+      logging.error("Deprecated Username ONPREMISE entries must be moved to DEFAULT section")
+      self.username           = config['ONPREMISE']['Username']
+    try:
+      self.password           = config['DEFAULT']['Password']
+    except:
+      logging.error("Deprecated: Password ONPREMISE entries must be moved to DEFAULT section")
+      self.password           = config['ONPREMISE']['Password']
+    
     self.pollinginterval    = int(config['DEFAULT']['ESP8266PollingIntervall'])
 
     if self.dtuvariant == "template":
@@ -280,7 +284,7 @@ class DbusService:
           pre = '/Ac/' + phase
           got_some_values_for_phase = False
           for actual_inverter in range(self.numberofinverters):
-            got_some_values_for_phase = phase == self.pvinverter_phase and isDataUpToDate(self.dtuvariant, meter_data, actual_inverter)
+            got_some_values_for_phase = phase == self.pvinverter_phase and self._isDataUpToDate(self.dtuvariant, meter_data, actual_inverter)
             if got_some_values_for_phase:
               if self.dtuvariant == 'ahoy':
                 power += getAhoyFieldByName(meter_data, actual_inverter, 'P_AC')
@@ -295,7 +299,7 @@ class DbusService:
                 if self.useyieldday:
                   total += meter_data['inverters'][actual_inverter]['0']['YieldDay']['v'] / 1000
                 else:
-                  total += meter_data['inverters'][actual_inverter]['0']['YieldTotal']['v'] 
+                  total += meter_data['inverters'][actual_inverter]['0']['YieldTotal']['v']
                 voltage = meter_data['inverters'][actual_inverter]['0']['Voltage']['v']
                 current += meter_data['inverters'][actual_inverter]['0']['Current']['v']
               elif self.dtuvariant == 'template':
