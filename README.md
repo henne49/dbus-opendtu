@@ -83,6 +83,8 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 | DEFAULT  | useYieldDay | send YieldDay instead of YieldTotal. Set this to 1 to prevent VRM from adding the total value to the history on one day. E.g. if you don't start using the inverter at 0. |
 | DEFAULT  | ESP8266PollingIntervall |  For ESP8266 reduce polling intervall to reduce load, default 10000ms|
 | DEFAULT  | Logging | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL |
+| DEFAULT | MagAgeTsLastSuccess | Maximum accepted age of ts_last_success in Ahoy status message. If ts_last_success is older than this number of seconds, values are not used.  Set this to < 0 to disable this check.                                    |
+| DEFAULT  | DryRun | Set this to a value different to "0" to prevent values from being sent. Use this for debugging or experiments. |
 | ONPREMISE  | Host | IP or hostname of OpenDTU web-interface |
 | ONPREMISE  | Username | use for template device, if authenticaed, leave empty if no authentication needed |
 | ONPREMISE  | Password | use for template device, if authenticaed, leave empty if no authentication needed |
