@@ -397,7 +397,6 @@ class DbusService:
 
 def main():
   #configure logging
-
   config_log = configparser.ConfigParser()
   config_log.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
   logging_level = config_log['DEFAULT']['Logging']
@@ -410,6 +409,8 @@ def main():
                                 logging.StreamHandler()
                             ])
  
+  run_tests()
+
   try:
       logging.info("Start");
   
@@ -526,5 +527,4 @@ def run_tests():
   test_ahoy_timestamp(test_service)
 
 if __name__ == "__main__":
-  run_tests()
   main()
