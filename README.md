@@ -106,15 +106,16 @@ Example for JSON PATH: use keywords separated by /
 
 ## Troubleshooting
 
-Please open a new issue on github, only here we can as team work on your problem https://github.com/henne49/dbus-opendtu/issues/new/choose
+Please open a new issue on github, only here we can work on your problem in a structured way: https://github.com/henne49/dbus-opendtu/issues/new/choose
 
-Please provide the JSON file and upload to the github issues, you can download using your browser or using a commandline like 
-OpenDTU: http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status
-Ahoy: http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/live
+Please provide the JSON file and upload to the github issues, you can download using your browser or using a commandline like tool like curl. 
 
-OpenDTU Curl example which makes it pretty: 
+| OpenDTU | http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status |
+| Ahoy | http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/live |
+
+OpenDTU Curl example which uses jq to make the output pretty: 
 ```
-curl http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status | jq
+curl http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status | jq > export.json
 ```
 also describe the problem as best as you can.
 
