@@ -372,13 +372,13 @@ class DbusService:
 
     elif self.dtuvariant == 'opendtu':
       producing = isTrue(meter_data['inverters'][self.pvinverternumber]['producing'])
-      power = meter_data['inverters'][self.pvinverternumber]['0']['Power']['v'] if producing else 0
+      power = meter_data['inverters'][self.pvinverternumber]['AC']['0']['Power']['v'] if producing else 0
       if self.useyieldday:
-        pvyield = meter_data['inverters'][self.pvinverternumber]['0']['YieldDay']['v'] / 1000
+        pvyield = meter_data['inverters'][self.pvinverternumber]['AC']['0']['YieldDay']['v'] / 1000
       else:
-        pvyield = meter_data['inverters'][self.pvinverternumber]['0']['YieldTotal']['v']
-      voltage = meter_data['inverters'][self.pvinverternumber]['0']['Voltage']['v']
-      current = meter_data['inverters'][self.pvinverternumber]['0']['Current']['v'] if producing else 0
+        pvyield = meter_data['inverters'][self.pvinverternumber]['AC']['0']['YieldTotal']['v']
+      voltage = meter_data['inverters'][self.pvinverternumber]['AC']['0']['Voltage']['v']
+      current = meter_data['inverters'][self.pvinverternumber]['AC']['0']['Current']['v'] if producing else 0
 
     elif self.dtuvariant == 'template':
       #logging.debug("JSON data: %s" % meter_data)
