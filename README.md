@@ -104,6 +104,20 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 
 Example for JSON PATH: use keywords separated by /
 
+## Troubleshooting
+
+Please open a new issue on github, only here we can as team work on your problem https://github.com/henne49/dbus-opendtu/issues/new/choose
+
+Please provide the JSON file and upload to the github issues, you can download using your browser or using a commandline like 
+OpenDTU: http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status
+Ahoy: http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/live
+
+Curl example which makes it pretty: curl http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status | jq
+
+also describe the problem as best as you can.
+
+Please also show, what you can see in Venus OS and VRM Portal, as the source of truth is Venus OS and not VRM. 
+
 ## Used documentation
 - https://github.com/victronenergy/venus/wiki/dbus#pv-inverters   DBus paths for Victron namespace
 - https://github.com/victronenergy/venus/wiki/dbus-api   DBus API from Victron
