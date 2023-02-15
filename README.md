@@ -110,6 +110,8 @@ Please open a new issue on github, only here we can work on your problem in a st
 
 Please provide the JSON file and upload to the github issues, you can download using your browser or using a commandline like tool like curl. 
 
+| Type of DTU | URL |
+| ------------- | ------------- |
 | OpenDTU | http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status |
 | Ahoy | http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/live |
 
