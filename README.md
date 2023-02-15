@@ -112,8 +112,10 @@ Please provide the JSON file and upload to the github issues, you can download u
 OpenDTU: http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status
 Ahoy: http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/live
 
-Curl example which makes it pretty: curl http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status | jq
-
+OpenDTU Curl example which makes it pretty: 
+```
+curl http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status | jq
+```
 also describe the problem as best as you can.
 
 Please also show, what you can see in Venus OS and VRM Portal, as the source of truth is Venus OS and not VRM. 
