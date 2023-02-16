@@ -244,7 +244,8 @@ class DbusService:
   
   def _getStatusUrl(self):
     if self.dtuvariant == 'opendtu':
-      URL = "http://%s/api/livedata/status" % ( self.host)
+      URL = "http://%s:%s@%s/api/livedata/status" % ( self.username, self.password, self.host)
+      URL = URL.replace(":@", "")
     elif self.dtuvariant == 'ahoy':
       URL = "http://%s/api/live" % ( self.host)
     elif self.dtuvariant == 'template':
