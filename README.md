@@ -108,7 +108,7 @@ Example for JSON PATH: use keywords separated by /
 
 Please open a new issue on github, only here we can work on your problem in a structured way: https://github.com/henne49/dbus-opendtu/issues/new/choose
 
-Please provide the JSON file and upload to the github issues, you can download using your browser or using a commandline like tool like curl. 
+Please provide the config.ini and JSON file and upload to the github issues, you can download the JSON file using your browser or using a commandline like tool like curl. 
 
 | Type of DTU | URL |
 | ------------- | ------------- |
