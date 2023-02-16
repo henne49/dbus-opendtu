@@ -54,7 +54,7 @@ class DbusService:
   _meter_data = None
   _test_meter_data = None
 
-  def __init__(self, servicename, paths, actual_inverter, productname='OpenDTU', connection='OpenDTU HTTP JSON service'):
+  def __init__(self, servicename, paths, actual_inverter, productname='OpenDTU', connection='OpenDTU HTTP JSON service', dtu='dtu'):
 
     if servicename == 'testing':
       self.max_age_ts = 600
@@ -66,8 +66,11 @@ class DbusService:
 
     self._lastUpdate = 0
     
-    self._readConfig(actual_inverter)
-    self.numberofinverters  = self._getNumberOfInverters()
+    if dtu == "dtu":
+      self._readConfigDTU(actual_inverter)
+      self.numberofinverters  = self._getNumberOfInverters()
+    elif dtu == "template":
+      self._readConfigTemplate(actual_inverter)
     
     logging.debug("%s /DeviceInstance = %d" % (servicename, self.deviceinstance))
 
@@ -108,22 +111,20 @@ class DbusService:
   
   ## read config file
 
-  def _readConfig(self, actual_inverter):
+  def _readConfigDTU(self, actual_inverter):
     config = self._getConfig()
     self.pvinverternumber   = actual_inverter
     self.dtuvariant         = str(config['DEFAULT']['DTU'])
     self.deviceinstance     = int(config['INVERTER{}'.format(self.pvinverternumber)]['DeviceInstance'])
-    self.customname         = config['DEFAULT']['CustomName']
     try: 
       self.acposition         = int(config['INVERTER{}'.format(self.pvinverternumber)]['AcPosition'])
     except:
       self.acposition         = int(config['DEFAULT']['AcPosition'])
       logging.error("Deprecated AcPosition DEFAULT entries must be moved to INVERTER section")
     self.signofliveinterval = config['DEFAULT']['SignOfLifeLog']
-    #self.numberofinverters  = self._getNumberOfInverters()
-    #self.numberofinverters  = int(config['DEFAULT']['NumberOfInverters'])
     self.useyieldday        = int(config['DEFAULT']['useYieldDay'])
     self.pvinverterphase    = str(config['INVERTER{}'.format(self.pvinverternumber)]['Phase'])
+    
     try:
       self.host               = config['DEFAULT']['Host']
     except:
@@ -151,23 +152,47 @@ class DbusService:
       self.dry_run            = False
 
     self.pollinginterval    = int(config['DEFAULT']['ESP8266PollingIntervall'])
+    self.meter_data         = 0
 
-    if self.dtuvariant == "template":
-      self.custpower          = config['TEMPLATE']['CUST_Power'].split("/")
-      self.custpower_factor   = config['TEMPLATE']['CUST_Power_Mult']
-      self.custtotal          = config['TEMPLATE']['CUST_Total'].split("/")
-      self.custtotal_factor   = config['TEMPLATE']['CUST_Total_Mult']
-      self.custvoltage        = config['TEMPLATE']['CUST_Voltage'].split("/")
-      self.custcurrent        = config['TEMPLATE']['CUST_Current'].split("/")
-      self.custapipath        = config['TEMPLATE']['CUST_API_PATH']
-      self.serial             = str(config['TEMPLATE']['CUST_SN'])
-      self.pollinginterval    = int(config['TEMPLATE']['CUST_POLLING'])
+  def _readConfigTemplate(self, template_number):
+      config = self._getConfig()
+      self.pvinverternumber   = template_number
+      self.custpower          = config['TEMPLATE{}'.format(template_number)]['CUST_Power'].split("/")
+      self.custpower_factor   = config['TEMPLATE{}'.format(template_number)]['CUST_Power_Mult']
+      self.custtotal          = config['TEMPLATE{}'.format(template_number)]['CUST_Total'].split("/")
+      self.custtotal_factor   = config['TEMPLATE{}'.format(template_number)]['CUST_Total_Mult']
+      self.custvoltage        = config['TEMPLATE{}'.format(template_number)]['CUST_Voltage'].split("/")
+      self.custcurrent        = config['TEMPLATE{}'.format(template_number)]['CUST_Current'].split("/")
+      self.custapipath        = config['TEMPLATE{}'.format(template_number)]['CUST_API_PATH']
+      self.serial             = str(config['TEMPLATE{}'.format(template_number)]['CUST_SN'])
+      self.pollinginterval    = int(config['TEMPLATE{}'.format(template_number)]['CUST_POLLING'])
+      self.host               = config['TEMPLATE{}'.format(template_number)]['Host']
+      self.username           = config['TEMPLATE{}'.format(template_number)]['Username']
+      self.password           = config['TEMPLATE{}'.format(template_number)]['Password']
+      self.dtuvariant         = "template"
+      self.deviceinstance     = int(config['TEMPLATE{}'.format(template_number)]['DeviceInstance'])
+      self.customname         = config['TEMPLATE{}'.format(template_number)]['Name']
+      self.acposition         = int(config['INVERTER{}'.format(template_number)]['AcPosition'])
+      self.signofliveinterval = config['DEFAULT']['SignOfLifeLog']
+      self.useyieldday        = int(config['DEFAULT']['useYieldDay'])
+      self.pvinverterphase    = str(config['INVERTER{}'.format(template_number)]['Phase'])
+      try:
+        self.max_age_ts         = int(config['DEFAULT']['MagAgeTsLastSuccess'])
+      except:
+        self.max_age_ts         = 600
+
+      try:
+        self.dry_run            = "0" != config['DEFAULT']['DryRun']
+      except:
+        self.dry_run            = False
+      self.meter_data           = 0 
 
   ## get the Serialnumber
   def _getSerial(self, pvinverternumber):
-  
-    meter_data = self._getData() 
-
+    
+    if self.dtuvariant == 'ahoy' or self.dtuvariant == 'opendtu' :
+      meter_data = self._getData() 
+    
     if self.dtuvariant == 'ahoy':
       if not meter_data['inverter'][pvinverternumber]['name']:
         raise ValueError("Response does not contain name")
@@ -186,7 +211,8 @@ class DbusService:
     return serial
 
   def _getName(self, pvinverternumber):
-    meter_data = self._getData()
+    if self.dtuvariant == 'ahoy' or self.dtuvariant == 'opendtu' :
+      meter_data = self._getData() 
     if self.dtuvariant == 'ahoy':
       name = meter_data['inverter'][pvinverternumber]['name']
     elif self.dtuvariant == 'opendtu':
@@ -206,6 +232,12 @@ class DbusService:
       numberofinverters = 1
     logging.info("Number of Inverters found: %s" % (numberofinverters))
     return numberofinverters
+
+  def _getNumberOfTemplates(self):
+    return self.numberoftemplates
+
+  def _getDtuVariant(self):
+    return self.dtuvariant
 
   def _getPollingInterval(self):
     meter_data = self._getData()
@@ -251,9 +283,10 @@ class DbusService:
       URL = "http://%s:%s@%s/%s" % ( self.username, self.password, self.host, self.custapipath)
       URL = URL.replace(":@", "")
     return URL
-  
+
   def _refreshData(self):
-    if self.pvinverternumber != 0:
+    
+    if self.pvinverternumber != 0 and self.dtuvariant != 'template':
       # only fetch new data when called for inverter 0 (background: data is kept at class level for all inverters)
       return
 
@@ -273,14 +306,22 @@ class DbusService:
       raise ValueError("Converting response to JSON failed")
 
     # store valid data for later use
-    DbusService._meter_data = meter_data
+    if self.dtuvariant == 'template':
+      self.meter_data = meter_data
+    else:
+      DbusService._meter_data = meter_data
 
   def _getData(self):
     if self._test_meter_data:
       return self._test_meter_data
     if not DbusService._meter_data:
       self._refreshData()
-    return DbusService._meter_data
+    
+    if self.dtuvariant == 'template': 
+      return self.meter_data
+    else:
+      return DbusService._meter_data
+    
   
   def setTestData(self, test_data):
     self._test_meter_data = test_data
@@ -397,9 +438,11 @@ class DbusService:
 
 def main():
   #configure logging
-  config_log = configparser.ConfigParser()
-  config_log.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
-  logging_level = config_log['DEFAULT']['Logging']
+  config= configparser.ConfigParser()
+  config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
+  logging_level = config['DEFAULT']['Logging']
+  dtu=config['DEFAULT']['DTU']
+  number_of_templates=int(config['DEFAULT']['NumberOfTemplates'])
 
   logging.basicConfig(      format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S',
@@ -441,22 +484,32 @@ def main():
             '/Ac/L2/Energy/Forward': {'initial': None, 'textformat': _kwh},
             '/Ac/L3/Energy/Forward': {'initial': None, 'textformat': _kwh},
           }
-
-      service = DbusService(
-          servicename='com.victronenergy.pvinverter',
-          paths=paths,
-          actual_inverter=0) 
-
-      number_of_inverters = service._getNumberOfInverters()
-
-      if number_of_inverters > 1:
-        #start our main-service if there are more than 1 inverter
-        for actual_inverter in range(number_of_inverters -1):
-          DbusService(
+      
+      if dtu != 'template':
+        service = DbusService(
             servicename='com.victronenergy.pvinverter',
             paths=paths,
-            actual_inverter=actual_inverter+1)
-     
+            actual_inverter=0) 
+
+        number_of_inverters = service._getNumberOfInverters()
+
+        if number_of_inverters > 1:
+          #start our main-service if there are more than 1 inverter
+          for actual_inverter in range(number_of_inverters -1):
+            DbusService(
+              servicename='com.victronenergy.pvinverter',
+              paths=paths,
+              actual_inverter=actual_inverter+1)
+
+      for actual_template in range(number_of_templates):
+        logging.info('Registering Templates')
+        service = DbusService(
+            servicename='com.victronenergy.pvinverter',
+            paths=paths,
+            actual_inverter=actual_template,
+            dtu='template') 
+
+
       logging.info('Connected to dbus, and switching over to gobject.MainLoop() (= event based)')
       mainloop = gobject.MainLoop()
       mainloop.run()            
