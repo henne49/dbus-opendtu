@@ -54,7 +54,7 @@ class DbusService:
   _meter_data = None
   _test_meter_data = None
 
-  def __init__(self, servicename, paths, actual_inverter, productname='OpenDTU', connection='OpenDTU HTTP JSON service', dtu='dtu'):
+  def __init__(self, servicename, paths, actual_inverter, productname='OpenDTU', connection='OpenDTU HTTP JSON service', dtuvariant='dtu'):
 
     if servicename == 'testing':
       self.max_age_ts = 600
@@ -66,12 +66,11 @@ class DbusService:
 
     self._lastUpdate = 0
     
-    if dtu == "dtu":
+    if dtuvariant == "dtu":
       self._readConfigDTU(actual_inverter)
       self.numberofinverters  = self._getNumberOfInverters()
-    elif dtu == "template":
+    elif dtuvariant == "template":
       self._readConfigTemplate(actual_inverter)
-      servicename = self._getServiceName()
     
     logging.debug("%s /DeviceInstance = %d" % (servicename, self.deviceinstance))
 
@@ -177,7 +176,6 @@ class DbusService:
       self.signofliveinterval = config['DEFAULT']['SignOfLifeLog']
       self.useyieldday        = int(config['DEFAULT']['useYieldDay'])
       self.pvinverterphase    = str(config['INVERTER{}'.format(template_number)]['Phase'])
-      self.servicename        = config['TEMPLATE{}'.format(template_number)]['Servicename']
       try:
         self.max_age_ts         = int(config['DEFAULT']['MagAgeTsLastSuccess'])
       except:
@@ -223,12 +221,6 @@ class DbusService:
       name = self.customname
     logging.info("Name of Inverters found: %s" % (name))
     return name
-
-  def _getServiceName(self):
-    if self.dtuvariant == 'ahoy' or self.dtuvariant == 'opendtu' :
-      return 'com.victronenergy.pvinverter'
-    elif self.dtuvariant == 'template':
-      return self.servicename
 
   def _getNumberOfInverters(self):
     meter_data = self._getData()
@@ -515,7 +507,7 @@ def main():
             servicename='com.victronenergy.pvinverter',
             paths=paths,
             actual_inverter=actual_template,
-            dtu='template') 
+            dtuvariant='template') 
 
 
       logging.info('Connected to dbus, and switching over to gobject.MainLoop() (= event based)')
