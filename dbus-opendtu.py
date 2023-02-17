@@ -71,6 +71,7 @@ class DbusService:
       self.numberofinverters  = self._getNumberOfInverters()
     elif dtu == "template":
       self._readConfigTemplate(actual_inverter)
+      servicename = self._getServiceName()
     
     logging.debug("%s /DeviceInstance = %d" % (servicename, self.deviceinstance))
 
@@ -176,6 +177,7 @@ class DbusService:
       self.signofliveinterval = config['DEFAULT']['SignOfLifeLog']
       self.useyieldday        = int(config['DEFAULT']['useYieldDay'])
       self.pvinverterphase    = str(config['INVERTER{}'.format(template_number)]['Phase'])
+      self.servicename        = config['TEMPLATE{}'.format(template_number)]['Servicename']
       try:
         self.max_age_ts         = int(config['DEFAULT']['MagAgeTsLastSuccess'])
       except:
@@ -221,6 +223,12 @@ class DbusService:
       name = self.customname
     logging.info("Name of Inverters found: %s" % (name))
     return name
+
+  def _getServiceName(self):
+    if self.dtuvariant == 'ahoy' or self.dtuvariant == 'opendtu' :
+      return 'com.victronenergy.pvinverter'
+    elif self.dtuvariant == 'template':
+      return self.servicename
 
   def _getNumberOfInverters(self):
     meter_data = self._getData()
