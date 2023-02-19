@@ -54,7 +54,7 @@ class DbusService:
   _meter_data = None
   _test_meter_data = None
 
-  def __init__(self, servicename, paths, actual_inverter, productname='OpenDTU', connection='OpenDTU HTTP JSON service', dtuvariant='dtu'):
+  def __init__(self, servicename, paths, actual_inverter, productname='OpenDTU', connection='OpenDTU HTTP JSON service', istemplate=False):
 
     if servicename == 'testing':
       self.max_age_ts = 600
@@ -66,10 +66,10 @@ class DbusService:
 
     self._lastUpdate = 0
     
-    if dtuvariant == "dtu":
+    if not istemplate:
       self._readConfigDTU(actual_inverter)
       self.numberofinverters  = self._getNumberOfInverters()
-    elif dtuvariant == "template":
+    elif istemplate:
       self._readConfigTemplate(actual_inverter)
     
     logging.debug("%s /DeviceInstance = %d" % (servicename, self.deviceinstance))
@@ -512,7 +512,7 @@ def main():
             servicename='com.victronenergy.pvinverter',
             paths=paths,
             actual_inverter=actual_template,
-            dtuvariant='template') 
+            istemplate=True) 
 
 
       logging.info('Connected to dbus, and switching over to gobject.MainLoop() (= event based)')
