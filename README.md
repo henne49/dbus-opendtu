@@ -86,7 +86,6 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 | DEFAULT  | Host | IP or hostname of ahoy or OpenDTU API/web-interface |
 | DEFAULT  | Username | use if authentication required, leave empty if no authentication needed |
 | DEFAULT  | Password | use if authentication required, leave empty if no authentication needed |
-
 | INVERTER0  | 1st Inverter | |
 | .........  |       | ........... |
 | INVERTER1  | 10th Inverter | |
