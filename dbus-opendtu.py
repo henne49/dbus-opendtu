@@ -69,7 +69,7 @@ class DbusService:
     if not istemplate:
       self._readConfigDTU(actual_inverter)
       self.numberofinverters  = self._getNumberOfInverters()
-    elif istemplate:
+    else:
       self._readConfigTemplate(actual_inverter)
     
     logging.debug("%s /DeviceInstance = %d" % (servicename, self.deviceinstance))
