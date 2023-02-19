@@ -172,10 +172,10 @@ class DbusService:
       self.dtuvariant         = "template"
       self.deviceinstance     = int(config['TEMPLATE{}'.format(template_number)]['DeviceInstance'])
       self.customname         = config['TEMPLATE{}'.format(template_number)]['Name']
-      self.acposition         = int(config['INVERTER{}'.format(template_number)]['AcPosition'])
+      self.acposition         = int(config['TEMPLATE{}'.format(template_number)]['AcPosition'])
       self.signofliveinterval = config['DEFAULT']['SignOfLifeLog']
       self.useyieldday        = int(config['DEFAULT']['useYieldDay'])
-      self.pvinverterphase    = str(config['INVERTER{}'.format(template_number)]['Phase'])
+      self.pvinverterphase    = str(config['TEMPLATE{}'.format(template_number)]['Phase'])
       try:
         self.max_age_ts         = int(config['DEFAULT']['MagAgeTsLastSuccess'])
       except:
