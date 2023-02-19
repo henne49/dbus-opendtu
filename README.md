@@ -1,7 +1,7 @@
 # dbus-opendtu/ahoydtu inverter
 Integrate openDTU or ahoyDTU and with that all Hoymiles Interverter https://github.com/tbnobody/OpenDTU into Victron Energies Venus OS. This also allows for template configuration to include other generic REST Devices. 
 
-The code allows to query up to one DTU, either ahoy or opendtu, plus multiple Template based PV Inverter in a single script. You can also only query template devices or only a dtu, or a mix of both. 
+The code allows to query up to one DTU, either ahoy or opendtu, plus multiple Template based PV Inverter in a single script. This means, you can also only query template devices or only a dtu, or a mix of one DTU and template devices.
 
 Tested Examples:
 
@@ -100,7 +100,7 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 | TEMPLATEX  | Password | use if authentication required, leave empty if no authentication needed |
 | TEMPLATEX  | CUST_SN | Serialnumber to register device in VenusOS|
 | TEMPLATEX  | CUST_API_PATH | Location of REST API Path for JSON to be used |
-| TEMPLATEX  | CUST_POLLING | Polling for Device |
+| TEMPLATEX  | CUST_POLLING | Polling interval in ms for Device |
 | TEMPLATEX  | CUST_Total | Path in JSON where to find total Energy |
 | TEMPLATEX  | CUST_Total_Mult | Multiplier to convert W per minute for example in kWh|
 | TEMPLATEX  | CUST_Power | Path in JSON where to find actual Power |
