@@ -1,6 +1,8 @@
 # dbus-opendtu/ahoydtu inverter
 Integrate openDTU or ahoyDTU and with that all Hoymiles Interverter https://github.com/tbnobody/OpenDTU into Victron Energies Venus OS. This also allows for template configuration to include other generic REST Devices. 
 
+The code allows to query up to one DTU, either ahoy or opendtu, plus multiple Template based PV Inverter in a single script. This means, you can also only query template devices or only a dtu, or a mix of one DTU and template devices.
+
 Tested Examples:
 
     * Tasmota unauthenticated
@@ -73,34 +75,42 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 
 | Section  | Config vlaue | Explanation |
 | ------------- | ------------- | ------------- |
-| DEFAULT  | AccessType | Fixed value 'OnPremise' |
 | DEFAULT  | SignOfLifeLog  | Time in minutes how often a status is added to the log-file `current.log` with log-level INFO |
-| DEFAULT  | Deviceinstance | Unique ID identifying the OpenDTU in Venus OS |
-| DEFAULT  | CustomName | Name shown in Remote Console (e.g. name of pv inverter) |
-| DEFAULT  | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
-| DEFAULT  | NumberOfInverters | How Many inverters to check, up 10 for ahoy and opendtu, template can only monitor 1 device |
+| DEFAULT  | NumberOfTemplates | Number ob Template Inverter to query |
 | DEFAULT  | DTU |  Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template |
 | DEFAULT  | useYieldDay | send YieldDay instead of YieldTotal. Set this to 1 to prevent VRM from adding the total value to the history on one day. E.g. if you don't start using the inverter at 0. |
 | DEFAULT  | ESP8266PollingIntervall |  For ESP8266 reduce polling intervall to reduce load, default 10000ms|
 | DEFAULT  | Logging | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL |
 | DEFAULT | MagAgeTsLastSuccess | Maximum accepted age of ts_last_success in Ahoy status message. If ts_last_success is older than this number of seconds, values are not used.  Set this to < 0 to disable this check.                                    |
 | DEFAULT  | DryRun | Set this to a value different to "0" to prevent values from being sent. Use this for debugging or experiments. |
-| ONPREMISE  | Host | IP or hostname of OpenDTU web-interface |
-| ONPREMISE  | Username | use for template device, if authenticaed, leave empty if no authentication needed |
-| ONPREMISE  | Password | use for template device, if authenticaed, leave empty if no authentication needed |
-| INVERTER0  | Phase | 1st Inverter added to which Phase L1, L2, L3|
-| INVERTER1  | Phase | 2nd Inverter added to which Phase L1, L2, L3|
+| DEFAULT  | Host | IP or hostname of ahoy or OpenDTU API/web-interface |
+| DEFAULT  | Username | use if authentication required, leave empty if no authentication needed |
+| DEFAULT  | Password | use if authentication required, leave empty if no authentication needed |
+| INVERTER0  | 1st Inverter | |
 | .........  |       | ........... |
-| INVERTER9  | Phase | 3rd Inverter added to which Phase L1, L2, L3|
-| TEMPLATE  | CUST_SN | Serialnumber to register device in VenusOS|
-| TEMPLATE  | CUST_API_PATH | Location of REST API Path for JSON to be used |
-| TEMPLATE  | CUST_POLLING | Polling for Device |
-| TEMPLATE  | CUST_Total | Path in JSON where to find total Energy |
-| TEMPLATE  | CUST_Total_Mult | Multiplier to convert W per minute for example in kWh|
-| TEMPLATE  | CUST_Power | Path in JSON where to find actual Power |
-| TEMPLATE  | CUST_Power_Mult | Multiplier to convert W in negative or positive |
-| TEMPLATE  | CUST_Voltage | Path in JSON where to find actual Voltage |
-| TEMPLATE  | CUST_Current | Path in JSON where to find actual Current |
+| INVERTER1  | 10th Inverter | |
+| INVERTERX  | Phase | which Phase L1, L2, L3 to show|
+| INVERTERX  | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
+| INVERTERX  | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
+| TEMPLATE0  | 1st Inverter | |
+| .........  |       | ........... |
+| TEMPLATEN  | nth Inverter | |
+| TEMPLATEX  | Host | IP or hostname of Template API/web-interface |
+| TEMPLATEX  | Username | use if authentication required, leave empty if no authentication needed |
+| TEMPLATEX  | Password | use if authentication required, leave empty if no authentication needed |
+| TEMPLATEX  | CUST_SN | Serialnumber to register device in VenusOS|
+| TEMPLATEX  | CUST_API_PATH | Location of REST API Path for JSON to be used |
+| TEMPLATEX  | CUST_POLLING | Polling interval in ms for Device |
+| TEMPLATEX  | CUST_Total | Path in JSON where to find total Energy |
+| TEMPLATEX  | CUST_Total_Mult | Multiplier to convert W per minute for example in kWh|
+| TEMPLATEX  | CUST_Power | Path in JSON where to find actual Power |
+| TEMPLATEX  | CUST_Power_Mult | Multiplier to convert W in negative or positive |
+| TEMPLATEX  | CUST_Voltage | Path in JSON where to find actual Voltage |
+| TEMPLATEX  | CUST_Current | Path in JSON where to find actual Current |
+| TEMPLATEX  | Phase | which Phase L1, L2, L3 to show|
+| TEMPLATEX  | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
+| TEMPLATEX  | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
+| TEMPLATEX  | Name | Name to be shown in VenusOS, use a descriptive name |
 
 Example for JSON PATH: use keywords separated by /
 
@@ -114,6 +124,10 @@ Please provide the config.ini and JSON file and upload to the github issues, you
 | ------------- | ------------- |
 | OpenDTU | http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status |
 | Ahoy | http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/live |
+| Template Tasmota| http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/cm?cmnd=STATUS+8 |
+| Template Shelly 1 | http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/status |
+| Template Shelly Plus | http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/rpc/Switch.GetStatus?id=0 |
+| Template Your Own | You will know best|
 
 OpenDTU Curl example which uses jq to make the output pretty: 
 ```
