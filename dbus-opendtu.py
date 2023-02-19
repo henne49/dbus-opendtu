@@ -189,6 +189,7 @@ class DbusService:
 
   ## get the Serialnumber
   def _getSerial(self, pvinverternumber):
+    
     if self.dtuvariant == 'ahoy' or self.dtuvariant == 'opendtu' :
       meter_data = self._getData() 
     
@@ -284,6 +285,7 @@ class DbusService:
     return URL
 
   def _refreshData(self):
+    
     if self.pvinverternumber != 0 and self.dtuvariant != 'template':
       # only fetch new data when called for inverter 0 (background: data is kept at class level for all inverters)
       return
@@ -439,8 +441,13 @@ def main():
   config= configparser.ConfigParser()
   config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
   logging_level = config['DEFAULT']['Logging']
-  dtu=config['DEFAULT']['DTU']
-  number_of_templates=int(config['DEFAULT']['NumberOfTemplates'])
+  dtuvariant=config['DEFAULT']['DTU']
+
+  try: 
+    number_of_templates=int(config['DEFAULT']['NumberOfTemplates'])
+  except:
+    number_of_template = 0
+
 
   logging.basicConfig(      format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S',
@@ -483,7 +490,7 @@ def main():
             '/Ac/L3/Energy/Forward': {'initial': None, 'textformat': _kwh},
           }
       
-      if dtu != 'template':
+      if dtuvariant != 'template':
         service = DbusService(
             servicename='com.victronenergy.pvinverter',
             paths=paths,
