@@ -446,7 +446,7 @@ def main():
   try: 
     number_of_templates=int(config['DEFAULT']['NumberOfTemplates'])
   except:
-    number_of_template = 0
+    number_of_templates = 0
 
 
   logging.basicConfig(      format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
