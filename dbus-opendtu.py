@@ -189,7 +189,6 @@ class DbusService:
 
   ## get the Serialnumber
   def _getSerial(self, pvinverternumber):
-    
     if self.dtuvariant == 'ahoy' or self.dtuvariant == 'opendtu' :
       meter_data = self._getData() 
     
@@ -285,7 +284,6 @@ class DbusService:
     return URL
 
   def _refreshData(self):
-    
     if self.pvinverternumber != 0 and self.dtuvariant != 'template':
       # only fetch new data when called for inverter 0 (background: data is kept at class level for all inverters)
       return
