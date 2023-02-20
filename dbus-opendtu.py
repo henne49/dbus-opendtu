@@ -119,28 +119,26 @@ class DbusService:
     try: 
       self.acposition         = int(config['INVERTER{}'.format(self.pvinverternumber)]['AcPosition'])
     except:
-      self.acposition         = int(config['DEFAULT']['AcPosition'])
-      logging.error("Deprecated AcPosition DEFAULT entries must be moved to INVERTER section")
+      logging.error("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
+      raise ValueError("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
     self.signofliveinterval = config['DEFAULT']['SignOfLifeLog']
     self.useyieldday        = int(config['DEFAULT']['useYieldDay'])
     self.pvinverterphase    = str(config['INVERTER{}'.format(self.pvinverternumber)]['Phase'])
-    
     try:
       self.host               = config['DEFAULT']['Host']
     except:
       logging.error("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
-      self.host               = config['ONPREMISE']['Host']
+      raise ValueError("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
     try:  
       self.username           = config['DEFAULT']['Username']
     except:
-      logging.error("Deprecated Username ONPREMISE entries must be moved to DEFAULT section")
-      self.username           = config['ONPREMISE']['Username']
+      logging.error("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
+      raise ValueError("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
     try:
       self.password           = config['DEFAULT']['Password']
     except:
-      logging.error("Deprecated: Password ONPREMISE entries must be moved to DEFAULT section")
-      self.password           = config['ONPREMISE']['Password']
-
+      logging.error("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
+      raise ValueError("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
     try:
       self.max_age_ts         = int(config['DEFAULT']['MagAgeTsLastSuccess'])
     except:
@@ -305,6 +303,11 @@ class DbusService:
     if not meter_data:
       logging.info("Converting response to JSON failed")
       raise ValueError("Converting response to JSON failed")
+
+    if self.dtuvariant == 'opendtu':
+      if not 'AC' in meter_data['inverters'][self.pvinverternumber]:
+        logging.info("You do not have the latest OpenDTU Version to run this script, please upgrade your OpenDTU to at least version 4.4.3")
+        raise ValueError("You do not have the latest OpenDTU Version to run this script, please upgrade your OpenDTU to at least version 4.4.3")
 
     # store valid data for later use
     if self.dtuvariant == 'template':
