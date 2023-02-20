@@ -121,30 +121,24 @@ class DbusService:
     except:
       logging.error("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
       raise ValueError("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
-      exit
     self.signofliveinterval = config['DEFAULT']['SignOfLifeLog']
     self.useyieldday        = int(config['DEFAULT']['useYieldDay'])
     self.pvinverterphase    = str(config['INVERTER{}'.format(self.pvinverternumber)]['Phase'])
-    
     try:
       self.host               = config['DEFAULT']['Host']
     except:
       logging.error("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
       raise ValueError("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
-      exit
     try:  
       self.username           = config['DEFAULT']['Username']
     except:
       logging.error("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
       raise ValueError("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
-      exit
     try:
       self.password           = config['DEFAULT']['Password']
     except:
       logging.error("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
       raise ValueError("Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
-      exit
-
     try:
       self.max_age_ts         = int(config['DEFAULT']['MagAgeTsLastSuccess'])
     except:
@@ -312,9 +306,8 @@ class DbusService:
 
     if self.dtuvariant == 'opendtu':
       if not 'AC' in meter_data['inverters'][self.pvinverternumber]:
-        logging.info("You do not have the latest OpenDTU Version to run this scrip, please upgrade your OpenDTU to at least version 4.4.3")
-        raise ValueError("You do not have the latest OpenDTU Version to run this scrip, please upgrade your OpenDTU to at least version 4.4.3")
-        exit
+        logging.info("You do not have the latest OpenDTU Version to run this script, please upgrade your OpenDTU to at least version 4.4.3")
+        raise ValueError("You do not have the latest OpenDTU Version to run this script, please upgrade your OpenDTU to at least version 4.4.3")
 
     # store valid data for later use
     if self.dtuvariant == 'template':
