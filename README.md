@@ -1,3 +1,5 @@
+⚠️For any issue with since version OpenDTU v4.4.3 please update to latest code where this is fixed. OpenDTU changed the API⚠️
+
 # dbus-opendtu/ahoydtu inverter
 Integrate openDTU or ahoyDTU and with that all Hoymiles Interverter https://github.com/tbnobody/OpenDTU into Victron Energies Venus OS. This also allows for template configuration to include other generic REST Devices. 
 
