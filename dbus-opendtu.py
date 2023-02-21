@@ -7,20 +7,20 @@ import sys
 import configparser  # for config/ini file
 import time
 import json
-import requests  # for http GET
-import dbus
+import requests  # for http GET #pylint: disable=E0401
+import dbus #pylint: disable=E0401
 
 if sys.version_info.major == 2:
-    import gobject
+    import gobject #pylint: disable=E0401
 else:
-    from gi.repository import GLib as gobject
+    from gi.repository import GLib as gobject #pylint: disable=E0401
 
 # our own packages from victron
 sys.path.insert(1, os.path.join(os.path.dirname(__file__),
                 '/opt/victronenergy/dbus-systemcalc-py/ext/velib_python'))
 
-from dbus.mainloop.glib import DBusGMainLoop
-from vedbus import VeDbusService
+from dbus.mainloop.glib import DBusGMainLoop #pylint: disable=E0401
+from vedbus import VeDbusService #pylint: disable=E0401
 
 def get_nested(value, path):
     """Extraxt Values from Template Path string"""
@@ -223,7 +223,7 @@ class DbusService:
     # get the Serialnumber
     def _get_serial(self, pvinverternumber):
         """get Serial of ahoy/openDTU or what is defined in template"""
-        if self.dtuvariant == 'ahoy' or self.dtuvariant == 'opendtu':
+        if self.dtuvariant in ('ahoy', 'opendtu'):
             meter_data = self._get_data()
 
         if self.dtuvariant == 'ahoy':
@@ -246,7 +246,7 @@ class DbusService:
 
     def _get_name(self, pvinverternumber):
         """Get Name of Inverter"""
-        if self.dtuvariant == 'ahoy' or self.dtuvariant == 'opendtu':
+        if self.dtuvariant in ('ahoy', 'opendtu'):
             meter_data = self._get_data()
         if self.dtuvariant == 'ahoy':
             name = meter_data['inverter'][pvinverternumber]['name']
@@ -300,8 +300,7 @@ class DbusService:
 
     def _get_config(self):
         config = configparser.ConfigParser()
-        config.read("%s/config.ini" %
-                    (os.path.dirname(os.path.realpath(__file__))))
+        config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
         return config
 
     def _get_sign_of_lifeinterval(self):
@@ -313,14 +312,12 @@ class DbusService:
 
     def _get_status_url(self):
         if self.dtuvariant == 'opendtu':
-            url = "http://%s:%s@%s/api/livedata/status" % (
-                self.username, self.password, self.host)
+            url = f"http://{self.username}:{self.password}@{self.host}/api/livedata/status"
             url = url.replace(":@", "")
         elif self.dtuvariant == 'ahoy':
-            url = "http://%s/api/live" % (self.host)
+            url = f"http://{self.host}/api/live"
         elif self.dtuvariant == 'template':
-            url = "http://%s:%s@%s/%s" % (self.username,
-                                          self.password, self.host, self.custapipath)
+            url = f"http://{self.username}:{self.password}@{self.host}/{self.custapipath}"
             url = url.replace(":@", "")
         return url
 
@@ -394,10 +391,8 @@ class DbusService:
             logging.debug("is_data_up_to_date: inverter #%d: age_seconds=%d, max_age_ts=%d",
                 self.pvinverternumber, age_seconds, self.max_age_ts)
             return age_seconds >= 0 and age_seconds < self.max_age_ts
-
         elif self.dtuvariant == 'opendtu':
             return is_true(meter_data['inverters'][self.pvinverternumber]['reachable'])
-
         else:
             return True
 
@@ -515,8 +510,7 @@ def main():
     """Main program to run"""
     # configure logging
     config = configparser.ConfigParser()
-    config.read("%s/config.ini" %
-                (os.path.dirname(os.path.realpath(__file__))))
+    config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
     logging_level = config['DEFAULT']['Logging']
     dtuvariant = config['DEFAULT']['DTU']
 
@@ -530,10 +524,9 @@ def main():
                         level=logging_level,
                         handlers=[
                             logging.FileHandler(
-                                "%s/current.log" % (os.path.dirname(os.path.realpath(__file__)))),
+                                f"{(os.path.dirname(os.path.realpath(__file__)))}/current.log"),
                             logging.StreamHandler()
                         ])
-
     run_tests()
 
     try:
