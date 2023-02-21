@@ -1,20 +1,20 @@
 ⚠️For any issue with since version OpenDTU v4.4.3 please update to latest code where this is fixed. OpenDTU changed the API⚠️
 
 # dbus-opendtu/ahoydtu inverter
-Integrate openDTU or ahoyDTU and with that all Hoymiles Interverter https://github.com/tbnobody/OpenDTU into Victron Energies Venus OS. This also allows for template configuration to include other generic REST Devices. 
+Integrate [openDTU](https://github.com/tbnobody/OpenDTU) or [Ahoy](https://github.com/lumapu/ahoy) DTU and with that all Hoymiles Inverter https://github.com/tbnobody/OpenDTU into Victron Energies Venus OS. This also allows for template configuration to include other generic REST Devices. 
 
-The code allows to query up to one DTU, either ahoy or opendtu, plus multiple Template based PV Inverter in a single script. This means, you can also only query template devices or only a dtu, or a mix of one DTU and template devices.
+The code allows to query up to one DTU, either Ahoy or OpenDTU, plus multiple template based PV Inverter in a single script. This means, you can also only query template devices or only a dtu, or a mix of one DTU and template devices.
 
-Tested Examples:
+Tested examples for template devices:
 
     * Tasmota unauthenticated
     * Shelly 1 PM authenticated/unauthenticated
     * Shelly Plus 1 PM unathenticated
 
-All configuration is done via config.ini examples are commented in config.ini
+All configuration is done via config.ini. Examples are commented in config.ini
 
 ## Purpose
-With the scripts in this repo it should be easy possible to install, uninstall, restart a service that connects the opendtu to the VenusOS and GX devices from Victron.
+With the scripts in this repo, it should be easy possible to install, uninstall, restart a service that connects the OpenDTU or Ahoy to the VenusOS and GX devices from Victron.
 Idea is inspired on @fabian-lauer & @vikt0rm project linked below.
 
 
@@ -28,6 +28,7 @@ This project is my first on GitHub and with the Victron Venus OS, so I took some
 - https://github.com/tbnobody/OpenDTU 
 - https://github.com/tbnobody/OpenDTU/blob/master/docs/Web-API.md
 - https://ahoydtu.de/
+- https://github.com/lumapu/ahoy
 
 
 ## How it works
@@ -35,14 +36,15 @@ This project is my first on GitHub and with the Victron Venus OS, so I took some
 
 ### Details / Process
 As mentioned above the script is inspired by @fabian-lauer dbus-shelly-3em-smartmeter implementation.
+
 So what is the script doing:
 - Running as a service
-- connecting to DBus of the Venus OS `com.victronenergy.pvinverter.http_{DeviceInstanceID_from_config}`
-- After successful DBus connection OpenDTU/ahoyDTU is accessed via REST-API - simply the /status is called and a JSON is returned with all details
+- Connecting to DBus of the Venus OS `com.victronenergy.pvinverter.http_{DeviceInstanceID_from_config}`
+- After successful DBus connection, OpenDTU (resp. Ahoy) is accessed via REST-API - simply the `/status` (resp. `api/live`) is called which returns a JSON with all details.
   A sample JSON file from OpenDTU can be found [here](docs/OpenDTU.json). A sample JSON file from OpenDTU can be found [here](docs/ahoy.json)
 - Serial/devicename is taken from the response as device serial
-- Paths are added to the DBus with default value 0 - including some settings like name, etc
-- After that a "loop" is started which pulls OpenDTU/AhoyDTU data every 5s from the REST-API and updates the values in the DBus, for ESP 8266 based ahoy systems we even pull data only every 10seconds
+- Paths are added to the DBus with default value 0 - including some settings like name etc.
+- After that, a "loop" is started which pulls OpenDTU/AhoyDTU data every 5s (configurable) from the REST-API and updates the values in the DBus, for ESP 8266 based ahoy systems we even pull data only every 10seconds.
 
 Thats it 😄
 
@@ -52,8 +54,8 @@ Thats it 😄
 
 ## Install & Configuration
 ### Get the code
-Just grap a copy of the main branche and copy them to a folder under `/data/` e.g. `/data/dbus-opendtu`.
-After that call the install.sh script.
+Just grap a copy of the main branch and copy them to a folder under `/data/` e.g. `/data/dbus-opendtu`.
+After that call the `install.sh script.
 
 The following script should do everything for you:
 ```
@@ -115,6 +117,18 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 | TEMPLATEX  | Name | Name to be shown in VenusOS, use a descriptive name |
 
 Example for JSON PATH: use keywords separated by /
+
+## Useful commands
+
+`svstat /service/dbus-opendtu` show if the service (our script) is running. If number of seconds show is low, the it is probably restarting and you should look into `/data/dbus-opendtu/current.log`.
+
+`/data/dbus-opendtu/uninstall.sh` stops the service and prevents it from being restarted (e.g. after a reboot).
+
+`/data/dbus-opendtu/install.sh` installs the service persistently (see above).
+
+`/data/dbus-opendtu/restart.sh` restarts the service - e.g. after a config.ini change.
+
+`dbus-spy` show all DBus values interactively.
 
 ## Troubleshooting
 
