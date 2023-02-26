@@ -45,7 +45,7 @@ def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname):
 
 def is_true(val):
     """helper to check for different true variants"""
-    return val == 1 or val == '1' or val is True
+    return val == 1 or val == '1' or val is True or val == 'True'
 
 class PvInverterRegistry(type):
     """register every PV Inverter as registry to iterate over it"""
@@ -333,8 +333,9 @@ class DbusService:
 
         # check for response
         if not meter_r:
-            logging.info("No Response from OpenDTU/Ahoy")
-            raise ConnectionError("No response from OpenDTU - %s", (url))
+            logging.info("No response from API - %s", (self.host))
+            #url = url.replace('/@','/XXXX:YYYY@')
+            raise ConnectionError("No response from API - %s", (self.host))
 
         meter_data = meter_r.json()
 
@@ -479,6 +480,7 @@ class DbusService:
                 power = meter_data['inverters'][pvinverter]['AC']['0']['Power']['v']
             else:
                 power = 0
+                logging.debug("Inverter not producing, not updating venus OS")
             if self.useyieldday:
                 pvyield = meter_data['inverters'][pvinverter]['AC']['0']['YieldDay']['v']
                 pvyield = pvyield / 1000
