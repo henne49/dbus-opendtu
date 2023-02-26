@@ -136,7 +136,7 @@ class DbusService:
         try:
             self.acposition = int(
                 config[f"INVERTER{self.pvinverternumber}"]['AcPosition'])
-        except DeprecationWarning as error:
+        except:
             logging.error(
                 "Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
             raise ValueError(
@@ -147,21 +147,21 @@ class DbusService:
             config[f"INVERTER{self.pvinverternumber}"]['Phase'])
         try:
             self.host = config['DEFAULT']['Host']
-        except DeprecationWarning as error:
+        except:
             logging.error(
                 "Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
             raise ValueError(
                 "Deprecated Host ONPREMISE entries must be moved to DEFAULT section") from error
         try:
             self.username = config['DEFAULT']['Username']
-        except DeprecationWarning as error:
+        except:
             logging.error(
                 "Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
             raise ValueError(
                 "Deprecated Host ONPREMISE entries must be moved to DEFAULT section") from error
         try:
             self.password = config['DEFAULT']['Password']
-        except DeprecationWarning as error:
+        except:
             logging.error(
                 "Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
             raise ValueError(
