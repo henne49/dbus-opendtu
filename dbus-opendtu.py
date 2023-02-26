@@ -434,7 +434,7 @@ class DbusService:
                 logging.debug("---")
 
             self._update_index()
-        except ImportError as error:
+        except:
             logging.critical('Error at %s', '_update', exc_info=error)
 
         # return true, otherwise add_timeout will be removed from GObject -
@@ -589,7 +589,7 @@ def main():
             'Connected to dbus, and switching over to gobject.MainLoop() (= event based)')
         mainloop = gobject.MainLoop()
         mainloop.run()
-    except RuntimeError as error:
+    except:
         logging.critical('Error at %s', 'main', exc_info=error)
 
 
