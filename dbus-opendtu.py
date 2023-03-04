@@ -1,20 +1,19 @@
 #!/usr/bin/env python
-
+'''module to read data from dtu/template and show in VenusOS'''
 import logging
 import os
 import platform
 import sys
 import time
 import json
+import configparser  # for config/ini file
+import requests  # for http GET #pylint: disable=E0401
 import dbus #pylint: disable=E0401
 
 if sys.version_info.major == 2:
     import gobject #pylint: disable=E0401
 else:
     from gi.repository import GLib as gobject #pylint: disable=E0401
-
-import configparser  # for config/ini file
-import requests  # for http GET #pylint: disable=E0401
 
 # our own packages from victron
 sys.path.insert(
@@ -28,18 +27,20 @@ from vedbus import VeDbusService #pylint: disable=E0401
 
 
 def get_nested(value, path):
-    for p in path:
+    '''parse template path and return value'''
+    for path_entry in path:
         try:
-            value = value[p]
-        except:
+            value = value[path_entry]
+        except Exception:
             try:
-                value = value[int(p)]
-            except:
+                value = value[int(path_entry)]
+            except Exception:
                 value = 0
     return value
 
 
 def getAhoyFieldByName(meter_data, actual_inverter, fieldname):
+    '''get the value by name instead of list index'''
     ac_data_field_names = meter_data["ch0_fld_names"]
     data_index = ac_data_field_names.index(fieldname)
     ac_channel_index = 0
@@ -47,16 +48,19 @@ def getAhoyFieldByName(meter_data, actual_inverter, fieldname):
 
 
 def isTrue(val):
+    '''helper function to test for different true values'''
     return val == 1 or val == "1" or val == True
 
 
 ## register every PV Inverter as registry to iterate over it
 class PvInverterRegistry(type):
+    '''Run a registry for all PV Inverter'''
     def __iter__(cls):
         return iter(cls._registry)
 
 
 class DbusService:
+    '''Main class to register PV Inverter in DBUS'''
     __metaclass__ = PvInverterRegistry
     _registry = []
     _meter_data = None
@@ -158,7 +162,7 @@ class DbusService:
             self.acposition = int(
                 config["INVERTER{}".format(self.pvinverternumber)]["AcPosition"]
             )
-        except:
+        except Exception:
             logging.error(
                 "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
             )
@@ -172,7 +176,7 @@ class DbusService:
         )
         try:
             self.host = config["DEFAULT"]["Host"]
-        except:
+        except Exception:
             logging.error(
                 "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
             )
@@ -181,7 +185,7 @@ class DbusService:
             )
         try:
             self.username = config["DEFAULT"]["Username"]
-        except:
+        except Exception:
             logging.error(
                 "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
             )
@@ -190,7 +194,7 @@ class DbusService:
             )
         try:
             self.password = config["DEFAULT"]["Password"]
-        except:
+        except Exception:
             logging.error(
                 "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
             )
@@ -199,12 +203,12 @@ class DbusService:
             )
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
-        except:
+        except Exception:
             self.max_age_ts = 600
 
         try:
             self.dry_run = "0" != config["DEFAULT"]["DryRun"]
-        except:
+        except Exception:
             self.dry_run = False
 
         self.pollinginterval = int(config["DEFAULT"]["ESP8266PollingIntervall"])
@@ -254,12 +258,12 @@ class DbusService:
         )
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
-        except:
+        except Exception:
             self.max_age_ts = 600
 
         try:
             self.dry_run = "0" != config["DEFAULT"]["DryRun"]
-        except:
+        except Exception:
             self.dry_run = False
         self.meter_data = 0
 
@@ -321,7 +325,7 @@ class DbusService:
             # Check for ESP8266 and limit polling
             try:
                 self.esptype = meter_data["generic"]["esp_type"]
-            except:
+            except Exception:
                 self.esptype = meter_data["system"]["esp_type"]
 
             if self.esptype == "ESP8266":
@@ -336,7 +340,6 @@ class DbusService:
             polling_interval = 5000
 
         elif self.dtuvariant == "template":
-            serial = self.serial
             polling_interval = self.pollinginterval
         return polling_interval
 
@@ -420,9 +423,11 @@ class DbusService:
             return DbusService._meter_data
 
     def setTestData(self, test_data):
+        '''Set Test Data to run test'''
         self._test_meter_data = test_data
 
     def setDTUVariant(self, dtuvariant):
+        '''set DTU variant'''
         self.dtuvariant = dtuvariant
 
     def _isDataUpToDate(self):
@@ -472,7 +477,7 @@ class DbusService:
                 (power, pvyield, current, voltage) = self.get_values_for_inverter()
 
                 if self.dry_run:
-                    logging.warn("DRY RUN. No data is sent!!")
+                    logging.info("DRY RUN. No data is sent!!")
                 else:
                     self._dbusservice[pre + "/Voltage"] = voltage
                     self._dbusservice[pre + "/Current"] = current
@@ -493,11 +498,13 @@ class DbusService:
                 logging.debug("---")
 
             self._update_index()
-        except Exception as e:
-            logging.critical("Error at %s", "_update", exc_info=e)
+        except Exception as error:
+            logging.critical("Error at %s", "_update", exc_info=error)
 
-        # return true, otherwise add_timeout will be removed from GObject - see docs http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
-        return True
+        # return true, otherwise add_timeout will be removed from GObject - see docs
+        # http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
+        finally:
+            return True
 
     def _update_index(self):
         if self.dry_run:
@@ -510,7 +517,7 @@ class DbusService:
         self._lastUpdate = time.time()
 
     def get_values_for_inverter(self):
-
+        '''read '''
         meter_data = self._getData()
         (power, pvyield, current, voltage) = (None, None, None, None)
 
@@ -518,8 +525,7 @@ class DbusService:
             power = getAhoyFieldByName(meter_data, self.pvinverternumber, "P_AC")
             if self.useyieldday:
                 pvyield = (
-                    getAhoyFieldByName(meter_data, self.pvinverternumber, "YieldDay")
-                    / 1000
+                    getAhoyFieldByName(meter_data, self.pvinverternumber, "YieldDay") / 1000
                 )
             else:
                 pvyield = getAhoyFieldByName(
@@ -539,22 +545,13 @@ class DbusService:
             )
             if self.useyieldday:
                 pvyield = (
-                    meter_data["inverters"][self.pvinverternumber]["AC"]["0"][
-                        "YieldDay"
-                    ]["v"]
-                    / 1000
+                    meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["YieldDay"]["v"] / 1000
                 )
             else:
-                pvyield = meter_data["inverters"][self.pvinverternumber]["AC"]["0"][
-                    "YieldTotal"
-                ]["v"]
-            voltage = meter_data["inverters"][self.pvinverternumber]["AC"]["0"][
-                "Voltage"
-            ]["v"]
+                pvyield = meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["YieldTotal"]["v"]
+            voltage = meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["Voltage"]["v"]
             current = (
-                meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["Current"][
-                    "v"
-                ]
+                meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["Current"]["v"]
                 if producing
                 else 0
             )
@@ -578,6 +575,7 @@ class DbusService:
 
 
 def main():
+    '''main loop'''
     # configure logging
     config = configparser.ConfigParser()
     config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
@@ -586,7 +584,7 @@ def main():
 
     try:
         number_of_templates = int(config["DEFAULT"]["NumberOfTemplates"])
-    except:
+    except Exception:
         number_of_templates = 0
 
     logging.basicConfig(
@@ -669,8 +667,8 @@ def main():
         )
         mainloop = gobject.MainLoop()
         mainloop.run()
-    except Exception as e:
-        logging.critical("Error at %s", "main", exc_info=e)
+    except Exception as error:
+        logging.critical("Error at %s", "main", exc_info=error)
 
 
 opendtu_test_data_str = '{"inverters":[{"serial":"112181311701","name":"Holzpalast Süd","data_age":11559,"reachable":false,"producing":false,"limit_relative":100,"limit_absolute":350,"0":{"Power":{"v":1,"u":"W"},"Voltage":{"v":235.1999969,"u":"V"},"Current":{"v":1,"u":"A"},"Power DC":{"v":1.200000048,"u":"W"},"YieldDay":{"v":482,"u":"Wh"},"YieldTotal":{"v":111.3209991,"u":"kWh"},"Frequency":{"v":49.99000168,"u":"Hz"},"Temperature":{"v":21.60000038,"u":"°C"},"PowerFactor":{"v":0,"u":"%"},"ReactivePower":{"v":0,"u":"var"},"Efficiency":{"v":0,"u":"%"}},"1":{"Power":{"v":1.200000048,"u":"W"},"Voltage":{"v":24.10000038,"u":"V"},"Current":{"v":0.050000001,"u":"A"},"YieldDay":{"v":482,"u":"Wh"},"YieldTotal":{"v":111.3209991,"u":"kWh"},"Irradiation":{"v":0.292682916,"u":"%"}},"events":3},{"serial":"112180719948","name":"Holzpalast Ost Links","data_age":11678,"reachable":false,"producing":false,"limit_relative":100,"limit_absolute":300,"0":{"Power":{"v":0,"u":"W"},"Voltage":{"v":235.6000061,"u":"V"},"Current":{"v":0,"u":"A"},"Power DC":{"v":1,"u":"W"},"YieldDay":{"v":351,"u":"Wh"},"YieldTotal":{"v":0.843999982,"u":"kWh"},"Frequency":{"v":49.97000122,"u":"Hz"},"Temperature":{"v":21.70000076,"u":"°C"},"PowerFactor":{"v":0,"u":"%"},"ReactivePower":{"v":0,"u":"var"},"Efficiency":{"v":0,"u":"%"}},"1":{"Power":{"v":1,"u":"W"},"Voltage":{"v":19.70000076,"u":"V"},"Current":{"v":0.050000001,"u":"A"},"YieldDay":{"v":351,"u":"Wh"},"YieldTotal":{"v":0.843999982,"u":"kWh"},"Irradiation":{"v":0.289855093,"u":"%"}},"events":3},{"serial":"114181304338","name":"Mülltonnen","data_age":11377,"reachable":false,"producing":false,"limit_relative":100,"limit_absolute":600,"0":{"Power":{"v":0,"u":"W"},"Voltage":{"v":234.5,"u":"V"},"Current":{"v":0,"u":"A"},"Power DC":{"v":0.700000048,"u":"W"},"YieldDay":{"v":828,"u":"Wh"},"YieldTotal":{"v":5.251999855,"u":"kWh"},"Frequency":{"v":49.99000168,"u":"Hz"},"Temperature":{"v":22.39999962,"u":"°C"},"PowerFactor":{"v":0,"u":"%"},"ReactivePower":{"v":0,"u":"var"},"Efficiency":{"v":0,"u":"%"}},"1":{"Power":{"v":0.300000012,"u":"W"},"Voltage":{"v":18.60000038,"u":"V"},"Current":{"v":0.02,"u":"A"},"YieldDay":{"v":398,"u":"Wh"},"YieldTotal":{"v":2.50999999,"u":"kWh"},"Irradiation":{"v":0.086956523,"u":"%"}},"2":{"Power":{"v":0.400000006,"u":"W"},"Voltage":{"v":18.60000038,"u":"V"},"Current":{"v":0.02,"u":"A"},"YieldDay":{"v":430,"u":"Wh"},"YieldTotal":{"v":2.742000103,"u":"kWh"},"Irradiation":{"v":0.115942039,"u":"%"}},"events":3}]}'
@@ -678,38 +676,40 @@ ahoy_test_data_str = '{"menu":{"name":["Live","Serial / Control","Settings","-",
 
 
 def test_opendtu_reachable(test_service):
+    '''Test if DTU is reachable'''
     test_service.setDTUVariant("opendtu")
     test_data = json.loads(opendtu_test_data_str)
 
     test_service.setTestData(test_data)
-    assert test_service._isDataUpToDate() == False
+    assert test_service._isDataUpToDate() is False
 
     test_data = json.loads(
         opendtu_test_data_str.replace('"reachable":false', '"reachable":"1"')
     )
     test_service.setTestData(test_data)
-    assert test_service._isDataUpToDate() == True
+    assert test_service._isDataUpToDate() is True
 
     test_data = json.loads(
         opendtu_test_data_str.replace('"reachable":false', '"reachable":1')
     )
     test_service.setTestData(test_data)
-    assert test_service._isDataUpToDate() == True
+    assert test_service._isDataUpToDate() is True
 
     test_data = json.loads(
         opendtu_test_data_str.replace('"reachable":false', '"reachable":true')
     )
     test_service.setTestData(test_data)
-    assert test_service._isDataUpToDate() == True
+    assert test_service._isDataUpToDate() is True
 
     test_data = json.loads(
         opendtu_test_data_str.replace('"reachable":false', '"reachable":false')
     )
     test_service.setTestData(test_data)
-    assert test_service._isDataUpToDate() == False
+    assert test_service._isDataUpToDate() is False
 
 
 def test_opendtu_producing(test_service):
+    '''test if the opendtu inverter is producing'''
     test_service.setDTUVariant("opendtu")
     test_data = json.loads(opendtu_test_data_str)
 
@@ -725,6 +725,7 @@ def test_opendtu_producing(test_service):
 
 
 def test_ahoy_values(test_service):
+    '''test with ahoy data'''
     test_service.setDTUVariant("ahoy")
     test_data = json.loads(ahoy_test_data_str)
 
@@ -733,11 +734,12 @@ def test_ahoy_values(test_service):
 
 
 def test_ahoy_timestamp(test_service):
+    '''test the timestamps for ahoy'''
     test_service.setDTUVariant("ahoy")
     test_data = json.loads(ahoy_test_data_str)
 
     test_service.setTestData(test_data)
-    assert test_service._isDataUpToDate() == False
+    assert test_service._isDataUpToDate() is False
 
     test_data = json.loads(
         ahoy_test_data_str.replace(
@@ -745,10 +747,11 @@ def test_ahoy_timestamp(test_service):
         )
     )
     test_service.setTestData(test_data)
-    assert test_service._isDataUpToDate() == True
+    assert test_service._isDataUpToDate() is True
 
 
 def run_tests():
+    '''function to run tests'''
     test_service = DbusService(servicename="testing", paths="dummy", actual_inverter=0)
     test_opendtu_reachable(test_service)
     test_opendtu_reachable(test_service)
