@@ -88,7 +88,7 @@ class DbusService:
         else:
             self._readConfigTemplate(actual_inverter)
 
-        logging.debug("%s /DeviceInstance = %d" % (servicename, self.deviceinstance))
+        logging.debug("%s /DeviceInstance = %d", servicename, self.deviceinstance)
 
         ### Allow for multiple Instance per process in DBUS
         dbusConn = (
@@ -295,7 +295,7 @@ class DbusService:
             name = meter_data["inverters"][pvinverternumber]["name"]
         else:
             name = self.customname
-        logging.info("Name of Inverters found: %s" % (name))
+        logging.info("Name of Inverters found: %s", name)
         return name
 
     def _getNumberOfInverters(self):
@@ -306,7 +306,7 @@ class DbusService:
             numberofinverters = len(meter_data["inverters"])
         else:
             numberofinverters = 1
-        logging.info("Number of Inverters found: %s" % (numberofinverters))
+        logging.info("Number of Inverters found: %s", numberofinverters)
         return numberofinverters
 
 #    def _getNumberOfTemplates(self):
@@ -437,8 +437,8 @@ class DbusService:
             ]
             age_seconds = time.time() - ts_last_success
             logging.debug(
-                "_isDataUpToDate: inverter #%d: age_seconds=%d, max_age_ts=%d"
-                % (self.pvinverternumber, age_seconds, self.max_age_ts)
+                "_isDataUpToDate: inverter #%d: age_seconds=%d, max_age_ts=%d",
+                self.pvinverternumber, age_seconds, self.max_age_ts
             )
             return age_seconds >= 0 and age_seconds < self.max_age_ts
 
@@ -446,18 +446,17 @@ class DbusService:
             return isTrue(meter_data["inverters"][self.pvinverternumber]["reachable"])
 
         else:
-            # TODO: anything for other DTUs?
             return True
 
     def _signOfLife(self):
         logging.info("--- Start: sign of life ---")
         logging.info(
-            "Last inverter #%d _update() call: %s"
-            % (self.pvinverternumber, self._lastUpdate)
+            "Last inverter #%d _update() call: %s",
+            self.pvinverternumber, self._lastUpdate
         )
         logging.info(
-            "Last inverter #%d '/Ac/Power': %s"
-            % (self.pvinverternumber, self._dbusservice["/Ac/Power"])
+            "Last inverter #%d '/Ac/Power': %s",
+            self.pvinverternumber, self._dbusservice["/Ac/Power"]
         )
         logging.info("--- End: sign of life ---")
         return True
@@ -484,12 +483,12 @@ class DbusService:
                         self._dbusservice["/Ac/Energy/Forward"] = pvyield
 
                 logging.debug(
-                    "Inverter #%d Power (/Ac/Power): %s"
-                    % (self.pvinverternumber, power)
+                    "Inverter #%d Power (/Ac/Power): %s",
+                    self.pvinverternumber, power
                 )
                 logging.debug(
-                    "Inverter #%d Energy (/Ac/Energy/Forward): %s"
-                    % (self.pvinverternumber, pvyield)
+                    "Inverter #%d Energy (/Ac/Energy/Forward): %s",
+                    self.pvinverternumber, pvyield
                 )
                 logging.debug("---")
 
@@ -574,7 +573,7 @@ class DbusService:
         return (power, pvyield, current, voltage)
 
     def _handlechangedvalue(self, path, value):
-        logging.debug("someone else updated %s to %s" % (path, value))
+        logging.debug("someone else updated %s to %s", path, value)
         return True  # accept the change
 
 
