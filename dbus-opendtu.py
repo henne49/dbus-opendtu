@@ -101,9 +101,7 @@ class DbusService:
             else dbus.SystemBus(private=True)
         )
 
-        self._dbusservice = VeDbusService(
-            "{}.http_{:02d}".format(servicename, self.deviceinstance), dbus_conn
-        )
+        self._dbusservice = VeDbusService(f"{servicename}.http_{self.deviceinstance}", dbus_conn)
         self._paths = paths
 
         # Create the management objects, as specified in the ccgx dbus-api document
@@ -155,12 +153,10 @@ class DbusService:
         config = self._get_config()
         self.pvinverternumber = actual_inverter
         self.dtuvariant = str(config["DEFAULT"]["DTU"])
-        self.deviceinstance = int(
-            config["INVERTER{}".format(self.pvinverternumber)]["DeviceInstance"]
-        )
+        self.deviceinstance = int(config[f"INVERTER{self.pvinverternumber}"]["DeviceInstance"])
         try:
             self.acposition = int(
-                config["INVERTER{}".format(self.pvinverternumber)]["AcPosition"]
+                config[f"INVERTER{self.pvinverternumber}"]["AcPosition"]
             )
         except Exception:
             logging.error(
@@ -171,9 +167,7 @@ class DbusService:
             )
         self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
         self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
-        self.pvinverterphase = str(
-            config["INVERTER{}".format(self.pvinverternumber)]["Phase"]
-        )
+        self.pvinverterphase = str(config[f"INVERTER{self.pvinverternumber}"]["Phase"])
         try:
             self.host = config["DEFAULT"]["Host"]
         except Exception:
@@ -217,45 +211,25 @@ class DbusService:
     def _read_config_template(self, template_number):
         config = self._get_config()
         self.pvinverternumber = template_number
-        self.custpower = config["TEMPLATE{}".format(template_number)][
-            "CUST_Power"
-        ].split("/")
-        self.custpower_factor = config["TEMPLATE{}".format(template_number)][
-            "CUST_Power_Mult"
-        ]
-        self.custtotal = config["TEMPLATE{}".format(template_number)][
-            "CUST_Total"
-        ].split("/")
-        self.custtotal_factor = config["TEMPLATE{}".format(template_number)][
-            "CUST_Total_Mult"
-        ]
-        self.custvoltage = config["TEMPLATE{}".format(template_number)][
-            "CUST_Voltage"
-        ].split("/")
-        self.custcurrent = config["TEMPLATE{}".format(template_number)][
-            "CUST_Current"
-        ].split("/")
-        self.custapipath = config["TEMPLATE{}".format(template_number)]["CUST_API_PATH"]
-        self.serial = str(config["TEMPLATE{}".format(template_number)]["CUST_SN"])
-        self.pollinginterval = int(
-            config["TEMPLATE{}".format(template_number)]["CUST_POLLING"]
-        )
-        self.host = config["TEMPLATE{}".format(template_number)]["Host"]
-        self.username = config["TEMPLATE{}".format(template_number)]["Username"]
-        self.password = config["TEMPLATE{}".format(template_number)]["Password"]
+        self.custpower = config[f"TEMPLATE{template_number}"]["CUST_Power"].split("/")
+        self.custpower_factor = config[f"TEMPLATE{template_number}"]["CUST_Power_Mult"]
+        self.custtotal = config[f"TEMPLATE{template_number}"]["CUST_Total"].split("/")
+        self.custtotal_factor = config[f"TEMPLATE{template_number}"]["CUST_Total_Mult"]
+        self.custvoltage = config[f"TEMPLATE{template_number}"]["CUST_Voltage"].split("/")
+        self.custcurrent = config[f"TEMPLATE{template_number}"]["CUST_Current"].split("/")
+        self.custapipath = config[f"TEMPLATE{template_number}"]["CUST_API_PATH"]
+        self.serial = str(config[f"TEMPLATE{template_number}"]["CUST_SN"])
+        self.pollinginterval = int(config[f"TEMPLATE{template_number}"]["CUST_POLLING"])
+        self.host = config[f"TEMPLATE{template_number}"]["Host"]
+        self.username = config[f"TEMPLATE{template_number}"]["Username"]
+        self.password = config[f"TEMPLATE{template_number}"]["Password"]
         self.dtuvariant = "template"
-        self.deviceinstance = int(
-            config["TEMPLATE{}".format(template_number)]["DeviceInstance"]
-        )
-        self.customname = config["TEMPLATE{}".format(template_number)]["Name"]
-        self.acposition = int(
-            config["TEMPLATE{}".format(template_number)]["AcPosition"]
-        )
+        self.deviceinstance = int(config[f"TEMPLATE{template_number}"]["DeviceInstance"])
+        self.customname = config[f"TEMPLATE{template_number}"]["Name"]
+        self.acposition = int(config[f"TEMPLATE{template_number}"]["AcPosition"])
         self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
         self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
-        self.pvinverterphase = str(
-            config["TEMPLATE{}".format(template_number)]["Phase"]
-        )
+        self.pvinverterphase = str(config[f"TEMPLATE{template_number}"]["Phase"])
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
         except Exception:
@@ -346,7 +320,7 @@ class DbusService:
 
     def _get_config(self):
         config = configparser.ConfigParser()
-        config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
+        config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
         return config
 
     def _get_sign_of_life_interval(self):
@@ -358,21 +332,12 @@ class DbusService:
 
     def _get_status_url(self):
         if self.dtuvariant == "opendtu":
-            url = "http://%s:%s@%s/api/livedata/status" % (
-                self.username,
-                self.password,
-                self.host,
-            )
+            url = f"http://{self.username}:{self.password}@{self.host}/api/livedata/status"
             url = url.replace(":@", "")
         elif self.dtuvariant == "ahoy":
-            url = "http://%s/api/live" % (self.host)
+            url = f"http://{self.host}/api/live"
         elif self.dtuvariant == "template":
-            url = "http://%s:%s@%s/%s" % (
-                self.username,
-                self.password,
-                self.host,
-                self.custapipath,
-            )
+            url = f"http://{self.username}:{self.password}@{self.host}/{self.custapipath}"
             url = url.replace(":@", "")
         else:
             logging.error('no dtuvariant set')
@@ -390,7 +355,7 @@ class DbusService:
         # check for response
         if not meter_r:
             logging.info("No Response from OpenDTU/Ahoy")
-            raise ConnectionError("No response from OpenDTU - %s" % (url))
+            raise ConnectionError("No response from OpenDTU - %s", url)
 
         meter_data = meter_r.json()
 
@@ -580,7 +545,7 @@ def main():
     '''main loop'''
     # configure logging
     config = configparser.ConfigParser()
-    config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
+    config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
     logging_level = config["DEFAULT"]["Logging"]
     dtuvariant = config["DEFAULT"]["DTU"]
 
@@ -595,7 +560,7 @@ def main():
         level=logging_level,
         handlers=[
             logging.FileHandler(
-                "%s/current.log" % (os.path.dirname(os.path.realpath(__file__)))
+                f"{(os.path.dirname(os.path.realpath(__file__)))}/current.log"
             ),
             logging.StreamHandler(),
         ],
