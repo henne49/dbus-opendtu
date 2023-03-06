@@ -147,6 +147,15 @@ class DbusService:
         # add _sign_of_life 'timer' to get feedback in log every 5minutes
         gobject.timeout_add(self._get_sign_of_life_interval() * 60 * 1000, self._sign_of_life)
 
+    def get_config_value(self, config, name, inverter_or_template):
+        '''check if config value exist, otherwise throw error'''
+        if name in config[f"{inverter_or_template}{self.pvinverternumber}"]:
+            return config[f"{inverter_or_template}{self.pvinverternumber}"][name]
+        else:
+            raise ValueError(
+                "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
+            )
+
     ## read config file
 
     def _read_config_dtu(self, actual_inverter):
@@ -154,47 +163,13 @@ class DbusService:
         self.pvinverternumber = actual_inverter
         self.dtuvariant = str(config["DEFAULT"]["DTU"])
         self.deviceinstance = int(config[f"INVERTER{self.pvinverternumber}"]["DeviceInstance"])
-        try:
-            self.acposition = int(
-                config[f"INVERTER{self.pvinverternumber}"]["AcPosition"]
-            )
-        except Exception:
-            logging.error(
-                "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
-            )
-            raise ValueError(
-                "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
-            )
+        self.acposition = int(self.get_config_value(config, "AcPosition", "INVERTER" ))
         self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
         self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
         self.pvinverterphase = str(config[f"INVERTER{self.pvinverternumber}"]["Phase"])
-        try:
-            self.host = config["DEFAULT"]["Host"]
-        except Exception:
-            logging.error(
-                "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
-            )
-            raise ValueError(
-                "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
-            )
-        try:
-            self.username = config["DEFAULT"]["Username"]
-        except Exception:
-            logging.error(
-                "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
-            )
-            raise ValueError(
-                "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
-            )
-        try:
-            self.password = config["DEFAULT"]["Password"]
-        except Exception:
-            logging.error(
-                "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
-            )
-            raise ValueError(
-                "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
-            )
+        self.host = self.get_config_value(config, "Host", "INVERTER" )
+        self.username = self.get_config_value(config, "Username", "INVERTER" )
+        self.password = self.get_config_value(config, "Password", "INVERTER" )
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
         except Exception:
@@ -244,7 +219,7 @@ class DbusService:
     ## get the Serialnumber
     def _get_serial(self, pvinverternumber):
 
-        if self.dtuvariant == "ahoy" or self.dtuvariant == "opendtu":
+        if self.dtuvariant in ('ahoy', 'opendtu'):
             meter_data = self._get_data()
 
         if self.dtuvariant == "ahoy":
@@ -265,7 +240,7 @@ class DbusService:
         return serial
 
     def _get_name(self, pvinverternumber):
-        if self.dtuvariant == "ahoy" or self.dtuvariant == "opendtu":
+        if self.dtuvariant in ('ahoy', 'opendtu'):
             meter_data = self._get_data()
         if self.dtuvariant == "ahoy":
             name = meter_data["inverter"][pvinverternumber]["name"]
@@ -355,7 +330,7 @@ class DbusService:
         # check for response
         if not meter_r:
             logging.info("No Response from OpenDTU/Ahoy")
-            raise ConnectionError("No response from OpenDTU - %s", url)
+            raise ConnectionError("No response from OpenDTU - ", self.host)
 
         meter_data = meter_r.json()
 
