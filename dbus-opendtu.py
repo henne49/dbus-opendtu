@@ -26,17 +26,18 @@ sys.path.insert(
 from vedbus import VeDbusService #pylint: disable=E0401
 
 
-def get_nested(value, path):
-    '''parse template path and return value'''
+def get_nested(meter_data, path):
+    '''Try to extract 'path' from nested array 'meter_data' (derived from json document) and return the found value'''
+    subtree = meter_data
     for path_entry in path:
         try:
-            value = value[path_entry]
+            subtree = subtree[path_entry]
         except Exception:
             try:
-                value = value[int(path_entry)]
+                subtree = subtree[int(path_entry)]
             except Exception:
-                value = 0
-    return value
+                subtree = 0
+    return subtree
 
 
 def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname):
