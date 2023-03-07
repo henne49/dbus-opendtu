@@ -28,16 +28,16 @@ from vedbus import VeDbusService #pylint: disable=E0401
 
 def get_nested(meter_data, path):
     '''Try to extract 'path' from nested array 'meter_data' (derived from json document) and return the found value'''
-    subtree = meter_data
+    value = meter_data
     for path_entry in path:
         try:
-            subtree = subtree[path_entry]
+            value = value[path_entry]
         except Exception:
             try:
-                subtree = subtree[int(path_entry)]
+                value = value[int(path_entry)]
             except Exception:
-                subtree = 0
-    return subtree
+                value = 0
+    return value
 
 
 def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname):
