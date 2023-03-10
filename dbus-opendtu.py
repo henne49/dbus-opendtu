@@ -149,13 +149,18 @@ class DbusService:
         gobject.timeout_add(self._get_sign_of_life_interval() * 60 * 1000, self._sign_of_life)
 
     def get_config_value(self, config, name, inverter_or_template):
-        '''check if config value exist, otherwise throw error'''
+        '''check if config value exist in current inverter/template's section, otherwise throw error'''
         if name in config[f"{inverter_or_template}{self.pvinverternumber}"]:
             return config[f"{inverter_or_template}{self.pvinverternumber}"][name]
         else:
-            raise ValueError(
-                "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
-            )
+            raise ValueError(f"config entry '{name}' not found. Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
+
+    def get_default_config(self, config, name, defaultvalue):
+        '''check if config value exist in DEFAULT section, otherwise return defaultvalue'''
+        if name in config["DEFAULT"]:
+            return config["DEFAULT"][name]
+        else:
+            return defaultvalue
 
     ## read config file
 
@@ -183,6 +188,7 @@ class DbusService:
 
         self.pollinginterval = int(config["DEFAULT"]["ESP8266PollingIntervall"])
         self.meter_data = 0
+        self.httptimeout = self.get_default_config(config, "HTTPTimeout", 2.5)
 
     def _read_config_template(self, template_number):
         config = self._get_config()
@@ -216,6 +222,7 @@ class DbusService:
         except Exception:
             self.dry_run = False
         self.meter_data = 0
+        self.httptimeout = self.get_default_config(config, "HTTPTimeout", 2.5)
 
     ## get the Serialnumber
     def _get_serial(self, pvinverternumber):
@@ -326,7 +333,8 @@ class DbusService:
             return
 
         url = self._get_status_url()
-        meter_r = requests.get(url=url, timeout=7.0)
+        logging.debug(f"calling {url} with timeout={self.httptimeout}")
+        meter_r = requests.get(url=url, timeout=float(self.httptimeout))
         meter_r.raise_for_status() # raise exception on bad status code
 
         # check for response
