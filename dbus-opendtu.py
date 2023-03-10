@@ -326,19 +326,24 @@ class DbusService:
             return
 
         url = self._get_status_url()
-        meter_r = requests.get(url=url, timeout=2.50)
+        meter_r = requests.get(url=url, timeout=7.0)
+        meter_r.raise_for_status() # raise exception on bad status code
 
         # check for response
         if not meter_r:
             logging.info("No Response from OpenDTU/Ahoy")
             raise ConnectionError("No response from OpenDTU - ", self.host)
 
-        meter_data = meter_r.json()
+        meter_data = None
+        try:
+            meter_data = meter_r.json()
+        except json.decoder.JSONDecodeError as error:
+            logging.debug(f"JSONDecodeError: {str(error)}")
 
         # check for Json
         if not meter_data:
-            logging.info("Converting response to JSON failed")
-            raise ValueError("Converting response to JSON failed")
+            # will be logged when catched
+            raise ValueError(f"Converting response from {url} to JSON failed:\nstatus={meter_r.status_code},\nresponse={meter_r.text}")
 
         if self.dtuvariant == "opendtu":
             if not "AC" in meter_data["inverters"][self.pvinverternumber]:
@@ -397,8 +402,7 @@ class DbusService:
             return True
 
     def _sign_of_life(self):
-        logging.info("--- Start: sign of life ---")
-        logging.info(
+        logging.debug(
             "Last inverter #%d _update() call: %s",
             self.pvinverternumber, self._last_update
         )
@@ -406,7 +410,6 @@ class DbusService:
             "Last inverter #%d '/Ac/Power': %s",
             self.pvinverternumber, self._dbusservice["/Ac/Power"]
         )
-        logging.info("--- End: sign of life ---")
         return True
 
     def _update(self):
@@ -441,8 +444,12 @@ class DbusService:
                 logging.debug("---")
 
             self._update_index()
+        except requests.exceptions.RequestException as exception:
+            logging.warning(f"HTTP Error at _update: {str(exception)}")
+        except ValueError as error:
+            logging.warning(f"Error at _update: {str(error)}")
         except Exception as error:
-            logging.critical("Error at %s", "_update", exc_info=error)
+            logging.warning("Error at %s", "_update", exc_info=error)
 
         # return true, otherwise add_timeout will be removed from GObject - see docs
         # http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
