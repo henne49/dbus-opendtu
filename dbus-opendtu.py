@@ -333,7 +333,7 @@ class DbusService:
             return
 
         url = self._get_status_url()
-        logging.debug(f"calling {url} with timeout={self.httptimeout}")
+        logging.debug(f"calling {self.host} with timeout={self.httptimeout}")
         meter_r = requests.get(url=url, timeout=float(self.httptimeout))
         meter_r.raise_for_status() # raise exception on bad status code
 
@@ -351,7 +351,7 @@ class DbusService:
         # check for Json
         if not meter_data:
             # will be logged when catched
-            raise ValueError(f"Converting response from {url} to JSON failed:\nstatus={meter_r.status_code},\nresponse={meter_r.text}")
+            raise ValueError(f"Converting response from {self.host} to JSON failed:\nstatus={meter_r.status_code},\nresponse={meter_r.text}")
 
         if self.dtuvariant == "opendtu":
             if not "AC" in meter_data["inverters"][self.pvinverternumber]:
@@ -457,7 +457,7 @@ class DbusService:
         except ValueError as error:
             logging.warning(f"Error at _update: {str(error)}")
         except Exception as error:
-            logging.warning("Error at %s", "_update", exc_info=error)
+            logging.warning(f"Error at _update", exc_info=error)
 
         # return true, otherwise add_timeout will be removed from GObject - see docs
         # http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
