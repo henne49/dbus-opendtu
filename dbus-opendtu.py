@@ -149,13 +149,18 @@ class DbusService:
         gobject.timeout_add(self._get_sign_of_life_interval() * 60 * 1000, self._sign_of_life)
 
     def get_config_value(self, config, name, inverter_or_template):
-        '''check if config value exist, otherwise throw error'''
+        '''check if config value exist in current inverter/template's section, otherwise throw error'''
         if name in config[f"{inverter_or_template}{self.pvinverternumber}"]:
             return config[f"{inverter_or_template}{self.pvinverternumber}"][name]
         else:
-            raise ValueError(
-                "Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
-            )
+            raise ValueError(f"config entry '{name}' not found. Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
+
+    def get_default_config(self, config, name, defaultvalue):
+        '''check if config value exist in DEFAULT section, otherwise return defaultvalue'''
+        if name in config["DEFAULT"]:
+            return config["DEFAULT"][name]
+        else:
+            return defaultvalue
 
     ## read config file
 
@@ -183,6 +188,7 @@ class DbusService:
 
         self.pollinginterval = int(config["DEFAULT"]["ESP8266PollingIntervall"])
         self.meter_data = 0
+        self.httptimeout = self.get_default_config(config, "HTTPTimeout", 2.5)
 
     def _read_config_template(self, template_number):
         config = self._get_config()
@@ -216,6 +222,7 @@ class DbusService:
         except Exception:
             self.dry_run = False
         self.meter_data = 0
+        self.httptimeout = self.get_default_config(config, "HTTPTimeout", 2.5)
 
     ## get the Serialnumber
     def _get_serial(self, pvinverternumber):
@@ -326,19 +333,25 @@ class DbusService:
             return
 
         url = self._get_status_url()
-        meter_r = requests.get(url=url, timeout=2.50)
+        logging.debug(f"calling {self.host} with timeout={self.httptimeout}")
+        meter_r = requests.get(url=url, timeout=float(self.httptimeout))
+        meter_r.raise_for_status() # raise exception on bad status code
 
         # check for response
         if not meter_r:
             logging.info("No Response from OpenDTU/Ahoy")
             raise ConnectionError("No response from OpenDTU - ", self.host)
 
-        meter_data = meter_r.json()
+        meter_data = None
+        try:
+            meter_data = meter_r.json()
+        except json.decoder.JSONDecodeError as error:
+            logging.debug(f"JSONDecodeError: {str(error)}")
 
         # check for Json
         if not meter_data:
-            logging.info("Converting response to JSON failed")
-            raise ValueError("Converting response to JSON failed")
+            # will be logged when catched
+            raise ValueError(f"Converting response from {self.host} to JSON failed:\nstatus={meter_r.status_code},\nresponse={meter_r.text}")
 
         if self.dtuvariant == "opendtu":
             if not "AC" in meter_data["inverters"][self.pvinverternumber]:
@@ -397,8 +410,7 @@ class DbusService:
             return True
 
     def _sign_of_life(self):
-        logging.info("--- Start: sign of life ---")
-        logging.info(
+        logging.debug(
             "Last inverter #%d _update() call: %s",
             self.pvinverternumber, self._last_update
         )
@@ -406,7 +418,6 @@ class DbusService:
             "Last inverter #%d '/Ac/Power': %s",
             self.pvinverternumber, self._dbusservice["/Ac/Power"]
         )
-        logging.info("--- End: sign of life ---")
         return True
 
     def _update(self):
@@ -441,8 +452,12 @@ class DbusService:
                 logging.debug("---")
 
             self._update_index()
+        except requests.exceptions.RequestException as exception:
+            logging.warning(f"HTTP Error at _update: {str(exception)}")
+        except ValueError as error:
+            logging.warning(f"Error at _update: {str(error)}")
         except Exception as error:
-            logging.critical("Error at %s", "_update", exc_info=error)
+            logging.warning(f"Error at _update", exc_info=error)
 
         # return true, otherwise add_timeout will be removed from GObject - see docs
         # http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
