@@ -88,6 +88,7 @@ Within the project there is a file `/data/dbus-opendtu/config.ini` - just change
 | DEFAULT | MagAgeTsLastSuccess | Maximum accepted age of ts_last_success in Ahoy status message. If ts_last_success is older than this number of seconds, values are not used.  Set this to < 0 to disable this check.                                    |
 | DEFAULT  | DryRun | Set this to a value different to "0" to prevent values from being sent. Use this for debugging or experiments. |
 | DEFAULT  | Host | IP or hostname of ahoy or OpenDTU API/web-interface |
+| DEFAULT  | HTTPTimeout | Timeout when doing the HTTP request to the DTU or template. Default: 2.5 sec |
 | DEFAULT  | Username | use if authentication required, leave empty if no authentication needed |
 | DEFAULT  | Password | use if authentication required, leave empty if no authentication needed |
 | INVERTER0  | 1st Inverter | |
