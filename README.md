@@ -75,7 +75,7 @@ rm main.zip
 ⚠️ Check configuration after that - because service is already installed an running and with wrong connection data (host, username, pwd) you will spam the log-file, also check to set right ⚠️minimal log level⚠️ as possible
 
 ### Change config.ini
-Within the project there is a file `/data/dbus-opendtu/config.ini` - just change the values - most important is the deviceinstance, custom name and phase under "DEFAULT" and host, username and password in section "ONPREMISE". More details below:
+Within the project there is a file `/data/dbus-opendtu/config.ini`. Most important is the DTU variant, Host and Username and Password, if you use authentication. 
 
 | Section  | Config vlaue | Explanation |
 | ------------- | ------------- | ------------- |
@@ -135,6 +135,8 @@ Example for JSON PATH: use keywords separated by /
 
 Please open a new issue on github, only here we can work on your problem in a structured way: https://github.com/henne49/dbus-opendtu/issues/new/choose
 
+Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert, once debugging and troubleshooting is complete. Rerun the script and share the current.log file. 
+
 Please provide the config.ini and JSON file and upload to the github issues, you can download the JSON file using your browser or using a commandline like tool like curl. 
 
 | Type of DTU | URL |
@@ -153,6 +155,11 @@ curl http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status | jq > export.j
 also describe the problem as best as you can.
 
 Please also show, what you can see in Venus OS and VRM Portal, as the source of truth is Venus OS and not VRM. 
+
+## Security
+For openDTU, you can use authentication for the web Interface, but allow access to the status page unauthenticated. For this please use the settings like below.
+
+<img src="img/opendtu-security.png" width="400" />
 
 ## Used documentation
 - https://github.com/victronenergy/venus/wiki/dbus#pv-inverters   DBus paths for Victron namespace
