@@ -453,7 +453,7 @@ class DbusService:
 
             self._update_index()
         except requests.exceptions.RequestException as exception:
-            logging.warning(f"HTTP Error at _update: {str(exception)}")
+            logging.warning(f"HTTP Error at _update: {str(self.host)}")
         except ValueError as error:
             logging.warning(f"Error at _update: {str(error)}")
         except Exception as error:
@@ -614,7 +614,7 @@ def main():
         for actual_template in range(number_of_templates):
             logging.info("Registering Templates")
             service = DbusService(
-                servicename="com.victronenergy.pvinverter",
+                servicename="com.victronenergy.grid",
                 paths=paths,
                 actual_inverter=actual_template,
                 istemplate=True,
