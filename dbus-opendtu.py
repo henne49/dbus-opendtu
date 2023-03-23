@@ -212,6 +212,7 @@ class DbusService:
         self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
         self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
         self.pvinverterphase = str(config[f"TEMPLATE{template_number}"]["Phase"])
+        self.servicename = str(config[f"TEMPLATE{template_number}"]["Servicename"])
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
         except Exception:
@@ -270,9 +271,6 @@ class DbusService:
             numberofinverters = 1
         logging.info("Number of Inverters found: %s", numberofinverters)
         return numberofinverters
-
-#    def _getNumberOfTemplates(self):
-#        return self.numberoftemplates
 
     def _get_dtu_variant(self):
         return self.dtuvariant
@@ -454,6 +452,7 @@ class DbusService:
             self._update_index()
         except requests.exceptions.RequestException as exception:
             logging.warning(f"HTTP Error at _update: {str(self.host)}")
+            #logging.warning(f"HTTP Error at _update: {str(exception)}") logs password in cleartext
         except ValueError as error:
             logging.warning(f"Error at _update: {str(error)}")
         except Exception as error:
@@ -614,7 +613,7 @@ def main():
         for actual_template in range(number_of_templates):
             logging.info("Registering Templates")
             service = DbusService(
-                servicename="com.victronenergy.grid",
+                servicename=str(config[f"TEMPLATE{actual_template}"]["Servicename"]),
                 paths=paths,
                 actual_inverter=actual_template,
                 istemplate=True,
