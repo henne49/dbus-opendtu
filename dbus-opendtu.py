@@ -8,7 +8,7 @@ import time
 import json
 import configparser  # for config/ini file
 import requests  # for http GET #pylint: disable=E0401
-from requests.auth import HTTPDigestAuth
+from requests.auth import HTTPDigestAuth #pylint: disable=E0401
 import dbus #pylint: disable=E0401
 
 if sys.version_info.major == 2:
@@ -51,7 +51,7 @@ def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname):
 
 def is_true(val):
     '''helper function to test for different true values'''
-    return val == 1 or val == "1" or val == True
+    return val in (1, '1', True)
 
 
 ## register every PV Inverter as registry to iterate over it
@@ -156,9 +156,8 @@ class DbusService:
         else:
             if defaultvalue is None:
                 raise ValueError(f"config entry '{name}' not found. Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
-            else: 
+            else:
                 return defaultvalue
-            
 
     def get_default_config(self, config, name, defaultvalue):
         '''check if config value exist in DEFAULT section, otherwise return defaultvalue'''
