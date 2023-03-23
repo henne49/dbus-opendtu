@@ -8,6 +8,7 @@ import time
 import json
 import configparser  # for config/ini file
 import requests  # for http GET #pylint: disable=E0401
+from requests.auth import HTTPDigestAuth
 import dbus #pylint: disable=E0401
 
 if sys.version_info.major == 2:
@@ -148,12 +149,16 @@ class DbusService:
         # add _sign_of_life 'timer' to get feedback in log every 5minutes
         gobject.timeout_add(self._get_sign_of_life_interval() * 60 * 1000, self._sign_of_life)
 
-    def get_config_value(self, config, name, inverter_or_template):
+    def get_config_value(self, config, name, inverter_or_template, defaultvalue=None):
         '''check if config value exist in current inverter/template's section, otherwise throw error'''
         if name in config[f"{inverter_or_template}{self.pvinverternumber}"]:
             return config[f"{inverter_or_template}{self.pvinverternumber}"][name]
         else:
-            raise ValueError(f"config entry '{name}' not found. Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
+            if defaultvalue is None:
+                raise ValueError(f"config entry '{name}' not found. Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
+            else: 
+                return defaultvalue
+            
 
     def get_default_config(self, config, name, defaultvalue):
         '''check if config value exist in DEFAULT section, otherwise return defaultvalue'''
@@ -176,6 +181,8 @@ class DbusService:
         self.host = self.get_config_value(config, "Host", "INVERTER" )
         self.username = self.get_config_value(config, "Username", "INVERTER" )
         self.password = self.get_config_value(config, "Password", "INVERTER" )
+        self.digestauth = bool(self.get_config_value(config, "DigestAuth", "INVERTER", False ))
+
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
         except Exception:
@@ -213,6 +220,8 @@ class DbusService:
         self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
         self.pvinverterphase = str(config[f"TEMPLATE{template_number}"]["Phase"])
         self.servicename = str(config[f"TEMPLATE{template_number}"]["Servicename"])
+        self.digestauth = bool(self.get_config_value(config, "DigestAuth", "TEMPLATE", False))
+
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
         except Exception:
@@ -318,8 +327,11 @@ class DbusService:
         elif self.dtuvariant == "ahoy":
             url = f"http://{self.host}/api/live"
         elif self.dtuvariant == "template":
-            url = f"http://{self.username}:{self.password}@{self.host}/{self.custapipath}"
-            url = url.replace(":@", "")
+            if self.digestauth:
+                url = f"http://{self.host}/{self.custapipath}"
+            else:
+                url = f"http://{self.username}:{self.password}@{self.host}/{self.custapipath}"
+                url = url.replace(":@", "")
         else:
             logging.error('no dtuvariant set')
         return url
@@ -332,7 +344,10 @@ class DbusService:
 
         url = self._get_status_url()
         logging.debug(f"calling {self.host} with timeout={self.httptimeout}")
-        meter_r = requests.get(url=url, timeout=float(self.httptimeout))
+        if not self.digestauth:
+            meter_r = requests.get(url=url, timeout=float(self.httptimeout))
+        else:
+            meter_r = requests.get(url = url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
         meter_r.raise_for_status() # raise exception on bad status code
 
         # check for response
@@ -451,8 +466,8 @@ class DbusService:
 
             self._update_index()
         except requests.exceptions.RequestException as exception:
-            logging.warning(f"HTTP Error at _update: {str(self.host)}")
-            #logging.warning(f"HTTP Error at _update: {str(exception)}") logs password in cleartext
+            #logging.warning(f"HTTP Error at _update: {str(self.host)}")
+            logging.warning(f"HTTP Error at _update: {str(exception)}") #logs password in cleartext
         except ValueError as error:
             logging.warning(f"Error at _update: {str(error)}")
         except Exception as error:
