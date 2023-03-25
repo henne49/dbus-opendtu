@@ -53,6 +53,22 @@ def is_true(val):
     '''helper function to test for different true values'''
     return val in (1, '1', True)
 
+def get_config_value(config, name, inverter_or_template, pvinverternumber, defaultvalue=None):
+    '''check if config value exist in current inverter/template's section, otherwise throw error'''
+    if name in config[f"{inverter_or_template}{pvinverternumber}"]:
+        return config[f"{inverter_or_template}{pvinverternumber}"][name]
+    else:
+        if defaultvalue is None:
+            raise ValueError(f"config entry '{name}' not found. Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
+        else:
+            return defaultvalue
+
+def get_default_config(config, name, defaultvalue):
+    '''check if config value exist in DEFAULT section, otherwise return defaultvalue'''
+    if name in config["DEFAULT"]:
+        return config["DEFAULT"][name]
+    else:
+        return defaultvalue
 
 ## register every PV Inverter as registry to iterate over it
 class PvInverterRegistry(type):
@@ -149,23 +165,6 @@ class DbusService:
         # add _sign_of_life 'timer' to get feedback in log every 5minutes
         gobject.timeout_add(self._get_sign_of_life_interval() * 60 * 1000, self._sign_of_life)
 
-    def get_config_value(self, config, name, inverter_or_template, defaultvalue=None):
-        '''check if config value exist in current inverter/template's section, otherwise throw error'''
-        if name in config[f"{inverter_or_template}{self.pvinverternumber}"]:
-            return config[f"{inverter_or_template}{self.pvinverternumber}"][name]
-        else:
-            if defaultvalue is None:
-                raise ValueError(f"config entry '{name}' not found. Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
-            else:
-                return defaultvalue
-
-    def get_default_config(self, config, name, defaultvalue):
-        '''check if config value exist in DEFAULT section, otherwise return defaultvalue'''
-        if name in config["DEFAULT"]:
-            return config["DEFAULT"][name]
-        else:
-            return defaultvalue
-
     ## read config file
 
     def _read_config_dtu(self, actual_inverter):
@@ -173,14 +172,14 @@ class DbusService:
         self.pvinverternumber = actual_inverter
         self.dtuvariant = str(config["DEFAULT"]["DTU"])
         self.deviceinstance = int(config[f"INVERTER{self.pvinverternumber}"]["DeviceInstance"])
-        self.acposition = int(self.get_config_value(config, "AcPosition", "INVERTER" ))
+        self.acposition = int(get_config_value(config, "AcPosition", "INVERTER", self.pvinverternumber ))
         self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
         self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
         self.pvinverterphase = str(config[f"INVERTER{self.pvinverternumber}"]["Phase"])
-        self.host = self.get_config_value(config, "Host", "INVERTER" )
-        self.username = self.get_config_value(config, "Username", "INVERTER" )
-        self.password = self.get_config_value(config, "Password", "INVERTER" )
-        self.digestauth = bool(self.get_config_value(config, "DigestAuth", "INVERTER", False ))
+        self.host = get_config_value(config, "Host", "INVERTER", self.pvinverternumber )
+        self.username = get_config_value(config, "Username", "INVERTER", self.pvinverternumber )
+        self.password = get_config_value(config, "Password", "INVERTER", self.pvinverternumber )
+        self.digestauth = bool(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, False ))
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
@@ -194,7 +193,7 @@ class DbusService:
 
         self.pollinginterval = int(config["DEFAULT"]["ESP8266PollingIntervall"])
         self.meter_data = 0
-        self.httptimeout = self.get_default_config(config, "HTTPTimeout", 2.5)
+        self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
 
     def _read_config_template(self, template_number):
         config = self._get_config()
@@ -218,8 +217,7 @@ class DbusService:
         self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
         self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
         self.pvinverterphase = str(config[f"TEMPLATE{template_number}"]["Phase"])
-        self.servicename = str(config[f"TEMPLATE{template_number}"]["Servicename"])
-        self.digestauth = bool(self.get_config_value(config, "DigestAuth", "TEMPLATE", False))
+        self.digestauth = bool(get_config_value(config, "DigestAuth", "TEMPLATE", template_number, False))
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
@@ -231,7 +229,7 @@ class DbusService:
         except Exception:
             self.dry_run = False
         self.meter_data = 0
-        self.httptimeout = self.get_default_config(config, "HTTPTimeout", 2.5)
+        self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
 
     ## get the Serialnumber
     def _get_serial(self, pvinverternumber):
@@ -626,8 +624,9 @@ def main():
 
         for actual_template in range(number_of_templates):
             logging.info("Registering Templates")
+            servicename = get_config_value(config, "Servicename", "TEMPLATE", actual_template, "com.victronenergy.pvinverter")
             service = DbusService(
-                servicename=str(config[f"TEMPLATE{actual_template}"]["Servicename"]),
+                servicename=servicename,
                 paths=paths,
                 actual_inverter=actual_template,
                 istemplate=True,
