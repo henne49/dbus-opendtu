@@ -9,7 +9,7 @@ assignees: ''
 
 **Follow the Troubleshooting Section**
 Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert, once debugging and troubleshooting is complete. Rerun the script and share the current.log and config.ini file.
-https://github.com/henne49/dbus-opendtu#troubleshooting 
+[Troubleshooting Section](https://github.com/henne49/dbus-opendtu#troubleshooting )
 
 **Describe the Problem**
 A clear and concise description of what the issue is.
