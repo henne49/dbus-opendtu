@@ -617,8 +617,8 @@ def main():
 
             if number_of_inverters > 1:
                 # start our main-service if there are more than 1 inverter
-                servicename=get_config_value(config, "Servicename", "INVERTER", actual_inverter, "com.victronenergy.pvinverter")
                 for actual_inverter in range(number_of_inverters - 1):
+                    servicename=get_config_value(config, "Servicename", "INVERTER", actual_inverter + 1, "com.victronenergy.pvinverter")
                     DbusService(
                         servicename=servicename,
                         paths=paths,
