@@ -41,7 +41,7 @@ def get_nested(meter_data, path):
                 value = 0
     return value
 
-def url_anomize(url):
+def url_anonymize(url):
     '''remove username & password from URL for debug logging'''
     return re.sub(r'//.*:.*\@',r'//****:****@',url)
 
@@ -343,7 +343,7 @@ class DbusService:
             return
 
         url = self._get_status_url()
-        logging.debug(f"calling {url_anomize(url)} with timeout={self.httptimeout}")
+        logging.debug(f"calling {url_anonymize(url)} with timeout={self.httptimeout}")
         if not self.digestauth:
             meter_r = requests.get(url=url, timeout=float(self.httptimeout))
         else:
@@ -467,7 +467,7 @@ class DbusService:
             self._update_index()
         except requests.exceptions.RequestException as exception:
             #logging.warning(f"HTTP Error at _update: {str(self.host)}")
-            logging.warning(f"HTTP Error at _update: {str(url_anomize(exception))}")
+            logging.warning(f"HTTP Error at _update: {str(url_anonymize(exception))}")
         except ValueError as error:
             logging.warning(f"Error at _update: {str(error)}")
         except Exception as error:
