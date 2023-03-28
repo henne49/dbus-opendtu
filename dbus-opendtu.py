@@ -608,8 +608,10 @@ def main():
         }
 
         if dtuvariant != "template":
+            logging.info("Registering dtu devices")
+            servicename=get_config_value(config, "Servicename", "INVERTER", 0, "com.victronenergy.pvinverter")
             service = DbusService(
-                servicename="com.victronenergy.pvinverter",
+                servicename=servicename,
                 paths=paths,
                 actual_inverter=0,
             )
@@ -619,8 +621,9 @@ def main():
             if number_of_inverters > 1:
                 # start our main-service if there are more than 1 inverter
                 for actual_inverter in range(number_of_inverters - 1):
+                    servicename=get_config_value(config, "Servicename", "INVERTER", actual_inverter + 1, "com.victronenergy.pvinverter")
                     DbusService(
-                        servicename="com.victronenergy.pvinverter",
+                        servicename=servicename,
                         paths=paths,
                         actual_inverter=actual_inverter + 1,
                     )
