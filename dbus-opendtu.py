@@ -6,6 +6,7 @@ import platform
 import sys
 import time
 import json
+import re
 import configparser  # for config/ini file
 import requests  # for http GET #pylint: disable=E0401
 from requests.auth import HTTPDigestAuth #pylint: disable=E0401
@@ -40,6 +41,9 @@ def get_nested(meter_data, path):
                 value = 0
     return value
 
+def url_anonymize(url):
+    '''remove username & password from URL for debug logging'''
+    return re.sub(r'//.*:.*\@',r'//****:****@',url)
 
 def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname):
     '''get the value by name instead of list index'''
@@ -47,7 +51,6 @@ def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname):
     data_index = ac_data_field_names.index(fieldname)
     ac_channel_index = 0
     return meter_data["inverter"][actual_inverter]["ch"][ac_channel_index][data_index]
-
 
 def is_true(val):
     '''helper function to test for different true values'''
@@ -340,11 +343,11 @@ class DbusService:
             return
 
         url = self._get_status_url()
-        logging.debug(f"calling {self.host} with timeout={self.httptimeout}")
+        logging.debug(f"calling {url_anonymize(url)} with timeout={self.httptimeout}")
         if not self.digestauth:
             meter_r = requests.get(url=url, timeout=float(self.httptimeout))
         else:
-            meter_r = requests.get(url = url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
+            meter_r = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
         meter_r.raise_for_status() # raise exception on bad status code
 
         # check for response
@@ -464,7 +467,7 @@ class DbusService:
             self._update_index()
         except requests.exceptions.RequestException as exception:
             #logging.warning(f"HTTP Error at _update: {str(self.host)}")
-            logging.warning(f"HTTP Error at _update: {str(exception)}") #logs password in cleartext
+            logging.warning(f"HTTP Error at _update: {str(url_anonymize(exception))}")
         except ValueError as error:
             logging.warning(f"Error at _update: {str(error)}")
         except Exception as error:
