@@ -1,5 +1,3 @@
-// ver 0.5.105, output of /api/inverter/id/0
-// after start of reception: ts_last_success holds a timestamp > 0 now
 {
   "id": 0,
   "enabled": true,
