@@ -47,6 +47,16 @@ def url_anonymize(url):
 
 def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname):
     '''get the value by name instead of list index'''
+    # fetch value from record call:
+    #  - but there seem to be more than one value per type and Inverter, and we don't know which one to take
+    # values = meter_data["record"]["inverter"][actual_inverter] # -> array of dicts
+    # for value_dict in values:
+    #     if value_dict["fld"] == fieldname:
+    #         val = value_dict["val"]
+    #         print(f"returning fieldname {fieldname}: value {val}")
+    #         return val
+    # raise ValueError(f"Fieldname {fieldname} not found in meter_data.")
+
     ac_data_field_names = meter_data["ch0_fld_names"]
     data_index = ac_data_field_names.index(fieldname)
     ac_channel_index = 0
@@ -325,7 +335,7 @@ class DbusService:
             url = f"http://{self.username}:{self.password}@{self.host}/api/livedata/status"
             url = url.replace(":@", "")
         elif self.dtuvariant == "ahoy":
-            url = f"http://{self.host}/api/live"
+            url = self.get_ahoy_base_url() + "/live"
         elif self.dtuvariant == "template":
             if self.digestauth:
                 url = f"http://{self.host}/{self.custapipath}"
@@ -336,50 +346,85 @@ class DbusService:
             logging.error('no dtuvariant set')
         return url
 
+    def get_ahoy_base_url(self):
+        return f"http://{self.host}/api"
+
     def _refresh_data(self):
+        '''Fetch new data from the DTU API and store in locally if successful.'''
 
         if self.pvinverternumber != 0 and self.dtuvariant != "template":
             # only fetch new data when called for inverter 0 (background: data is kept at class level for all inverters)
             return
 
         url = self._get_status_url()
-        logging.debug(f"calling {url_anonymize(url)} with timeout={self.httptimeout}")
-        if not self.digestauth:
-            meter_r = requests.get(url=url, timeout=float(self.httptimeout))
-        else:
-            meter_r = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
-        meter_r.raise_for_status() # raise exception on bad status code
-
-        # check for response
-        if not meter_r:
-            logging.info("No Response from OpenDTU/Ahoy")
-            raise ConnectionError("No response from OpenDTU - ", self.host)
-
-        meter_data = None
-        try:
-            meter_data = meter_r.json()
-        except json.decoder.JSONDecodeError as error:
-            logging.debug(f"JSONDecodeError: {str(error)}")
-
-        # check for Json
-        if not meter_data:
-            # will be logged when catched
-            raise ValueError(f"Converting response from {self.host} to JSON failed:\nstatus={meter_r.status_code},\nresponse={meter_r.text}")
+        meter_data = self.fetch_url(url)
 
         if self.dtuvariant == "opendtu":
-            if not "AC" in meter_data["inverters"][self.pvinverternumber]:
-                logging.info(
-                    "You do not have the latest OpenDTU Version to run this script, please upgrade your OpenDTU to at least version 4.4.3"
-                )
-                raise ValueError(
-                    "You do not have the latest OpenDTU Version to run this script, please upgrade your OpenDTU to at least version 4.4.3"
-                )
+            self.check_opendtu_data(meter_data)
+
+        if self.dtuvariant == "ahoy":
+            self.check_and_enrich_ahoy_data(meter_data)
 
         # store valid data for later use
         if self.dtuvariant == "template":
             self.meter_data = meter_data
         else:
             DbusService._meter_data = meter_data
+
+    def check_and_enrich_ahoy_data(self, meter_data):
+        if not "iv" in meter_data:
+            logging.info("You do not have the latest Ahoy Version to run this script, please upgrade your Ahoy to at least version 0.5.93")
+            raise ValueError("You do not have the latest Ahoy Version to run this script, please upgrade your Ahoy to at least version 0.5.93")
+
+        # not needed: meter_data["record"] = self.fetch_ahoy_record_data()
+
+        meter_data["inverter"] = []
+        for inverter_number in range(len(meter_data["iv"])):
+            if is_true(meter_data["iv"][inverter_number]):
+                iv_data = self.fetch_ahoy_iv_data(inverter_number)
+            else:
+                iv_data = {}
+            meter_data["inverter"].append(iv_data)
+
+    def check_opendtu_data(self, meter_data):
+        if not "AC" in meter_data["inverters"][self.pvinverternumber]:
+            logging.info("You do not have the latest OpenDTU Version to run this script, please upgrade your OpenDTU to at least version 4.4.3")
+            raise ValueError("You do not have the latest OpenDTU Version to run this script, please upgrade your OpenDTU to at least version 4.4.3")
+
+    def fetch_ahoy_iv_data(self, inverter_number):
+        iv_url = self.get_ahoy_base_url() + "inverter/id/" + inverter_number
+        return self.fetch_url(iv_url)
+
+    def fetch_ahoy_record_data(self):
+        record_live_url = self.get_ahoy_base_url() + "/record/live"
+        return self.fetch_url(record_live_url)
+
+
+    def fetch_url(self, url):
+        '''Fetch JSON data from url. Throw an exception on any error. Only return on success.'''
+        logging.debug(f"calling {url_anonymize(url)} with timeout={self.httptimeout}")
+        if not self.digestauth:
+            json_str = requests.get(url=url, timeout=float(self.httptimeout))
+        else:
+            json_str = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
+        json_str.raise_for_status() # raise exception on bad status code
+
+        # check for response
+        if not json_str:
+            logging.info("No Response from OpenDTU/Ahoy")
+            raise ConnectionError("No response from OpenDTU - ", self.host)
+
+        json = None
+        try:
+            json = json_str.json()
+        except json.decoder.JSONDecodeError as error:
+            logging.debug(f"JSONDecodeError: {str(error)}")
+
+        # check for Json
+        if not json:
+            # will be logged when catched
+            raise ValueError(f"Converting response from {self.host} to JSON failed:\nstatus={json_str.status_code},\nresponse={json_str.text}")
+        return json
 
     def _get_data(self):
         if self._test_meter_data:
@@ -391,7 +436,7 @@ class DbusService:
             return self.meter_data
         else:
             return DbusService._meter_data
-
+    
     def set_test_data(self, test_data):
         '''Set Test Data to run test'''
         self._test_meter_data = test_data
@@ -405,10 +450,11 @@ class DbusService:
         if self.max_age_ts < 0:
             # check is disabled by config
             return True
+
         meter_data = self._get_data()
 
         if self.dtuvariant == "ahoy":
-            ts_last_success = meter_data["inverter"][self.pvinverternumber]["ts_last_success"]
+            ts_last_success = self.get_ts_last_success(meter_data)
             age_seconds = time.time() - ts_last_success
             logging.debug(
                 "is_data_up2date: inverter #%d: age_seconds=%d, max_age_ts=%d",
@@ -421,6 +467,10 @@ class DbusService:
 
         else:
             return True
+
+    def get_ts_last_success(self, meter_data):
+        '''return ts_last_success from the meter_data structure - depending on the API version'''
+        return meter_data["inverter"][self.pvinverternumber]["ts_last_success"]
 
     def _sign_of_life(self):
         logging.debug(
@@ -489,7 +539,7 @@ class DbusService:
         self._last_update = time.time()
 
     def get_values_for_inverter(self):
-        '''read '''
+        '''read data and return (power, pvyield, current, voltage)'''
         meter_data = self._get_data()
         (power, pvyield, current, voltage) = (None, None, None, None)
 
@@ -648,7 +698,9 @@ def main():
 
 
 OPENDTU_TEST_DATA_STR = '{"inverters":[{"serial":"112181311701","name":"Holzpalast Süd","data_age":11559,"reachable":false,"producing":false,"limit_relative":100,"limit_absolute":350,"0":{"Power":{"v":1,"u":"W"},"Voltage":{"v":235.1999969,"u":"V"},"Current":{"v":1,"u":"A"},"Power DC":{"v":1.200000048,"u":"W"},"YieldDay":{"v":482,"u":"Wh"},"YieldTotal":{"v":111.3209991,"u":"kWh"},"Frequency":{"v":49.99000168,"u":"Hz"},"Temperature":{"v":21.60000038,"u":"°C"},"PowerFactor":{"v":0,"u":"%"},"ReactivePower":{"v":0,"u":"var"},"Efficiency":{"v":0,"u":"%"}},"1":{"Power":{"v":1.200000048,"u":"W"},"Voltage":{"v":24.10000038,"u":"V"},"Current":{"v":0.050000001,"u":"A"},"YieldDay":{"v":482,"u":"Wh"},"YieldTotal":{"v":111.3209991,"u":"kWh"},"Irradiation":{"v":0.292682916,"u":"%"}},"events":3},{"serial":"112180719948","name":"Holzpalast Ost Links","data_age":11678,"reachable":false,"producing":false,"limit_relative":100,"limit_absolute":300,"0":{"Power":{"v":0,"u":"W"},"Voltage":{"v":235.6000061,"u":"V"},"Current":{"v":0,"u":"A"},"Power DC":{"v":1,"u":"W"},"YieldDay":{"v":351,"u":"Wh"},"YieldTotal":{"v":0.843999982,"u":"kWh"},"Frequency":{"v":49.97000122,"u":"Hz"},"Temperature":{"v":21.70000076,"u":"°C"},"PowerFactor":{"v":0,"u":"%"},"ReactivePower":{"v":0,"u":"var"},"Efficiency":{"v":0,"u":"%"}},"1":{"Power":{"v":1,"u":"W"},"Voltage":{"v":19.70000076,"u":"V"},"Current":{"v":0.050000001,"u":"A"},"YieldDay":{"v":351,"u":"Wh"},"YieldTotal":{"v":0.843999982,"u":"kWh"},"Irradiation":{"v":0.289855093,"u":"%"}},"events":3},{"serial":"114181304338","name":"Mülltonnen","data_age":11377,"reachable":false,"producing":false,"limit_relative":100,"limit_absolute":600,"0":{"Power":{"v":0,"u":"W"},"Voltage":{"v":234.5,"u":"V"},"Current":{"v":0,"u":"A"},"Power DC":{"v":0.700000048,"u":"W"},"YieldDay":{"v":828,"u":"Wh"},"YieldTotal":{"v":5.251999855,"u":"kWh"},"Frequency":{"v":49.99000168,"u":"Hz"},"Temperature":{"v":22.39999962,"u":"°C"},"PowerFactor":{"v":0,"u":"%"},"ReactivePower":{"v":0,"u":"var"},"Efficiency":{"v":0,"u":"%"}},"1":{"Power":{"v":0.300000012,"u":"W"},"Voltage":{"v":18.60000038,"u":"V"},"Current":{"v":0.02,"u":"A"},"YieldDay":{"v":398,"u":"Wh"},"YieldTotal":{"v":2.50999999,"u":"kWh"},"Irradiation":{"v":0.086956523,"u":"%"}},"2":{"Power":{"v":0.400000006,"u":"W"},"Voltage":{"v":18.60000038,"u":"V"},"Current":{"v":0.02,"u":"A"},"YieldDay":{"v":430,"u":"Wh"},"YieldTotal":{"v":2.742000103,"u":"kWh"},"Irradiation":{"v":0.115942039,"u":"%"}},"events":3}]}'
-AHOY_TEST_DATA_STR = '{"menu":{"name":["Live","Serial / Control","Settings","-","REST API","-","Update","System","-","Documentation"],"link":["/live","/serial","/setup",null,"/api",null,"/update","/system",null,"https://ahoydtu.de"],"trgt":[null,null,null,null,"_blank",null,null,null,null,"_blank"]},"generic":{"version":"0.5.70","build":"d8e255d","wifi_rssi":-72,"ts_uptime":1602,"esp_type":"ESP8266"},"inverter":[{"enabled":true,"name":"hoymiles1","channels":1,"power_limit_read":100,"last_alarm":"Inverter start","ts_last_success":1675243378,"ch":[[234.9,0.1,22.5,50.04,1,7.5,96.802,16,23.6,95.339,0],[33,0.71,23.6,16,96.802,6.743]],"ch_names":["AC","einzel"]},{"enabled":true,"name":"hoymiles2","channels":4,"power_limit_read":100,"last_alarm":"Inverter start","ts_last_success":1675243373,"ch":[[234.4,0.37,87.2,50.03,0.971,5.8,11.338,68,91.7,95.093,21.5],[34,0.76,26,19,3.554,6.933],[34,0.01,0.5,0,0.071,0],[33.8,0.95,32.1,24,3.581,8.56],[33.8,0.98,33.1,25,4.132,8.827]],"ch_names":["AC","M1","no","M3","M4"]}],"refresh_interval":5,"ch0_fld_units":["V","A","W","Hz","","°C","kWh","Wh","W","%","var"],"ch0_fld_names":["U_AC","I_AC","P_AC","F_AC","PF_AC","Temp","YieldTotal","YieldDay","P_DC","Efficiency","Q_AC"],"fld_units":["V","A","W","Wh","kWh","%"],"fld_names":["U_DC","I_DC","P_DC","YieldDay","YieldTotal","Irradiation"]}'
+AHOY_TEST_DATA_FILE_LIVE = "docs/ahoy_0.5.93_live.json"
+AHOY_TEST_DATA_FILE_RECORD = "docs/ahoy_0.5.93_record-live.json"
+AHOY_TEST_DATA_FILE_IV_0 = "docs/ahoy_0.5.93_inverter-id-0.json"
 
 
 def test_opendtu_reachable(test_service):
@@ -700,28 +752,38 @@ def test_opendtu_producing(test_service):
     assert test_service.get_values_for_inverter() == (1, 111.3209991, 1, 235.1999969)
 
 
+def load_json_file(filename):
+    with open(filename) as file:
+        return json.load(file)
+
+def load_ahoy_data():
+    test_data = load_json_file(AHOY_TEST_DATA_FILE_LIVE)
+    # not needed: test_data["record"] = load_json_file(AHOY_TEST_DATA_FILE_RECORD)
+    test_data["inverter"] = []
+    test_data["inverter"].append(load_json_file(AHOY_TEST_DATA_FILE_IV_0))
+    return test_data
+
+
 def test_ahoy_values(test_service):
     '''test with ahoy data'''
     test_service.set_dtu_variant("ahoy")
-    test_data = json.loads(AHOY_TEST_DATA_STR)
+    test_data = load_ahoy_data()
 
     test_service.set_test_data(test_data)
-    assert test_service.get_values_for_inverter() == (22.5, 96.802, 0.1, 234.9)
+    # (power, pvyield total, current, voltage)
+    assert test_service.get_values_for_inverter() == (223.7, 422.603, 0.98, 229.5)
 
 
 def test_ahoy_timestamp(test_service):
     '''test the timestamps for ahoy'''
     test_service.set_dtu_variant("ahoy")
-    test_data = json.loads(AHOY_TEST_DATA_STR)
+    test_data = load_ahoy_data()
 
     test_service.set_test_data(test_data)
     assert test_service.is_data_up2date() is False
 
-    test_data = json.loads(
-        AHOY_TEST_DATA_STR.replace(
-            '"ts_last_success":1675243378', '"ts_last_success":' + str(time.time() - 10)
-        )
-    )
+    test_data = load_ahoy_data()
+    test_data["inverter"][0]["ts_last_success"] = time.time() - 10
     test_service.set_test_data(test_data)
     assert test_service.is_data_up2date() is True
 
