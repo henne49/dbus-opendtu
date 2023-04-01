@@ -382,9 +382,10 @@ class DbusService:
         for inverter_number in range(len(meter_data["iv"])):
             if is_true(meter_data["iv"][inverter_number]):
                 iv_data = self.fetch_ahoy_iv_data(inverter_number)
-            else:
-                iv_data = {}
-            meter_data["inverter"].append(iv_data)
+                while len(meter_data["inverter"]) < inverter_number:
+                    # there was a gap
+                    meter_data.append({})
+                meter_data["inverter"].append(iv_data)
 
     def check_opendtu_data(self, meter_data):
         if not "AC" in meter_data["inverters"][self.pvinverternumber]:
@@ -392,7 +393,7 @@ class DbusService:
             raise ValueError("You do not have the latest OpenDTU Version to run this script, please upgrade your OpenDTU to at least version 4.4.3")
 
     def fetch_ahoy_iv_data(self, inverter_number):
-        iv_url = self.get_ahoy_base_url() + "inverter/id/" + inverter_number
+        iv_url = self.get_ahoy_base_url() + "/inverter/id/" + str(inverter_number)
         return self.fetch_url(iv_url)
 
     def fetch_ahoy_record_data(self):
@@ -621,7 +622,7 @@ def main():
         ],
     )
 
-    run_tests()
+    # run_tests()
 
     try:
         logging.info("Start")
@@ -787,6 +788,14 @@ def test_ahoy_timestamp(test_service):
     test_service.set_test_data(test_data)
     assert test_service.is_data_up2date() is True
 
+def test_ahoy_get_number_of_inverters(test_service):
+    '''test if get_number_of_inverters works correctly'''
+    test_service.set_dtu_variant("ahoy")
+    test_data = load_ahoy_data()
+
+    test_service.set_test_data(test_data)
+    assert test_service.get_number_of_inverters() == 3
+
 
 def run_tests():
     '''function to run tests'''
@@ -799,3 +808,4 @@ def run_tests():
 
 if __name__ == "__main__":
     main()
+    #run_tests()
