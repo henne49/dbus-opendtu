@@ -1,0 +1,438 @@
+{
+  "inverter": [
+    [
+      {
+        "fld": "U_DC",
+        "unit": "V",
+        "val": "30.10"
+      },
+      {
+        "fld": "I_DC",
+        "unit": "A",
+        "val": "0.09"
+      },
+      {
+        "fld": "P_DC",
+        "unit": "W",
+        "val": "2.80"
+      },
+      {
+        "fld": "YieldDay",
+        "unit": "Wh",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldTotal",
+        "unit": "kWh",
+        "val": "96.27"
+      },
+      {
+        "fld": "Irradiation",
+        "unit": "%",
+        "val": "0.75"
+      },
+      {
+        "fld": "U_DC",
+        "unit": "V",
+        "val": "30.10"
+      },
+      {
+        "fld": "I_DC",
+        "unit": "A",
+        "val": "0.10"
+      },
+      {
+        "fld": "P_DC",
+        "unit": "W",
+        "val": "3.00"
+      },
+      {
+        "fld": "YieldDay",
+        "unit": "Wh",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldTotal",
+        "unit": "kWh",
+        "val": "99.01"
+      },
+      {
+        "fld": "Irradiation",
+        "unit": "%",
+        "val": "0.80"
+      },
+      {
+        "fld": "U_DC",
+        "unit": "V",
+        "val": "30.40"
+      },
+      {
+        "fld": "I_DC",
+        "unit": "A",
+        "val": "0.10"
+      },
+      {
+        "fld": "P_DC",
+        "unit": "W",
+        "val": "2.90"
+      },
+      {
+        "fld": "YieldDay",
+        "unit": "Wh",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldTotal",
+        "unit": "kWh",
+        "val": "98.90"
+      },
+      {
+        "fld": "Irradiation",
+        "unit": "%",
+        "val": "0.77"
+      },
+      {
+        "fld": "U_DC",
+        "unit": "V",
+        "val": "30.40"
+      },
+      {
+        "fld": "I_DC",
+        "unit": "A",
+        "val": "0.10"
+      },
+      {
+        "fld": "P_DC",
+        "unit": "W",
+        "val": "3.00"
+      },
+      {
+        "fld": "YieldDay",
+        "unit": "Wh",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldTotal",
+        "unit": "kWh",
+        "val": "98.77"
+      },
+      {
+        "fld": "Irradiation",
+        "unit": "%",
+        "val": "0.80"
+      },
+      {
+        "fld": "U_AC",
+        "unit": "V",
+        "val": "228.10"
+      },
+      {
+        "fld": "I_AC",
+        "unit": "A",
+        "val": "0.05"
+      },
+      {
+        "fld": "P_AC",
+        "unit": "W",
+        "val": "11.30"
+      },
+      {
+        "fld": "Q_AC",
+        "unit": "var",
+        "val": "18.40"
+      },
+      {
+        "fld": "F_AC",
+        "unit": "Hz",
+        "val": "50.02"
+      },
+      {
+        "fld": "PF_AC",
+        "unit": "",
+        "val": "0.52"
+      },
+      {
+        "fld": "Temp",
+        "unit": "°C",
+        "val": "13.40"
+      },
+      {
+        "fld": "ALARM_MES_ID",
+        "unit": "",
+        "val": "1.00"
+      },
+      {
+        "fld": "YieldDay",
+        "unit": "Wh",
+        "val": "8.00"
+      },
+      {
+        "fld": "YieldTotal",
+        "unit": "kWh",
+        "val": "392.96"
+      },
+      {
+        "fld": "P_DC",
+        "unit": "W",
+        "val": "11.70"
+      },
+      {
+        "fld": "Efficiency",
+        "unit": "%",
+        "val": "96.58"
+      }
+    ],
+    [
+      {
+        "fld": "U_DC",
+        "unit": "V",
+        "val": "29.50"
+      },
+      {
+        "fld": "I_DC",
+        "unit": "A",
+        "val": "0.06"
+      },
+      {
+        "fld": "P_DC",
+        "unit": "W",
+        "val": "1.90"
+      },
+      {
+        "fld": "YieldDay",
+        "unit": "Wh",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldTotal",
+        "unit": "kWh",
+        "val": "91.14"
+      },
+      {
+        "fld": "Irradiation",
+        "unit": "%",
+        "val": "0.51"
+      },
+      {
+        "fld": "U_DC",
+        "unit": "V",
+        "val": "29.50"
+      },
+      {
+        "fld": "I_DC",
+        "unit": "A",
+        "val": "0.07"
+      },
+      {
+        "fld": "P_DC",
+        "unit": "W",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldDay",
+        "unit": "Wh",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldTotal",
+        "unit": "kWh",
+        "val": "94.00"
+      },
+      {
+        "fld": "Irradiation",
+        "unit": "%",
+        "val": "0.53"
+      },
+      {
+        "fld": "U_DC",
+        "unit": "V",
+        "val": "29.90"
+      },
+      {
+        "fld": "I_DC",
+        "unit": "A",
+        "val": "0.07"
+      },
+      {
+        "fld": "P_DC",
+        "unit": "W",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldDay",
+        "unit": "Wh",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldTotal",
+        "unit": "kWh",
+        "val": "93.25"
+      },
+      {
+        "fld": "Irradiation",
+        "unit": "%",
+        "val": "0.53"
+      },
+      {
+        "fld": "U_DC",
+        "unit": "V",
+        "val": "29.90"
+      },
+      {
+        "fld": "I_DC",
+        "unit": "A",
+        "val": "0.07"
+      },
+      {
+        "fld": "P_DC",
+        "unit": "W",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldDay",
+        "unit": "Wh",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldTotal",
+        "unit": "kWh",
+        "val": "94.09"
+      },
+      {
+        "fld": "Irradiation",
+        "unit": "%",
+        "val": "0.53"
+      },
+      {
+        "fld": "U_AC",
+        "unit": "V",
+        "val": "228.90"
+      },
+      {
+        "fld": "I_AC",
+        "unit": "A",
+        "val": "0.03"
+      },
+      {
+        "fld": "P_AC",
+        "unit": "W",
+        "val": "7.50"
+      },
+      {
+        "fld": "Q_AC",
+        "unit": "var",
+        "val": "18.50"
+      },
+      {
+        "fld": "F_AC",
+        "unit": "Hz",
+        "val": "50.01"
+      },
+      {
+        "fld": "PF_AC",
+        "unit": "",
+        "val": "0.38"
+      },
+      {
+        "fld": "Temp",
+        "unit": "°C",
+        "val": "13.40"
+      },
+      {
+        "fld": "ALARM_MES_ID",
+        "unit": "",
+        "val": "1.00"
+      },
+      {
+        "fld": "YieldDay",
+        "unit": "Wh",
+        "val": "8.00"
+      },
+      {
+        "fld": "YieldTotal",
+        "unit": "kWh",
+        "val": "372.49"
+      },
+      {
+        "fld": "P_DC",
+        "unit": "W",
+        "val": "7.90"
+      },
+      {
+        "fld": "Efficiency",
+        "unit": "%",
+        "val": "94.94"
+      }
+    ],
+    [
+      {
+        "fld": "U_DC",
+        "unit": "V",
+        "val": "29.40"
+      },
+      {
+        "fld": "I_DC",
+        "unit": "A",
+        "val": "0.08"
+      },
+      {
+        "fld": "P_DC",
+        "unit": "W",
+        "val": "2.50"
+      },
+      {
+        "fld": "YieldDay",
+        "unit": "Wh",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldTotal",
+        "unit": "kWh",
+        "val": "96.62"
+      },
+      {
+        "fld": "Irradiation",
+        "unit": "%",
+        "val": "0.67"
+      },
+      {
+        "fld": "U_DC",
+        "unit": "V",
+        "val": "29.40"
+      },
+      {
+        "fld": "I_DC",
+        "unit": "A",
+        "val": "0.09"
+      },
+      {
+        "fld": "P_DC",
+        "unit": "W",
+        "val": "2.50"
+      },
+      {
+        "fld": "YieldDay",
+        "unit": "Wh",
+        "val": "2.00"
+      },
+      {
+        "fld": "YieldTotal",
+        "unit": "kWh",
+        "val": "98.54"
+      },
+      {
+        "fld": "Irradiation",
+        "unit": "%",
+        "val": "0.67"
+      },
+      {
+        "fld": "U_DC",
+        "unit": "V",
+        "val": "30.00"
+      },
+      {
+        "fld": "I_DC"
+      }
+    ]
+  ]
+}
