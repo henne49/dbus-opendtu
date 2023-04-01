@@ -103,6 +103,7 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 | TEMPLATEX  | Host | IP or hostname of Template API/web-interface |
 | TEMPLATEX  | Username | use if authentication required, leave empty if no authentication needed |
 | TEMPLATEX  | Password | use if authentication required, leave empty if no authentication needed |
+| TEMPLATEX  | DigestAuth | TRUE if authentication is required using Digest Auth, as for Shelly Plus Devices, False if you Basic Auth to be used|
 | TEMPLATEX  | CUST_SN | Serialnumber to register device in VenusOS|
 | TEMPLATEX  | CUST_API_PATH | Location of REST API Path for JSON to be used |
 | TEMPLATEX  | CUST_POLLING | Polling interval in ms for Device |
@@ -116,6 +117,7 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 | TEMPLATEX  | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
 | TEMPLATEX  | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
 | TEMPLATEX  | Name | Name to be shown in VenusOS, use a descriptive name |
+| TEMPLATEX  | Servicename | com.victronenergy.pvinverter, com.victronenergy.acload, com.victronenergy.genset, com.victronenergy.grid |
 
 Example for JSON PATH: use keywords separated by /
 
@@ -135,7 +137,7 @@ Example for JSON PATH: use keywords separated by /
 
 Please open a new issue on github, only here we can work on your problem in a structured way: https://github.com/henne49/dbus-opendtu/issues/new/choose
 
-Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert, once debugging and troubleshooting is complete. Rerun the script and share the current.log file. 
+⚠️ **Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert, once debugging and troubleshooting is complete. Rerun the script and share the current.log file**. 
 
 Please provide the config.ini and JSON file and upload to the github issues, you can download the JSON file using your browser or using a commandline like tool like curl. 
 
