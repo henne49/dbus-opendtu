@@ -64,6 +64,7 @@ class DbusService:
         self._registry.append(self)
 
         self._last_update = 0
+        self.last_update_successful = False
 
         if not istemplate:
             self._read_config_dtu(actual_inverter)
@@ -98,7 +99,8 @@ class DbusService:
             "/ProductId", 0xFFFF
         )  # id assigned by Victron Support from SDM630v2.py
         self._dbusservice.add_path("/ProductName", productname)
-        self._dbusservice.add_path("/CustomName", self._get_name(self.pvinverternumber))
+        self._dbusservice.add_path("/CustomName", self._get_name())
+        logging.info(f"Name of Inverters found: {self._get_name()}")
         self._dbusservice.add_path("/Connected", 1)
 
         self._dbusservice.add_path("/Latency", None)
@@ -217,16 +219,15 @@ class DbusService:
 
         return serial
 
-    def _get_name(self, pvinverternumber):
-        if self.dtuvariant in ('ahoy', 'opendtu'):
+    def _get_name(self):
+        if self.dtuvariant in (constants.DTUVARIANT_OPENDTU, constants.DTUVARIANT_AHOY):
             meter_data = self._get_data()
         if self.dtuvariant == constants.DTUVARIANT_AHOY:
-            name = meter_data["inverter"][pvinverternumber]["name"]
+            name = meter_data["inverter"][self.pvinverternumber]["name"]
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
-            name = meter_data["inverters"][pvinverternumber]["name"]
+            name = meter_data["inverters"][self.pvinverternumber]["name"]
         else:
             name = self.customname
-        logging.info("Name of Inverters found: %s", name)
         return name
 
     def get_number_of_inverters(self):
@@ -362,7 +363,6 @@ class DbusService:
         record_live_url = self.get_ahoy_base_url() + "/record/live"
         return self.fetch_url(record_live_url)
 
-
     @timeit
     def fetch_url(self, url):
         '''Fetch JSON data from url. Throw an exception on any error. Only return on success.'''
@@ -387,7 +387,7 @@ class DbusService:
         # check for Json
         if not json:
             # will be logged when catched
-            raise ValueError(f"Converting response from {self.host} to JSON failed:\nstatus={json_str.status_code},\nresponse={json_str.text}")
+            raise ValueError(f"Converting response from {url_anonymize(url)} to JSON failed:\nstatus={json_str.status_code},\nresponse={json_str.text}")
         return json
 
     def _get_data(self):
@@ -448,6 +448,7 @@ class DbusService:
         return True
 
     def _update(self):
+        successful = False
         try:
             # update data from DTU once per _update call:
             self._refresh_data()
@@ -468,27 +469,29 @@ class DbusService:
                         self._dbusservice[pre + "/Energy/Forward"] = pvyield
                         self._dbusservice["/Ac/Energy/Forward"] = pvyield
 
-                logging.debug(
-                    "Inverter #%d Power (/Ac/Power): %s",
-                    self.pvinverternumber, power
-                )
-                logging.debug(
-                    "Inverter #%d Energy (/Ac/Energy/Forward): %s",
-                    self.pvinverternumber, pvyield
-                )
+                logging.debug("Inverter #%d Power (/Ac/Power): %s", self.pvinverternumber, power)
+                logging.debug("Inverter #%d Energy (/Ac/Energy/Forward): %s", self.pvinverternumber, pvyield)
                 logging.debug("---")
 
             self._update_index()
+            successful = True
         except requests.exceptions.RequestException as exception:
             logging.warning(f"HTTP Error at _update: {str(url_anonymize(exception))}")
         except ValueError as error:
             logging.warning(f"Error at _update: {str(error)}")
         except Exception as error:
             logging.warning(f"Error at _update", exc_info=error)
-
-        # return true, otherwise add_timeout will be removed from GObject - see docs
-        # http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
         finally:
+            if successful:
+                if not self.last_update_successful:
+                    logging.warning(f"Recovered inverter {self.pvinverternumber} ({self._get_name()}): "
+                                    f"Successfully fetched data now: {'NOT' if not self.is_data_up2date() else 'Is'} up-to-date")
+                    self.last_update_successful = True
+            else:
+                self.last_update_successful = False
+
+            # return true, otherwise add_timeout will be removed from GObject - see docs
+            # http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
             return True
 
     def _update_index(self):
