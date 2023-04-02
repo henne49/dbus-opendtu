@@ -13,7 +13,7 @@ import constants
 from dbus_service import DbusService
 
 
-OPENDTU_TEST_DATA_FILE = "docs/OpenDTU.json"
+OPENDTU_TEST_DATA_FILE = "docs/opendtu_status.json"
 AHOY_TEST_DATA_FILE_LIVE = "docs/ahoy_0.5.93_live.json"
 AHOY_TEST_DATA_FILE_RECORD = "docs/ahoy_0.5.93_record-live.json"
 AHOY_TEST_DATA_FILE_IV_0 = "docs/ahoy_0.5.93_inverter-id-0.json"
@@ -55,7 +55,8 @@ def test_opendtu_producing(test_service):
 
     test_data = load_json_file(OPENDTU_TEST_DATA_FILE, '"producing": false', '"producing":"1"')
     test_service.set_test_data(test_data)
-    assert test_service.get_values_for_inverter() == (1, 111.3209991, 1, 235.1999969)
+    # (power, pvyield total, current, voltage)
+    assert test_service.get_values_for_inverter() == (100, 270.4509888, 0.5, 999) # test sollte hier zuschlagen: TODO: korrigieren
 
 
 def load_json_file(filename, find_str = None, replace_str = None):
