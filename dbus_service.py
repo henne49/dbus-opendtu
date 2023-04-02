@@ -488,6 +488,8 @@ class DbusService:
                                     f"Successfully fetched data now: {'NOT' if not self.is_data_up2date() else 'Is'} up-to-date")
                     self.last_update_successful = True
             else:
+                # It happens that this warning appears without an Exception being logged above. Why?
+                logging.warning(f"Error while processing inverter {self.pvinverternumber} ({self._get_name()})")
                 self.last_update_successful = False
 
             # return true, otherwise add_timeout will be removed from GObject - see docs
