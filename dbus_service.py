@@ -485,7 +485,7 @@ class DbusService:
                 logging.warning(f"HTTP Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {url_anonymize(str(exception))}")
         except ValueError as error:
             if self.last_update_successful:
-                logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {str(error)}")
+                logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {url_anonymize(str(error))}")
         except Exception as error:
             if self.last_update_successful:
                 logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()})", exc_info=error)
