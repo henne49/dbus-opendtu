@@ -256,9 +256,7 @@ class DbusService:
 
             if self.esptype == "ESP8266":
                 polling_interval = self.pollinginterval
-                logging.info(
-                    "ESP8266 detected, reducing polling to %s", polling_interval
-                )
+                logging.info(f"ESP8266 detected, polling interval {polling_interval/1000} Sek.")
             else:
                 polling_interval = 5000
 
@@ -364,31 +362,38 @@ class DbusService:
         return self.fetch_url(record_live_url)
 
     @timeit
-    def fetch_url(self, url):
-        '''Fetch JSON data from url. Throw an exception on any error. Only return on success.'''
-        logging.debug(f"calling {url_anonymize(url)} with timeout={self.httptimeout}")
-        if not self.digestauth:
-            json_str = requests.get(url=url, timeout=float(self.httptimeout))
-        else:
-            json_str = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
-        json_str.raise_for_status() # raise exception on bad status code
-
-        # check for response
-        if not json_str:
-            logging.info("No Response from OpenDTU/Ahoy")
-            raise ConnectionError("No response from OpenDTU - ", self.host)
-
-        json = None
+    def fetch_url(self, url, try_number = 1):
         try:
-            json = json_str.json()
-        except json.decoder.JSONDecodeError as error:
-            logging.debug(f"JSONDecodeError: {str(error)}")
+            '''Fetch JSON data from url. Throw an exception on any error. Only return on success.'''
+            logging.debug(f"calling {url_anonymize(url)} with timeout={self.httptimeout}")
+            if not self.digestauth:
+                json_str = requests.get(url=url, timeout=float(self.httptimeout))
+            else:
+                json_str = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
+            json_str.raise_for_status() # raise exception on bad status code
 
-        # check for Json
-        if not json:
-            # will be logged when catched
-            raise ValueError(f"Converting response from {url_anonymize(url)} to JSON failed:\nstatus={json_str.status_code},\nresponse={json_str.text}")
-        return json
+            # check for response
+            if not json_str:
+                logging.info("No Response from DTU")
+                raise ConnectionError("No response from DTU - ", self.host)
+
+            json = None
+            try:
+                json = json_str.json()
+            except json.decoder.JSONDecodeError as error:
+                logging.debug(f"JSONDecodeError: {str(error)}")
+
+            # check for Json
+            if not json:
+                # will be logged when catched
+                raise ValueError(f"Converting response from {url_anonymize(url)} to JSON failed:\nstatus={json_str.status_code},\nresponse={json_str.text}")
+            return json
+        except:
+            if (try_number < 3): # retry same call up to 3 times
+                time.sleep(0.5)
+                return self.fetch_url(url, try_number + 1)
+            else:
+                raise
 
     def _get_data(self):
         if self._test_meter_data:
@@ -476,20 +481,21 @@ class DbusService:
             self._update_index()
             successful = True
         except requests.exceptions.RequestException as exception:
-            logging.warning(f"HTTP Error at _update: {str(url_anonymize(exception))}")
+            if self.last_update_successful:
+                logging.warning(f"HTTP Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {url_anonymize(str(exception))}")
         except ValueError as error:
-            logging.warning(f"Error at _update: {str(error)}")
+            if self.last_update_successful:
+                logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {url_anonymize(str(error))}")
         except Exception as error:
-            logging.warning(f"Error at _update", exc_info=error)
+            if self.last_update_successful:
+                logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()})", exc_info=error)
         finally:
             if successful:
                 if not self.last_update_successful:
                     logging.warning(f"Recovered inverter {self.pvinverternumber} ({self._get_name()}): "
-                                    f"Successfully fetched data now: {'NOT' if not self.is_data_up2date() else 'Is'} up-to-date")
+                                    f"Successfully fetched data now: {'NOT (yet?)' if not self.is_data_up2date() else 'Is'} up-to-date")
                     self.last_update_successful = True
             else:
-                # It happens that this warning appears without an Exception being logged above. Why?
-                logging.warning(f"Error while processing inverter {self.pvinverternumber} ({self._get_name()})")
                 self.last_update_successful = False
 
             # return true, otherwise add_timeout will be removed from GObject - see docs

@@ -13,7 +13,7 @@ import constants
 from dbus_service import DbusService
 
 
-OPENDTU_TEST_DATA_FILE = "docs/OpenDTU.json"
+OPENDTU_TEST_DATA_FILE = "docs/opendtu_status.json"
 AHOY_TEST_DATA_FILE_LIVE = "docs/ahoy_0.5.93_live.json"
 AHOY_TEST_DATA_FILE_RECORD = "docs/ahoy_0.5.93_record-live.json"
 AHOY_TEST_DATA_FILE_IV_0 = "docs/ahoy_0.5.93_inverter-id-0.json"
@@ -51,11 +51,13 @@ def test_opendtu_producing(test_service):
 
     test_service.set_test_data(test_data)
     # current, power are 0 because inverter is not producing
-    assert test_service.get_values_for_inverter() == (0, 111.3209991, 0, 235.1999969)
+    # (power, pvyield total, current, voltage)
+    assert test_service.get_values_for_inverter() == (0, 270.4660034, 0, 226.1999969)
 
     test_data = load_json_file(OPENDTU_TEST_DATA_FILE, '"producing": false', '"producing":"1"')
     test_service.set_test_data(test_data)
-    assert test_service.get_values_for_inverter() == (1, 111.3209991, 1, 235.1999969)
+    # (power, pvyield total, current, voltage)
+    assert test_service.get_values_for_inverter() == (31.79999924, 270.4660034, 0.140000001, 226.1999969)
 
 
 def load_json_file(filename, find_str = None, replace_str = None):
@@ -111,7 +113,7 @@ def run_tests():
     '''function to run tests'''
     test_service = DbusService(servicename="testing", paths="dummy", actual_inverter=0)
     test_opendtu_reachable(test_service)
-    test_opendtu_reachable(test_service)
+    test_opendtu_producing(test_service)
     test_ahoy_values(test_service)
     test_ahoy_timestamp(test_service)
     logging.debug("tests have passed")
