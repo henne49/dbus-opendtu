@@ -97,6 +97,7 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 | INVERTERX  | Phase | which Phase L1, L2, L3 to show|
 | INVERTERX  | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
 | INVERTERX  | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
+| INVERTERX  | Servicename | com.victronenergy.pvinverter, com.victronenergy.acload, com.victronenergy.genset, com.victronenergy.grid etc. |
 | TEMPLATE0  | 1st Inverter | |
 | .........  |       | ........... |
 | TEMPLATEN  | nth Inverter | |
@@ -117,7 +118,7 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 | TEMPLATEX  | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
 | TEMPLATEX  | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
 | TEMPLATEX  | Name | Name to be shown in VenusOS, use a descriptive name |
-| TEMPLATEX  | Servicename | com.victronenergy.pvinverter, com.victronenergy.acload, com.victronenergy.genset, com.victronenergy.grid |
+| TEMPLATEX  | Servicename | com.victronenergy.pvinverter, com.victronenergy.acload, com.victronenergy.genset, com.victronenergy.grid etc. |
 
 Example for JSON PATH: use keywords separated by /
 
