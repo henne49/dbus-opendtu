@@ -324,7 +324,9 @@ class DbusService:
         if self.dtuvariant == constants.DTUVARIANT_AHOY:
             self.check_and_enrich_ahoy_data(meter_data)
 
-        # store valid data for later use
+        self.store_for_later_use(meter_data)
+
+    def store_for_later_use(self, meter_data):
         if self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             self.meter_data = meter_data
         else:
@@ -363,8 +365,8 @@ class DbusService:
 
     @timeit
     def fetch_url(self, url, try_number = 1):
+        '''Fetch JSON data from url. Throw an exception on any error. Only return on success.'''
         try:
-            '''Fetch JSON data from url. Throw an exception on any error. Only return on success.'''
             logging.debug(f"calling {url_anonymize(url)} with timeout={self.httptimeout}")
             if not self.digestauth:
                 json_str = requests.get(url=url, timeout=float(self.httptimeout))
@@ -554,12 +556,8 @@ class DbusService:
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             # logging.debug("JSON data: %s" % meter_data)
-            power = float(
-                get_nested(meter_data, self.custpower) * float(self.custpower_factor)
-            )
-            pvyield = float(
-                get_nested(meter_data, self.custtotal) * float(self.custtotal_factor)
-            )
+            power = float(get_nested(meter_data, self.custpower) * float(self.custpower_factor))
+            pvyield = float(get_nested(meter_data, self.custtotal) * float(self.custtotal_factor))
             voltage = float(get_nested(meter_data, self.custvoltage))
             current = float(get_nested(meter_data, self.custcurrent))
 
