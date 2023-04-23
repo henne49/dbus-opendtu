@@ -129,6 +129,14 @@ class DbusService:
         gobject.timeout_add(self._get_sign_of_life_interval() * 60 * 1000, self._sign_of_life)
 
     ## read config file
+    def stringToBool(self, s):
+        if s == "False":
+            bool_flag = False
+        elif s == "True":
+            bool_flag = True
+        else:
+            raise ValueError(f"value '{s}' cannot be converted to boolean")
+        return bool_flag
 
     def _read_config_dtu(self, actual_inverter):
         config = self._get_config()
@@ -144,7 +152,7 @@ class DbusService:
         self.host = get_config_value(config, "Host", "INVERTER", self.pvinverternumber )
         self.username = get_config_value(config, "Username", "INVERTER", self.pvinverternumber )
         self.password = get_config_value(config, "Password", "INVERTER", self.pvinverternumber )
-        self.digestauth = bool(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, False ))
+        self.digestauth = self.stringToBool(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, "False" ))
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
@@ -182,7 +190,7 @@ class DbusService:
         self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
         self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
         self.pvinverterphase = str(config[f"TEMPLATE{template_number}"]["Phase"])
-        self.digestauth = bool(get_config_value(config, "DigestAuth", "TEMPLATE", template_number, False))
+        self.digestauth = self.stringToBool(get_config_value(config, "DigestAuth", "TEMPLATE", template_number, "False"))
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
@@ -301,12 +309,8 @@ class DbusService:
 
     def get_template_base_url(self):
         '''Get API base URL for all Template calls'''
-        if self.digestauth:
-            url = f"http://{self.host}/{self.custapipath}"
-        else:
-            url = f"http://{self.username}:{self.password}@{self.host}/{self.custapipath}"
-            url = url.replace(":@", "")
-        return url
+        return f"http://{self.host}/{self.custapipath}"
+
 
     def _refresh_data(self):
         '''Fetch new data from the DTU API and store in locally if successful.'''
@@ -368,13 +372,13 @@ class DbusService:
         '''Fetch JSON data from url. Throw an exception on any error. Only return on success.'''
         try:
             logging.debug(f"calling {url_anonymize(url)} with timeout={self.httptimeout}")
-            if not self.digestauth:
-                json_str = requests.get(url=url, timeout=float(self.httptimeout))
+            if self.digestauth:
+                json_str = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
             elif self.username and self.password:
                 logging.debug(f"using basic auth for {url_anonymize(url)}") 
                 json_str = requests.get(url=url, auth=(self.username, self.password), timeout=float(self.httptimeout))
             else:
-                json_str = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
+                json_str = requests.get(url=url, timeout=float(self.httptimeout))
             json_str.raise_for_status() # raise exception on bad status code
 
             # check for response
