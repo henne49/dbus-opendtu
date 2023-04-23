@@ -41,7 +41,8 @@ So what is the script doing:
 - Running as a service
 - Connecting to DBus of the Venus OS `com.victronenergy.pvinverter.http_{DeviceInstanceID_from_config}`
 - After successful DBus connection, OpenDTU (resp. Ahoy) is accessed via REST-API - simply the `/status` (resp. `api/live`) is called which returns a JSON with all details.
-  A sample JSON file from OpenDTU can be found [here](docs/OpenDTU.json). A sample JSON file from OpenDTU can be found [here](docs/ahoy.json)
+  - A sample JSON file from OpenDTU can be found [here](docs/OpenDTU.json). 
+  - A sample JSON file from Ahoy can be found [here](docs/ahoy_0.6.9_live.json)
 - Serial/devicename is taken from the response as device serial
 - Paths are added to the DBus with default value 0 - including some settings like name etc.
 - After that, a "loop" is started which pulls OpenDTU/AhoyDTU data every 5s (configurable) from the REST-API and updates the values in the DBus, for ESP 8266 based ahoy systems we even pull data only every 10seconds.
@@ -175,5 +176,7 @@ This module/repository has been posted on the following threads:
 - https://community.victronenergy.com/questions/169076/opendtu-as-pv-inverter-in-venusos.html
 
 ## Video on how to install and use:
+*(Don't be confused that the config they used is not the actual one.)*
+
 - https://youtu.be/PpjCz33pGkk Meine Energiewende
 - https://youtu.be/UNuIOa72eP4 Schatten PV

@@ -1,0 +1,47 @@
+{
+  "generic": {
+    "wifi_rssi": -65,
+    "ts_uptime": 3895,
+    "menu_prot": false,
+    "menu_mask": 61,
+    "menu_protEn": false,
+    "esp_type": "ESP8266"
+  },
+  "refresh": 10,
+  "ch0_fld_units": [
+    "V",
+    "A",
+    "W",
+    "Hz",
+    "",
+    "°C",
+    "kWh",
+    "Wh",
+    "W",
+    "%",
+    "var"
+  ],
+  "ch0_fld_names": [
+    "U_AC",
+    "I_AC",
+    "P_AC",
+    "F_AC",
+    "PF_AC",
+    "Temp",
+    "YieldTotal",
+    "YieldDay",
+    "P_DC",
+    "Efficiency",
+    "Q_AC"
+  ],
+  "fld_units": ["V", "A", "W", "Wh", "kWh", "%"],
+  "fld_names": [
+    "U_DC",
+    "I_DC",
+    "P_DC",
+    "YieldDay",
+    "YieldTotal",
+    "Irradiation"
+  ],
+  "iv": [true, false, false, false, false, false, false, false, false, false]
+}
