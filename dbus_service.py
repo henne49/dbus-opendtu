@@ -370,6 +370,9 @@ class DbusService:
             logging.debug(f"calling {url_anonymize(url)} with timeout={self.httptimeout}")
             if not self.digestauth:
                 json_str = requests.get(url=url, timeout=float(self.httptimeout))
+            elif self.username and self.password:
+                logging.debug(f"using basic auth for {url_anonymize(url)}") 
+                json_str = requests.get(url=url, auth=(self.username, self.password), timeout=float(self.httptimeout))
             else:
                 json_str = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
             json_str.raise_for_status() # raise exception on bad status code
