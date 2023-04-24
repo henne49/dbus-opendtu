@@ -129,7 +129,6 @@ class DbusService:
         gobject.timeout_add(self._get_sign_of_life_interval() * 60 * 1000, self._sign_of_life)
 
     ## read config file
-
     def _read_config_dtu(self, actual_inverter):
         config = self._get_config()
         self.pvinverternumber = actual_inverter
@@ -144,7 +143,7 @@ class DbusService:
         self.host = get_config_value(config, "Host", "INVERTER", self.pvinverternumber )
         self.username = get_config_value(config, "Username", "INVERTER", self.pvinverternumber )
         self.password = get_config_value(config, "Password", "INVERTER", self.pvinverternumber )
-        self.digestauth = bool(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, False ))
+        self.digestauth = is_true(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, False ))
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
@@ -182,7 +181,7 @@ class DbusService:
         self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
         self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
         self.pvinverterphase = str(config[f"TEMPLATE{template_number}"]["Phase"])
-        self.digestauth = bool(get_config_value(config, "DigestAuth", "TEMPLATE", template_number, False))
+        self.digestauth =  is_true(get_config_value(config, "DigestAuth", "TEMPLATE", template_number, False))
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
@@ -292,8 +291,7 @@ class DbusService:
 
     def get_opendtu_base_url(self):
         '''Get API base URL for all OpenDTU calls'''
-        url = f"http://{self.username}:{self.password}@{self.host}/api"
-        return url.replace(":@", "")
+        return f"http://{self.host}/api"
 
     def get_ahoy_base_url(self):
         '''Get API base URL for all Ahoy calls'''
@@ -301,12 +299,8 @@ class DbusService:
 
     def get_template_base_url(self):
         '''Get API base URL for all Template calls'''
-        if self.digestauth:
-            url = f"http://{self.host}/{self.custapipath}"
-        else:
-            url = f"http://{self.username}:{self.password}@{self.host}/{self.custapipath}"
-            url = url.replace(":@", "")
-        return url
+        return f"http://{self.host}/{self.custapipath}"
+
 
     def _refresh_data(self):
         '''Fetch new data from the DTU API and store in locally if successful.'''
@@ -367,14 +361,15 @@ class DbusService:
     def fetch_url(self, url, try_number = 1):
         '''Fetch JSON data from url. Throw an exception on any error. Only return on success.'''
         try:
-            logging.debug(f"calling {url_anonymize(url)} with timeout={self.httptimeout}")
-            if not self.digestauth:
-                json_str = requests.get(url=url, timeout=float(self.httptimeout))
+            logging.debug(f"calling {url} with timeout={self.httptimeout}")
+            if self.digestauth:
+                logging.debug("using Digest access authentication...") 
+                json_str = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
             elif self.username and self.password:
-                logging.debug(f"using basic auth for {url_anonymize(url)}") 
+                logging.debug("using Basic access authentication...") 
                 json_str = requests.get(url=url, auth=(self.username, self.password), timeout=float(self.httptimeout))
             else:
-                json_str = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
+                json_str = requests.get(url=url, timeout=float(self.httptimeout))
             json_str.raise_for_status() # raise exception on bad status code
 
             # check for response
@@ -391,7 +386,7 @@ class DbusService:
             # check for Json
             if not json:
                 # will be logged when catched
-                raise ValueError(f"Converting response from {url_anonymize(url)} to JSON failed:\nstatus={json_str.status_code},\nresponse={json_str.text}")
+                raise ValueError(f"Converting response from {url} to JSON failed:\nstatus={json_str.status_code},\nresponse={json_str.text}")
             return json
         except:
             if (try_number < 3): # retry same call up to 3 times
@@ -487,10 +482,10 @@ class DbusService:
             successful = True
         except requests.exceptions.RequestException as exception:
             if self.last_update_successful:
-                logging.warning(f"HTTP Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {url_anonymize(str(exception))}")
+                logging.warning(f"HTTP Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {str(exception)}")
         except ValueError as error:
             if self.last_update_successful:
-                logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {url_anonymize(str(error))}")
+                logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {str(error)}")
         except Exception as error:
             if self.last_update_successful:
                 logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()})", exc_info=error)
