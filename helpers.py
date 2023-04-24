@@ -39,10 +39,6 @@ def get_nested(meter_data, path):
                 value = 0
     return value
 
-def url_anonymize(url):
-    '''remove username & password from URL for debug logging'''
-    return re.sub(r'//.*:.*\@',r'//****:****@',url)
-
 def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname):
     '''get the value by name instead of list index'''
     # fetch value from record call:

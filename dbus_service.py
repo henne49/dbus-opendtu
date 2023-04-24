@@ -291,8 +291,7 @@ class DbusService:
 
     def get_opendtu_base_url(self):
         '''Get API base URL for all OpenDTU calls'''
-        url = f"http://{self.username}:{self.password}@{self.host}/api"
-        return url.replace(":@", "")
+        return f"http://{self.host}/api"
 
     def get_ahoy_base_url(self):
         '''Get API base URL for all Ahoy calls'''
@@ -362,11 +361,12 @@ class DbusService:
     def fetch_url(self, url, try_number = 1):
         '''Fetch JSON data from url. Throw an exception on any error. Only return on success.'''
         try:
-            logging.debug(f"calling {url_anonymize(url)} with timeout={self.httptimeout}")
+            logging.debug(f"calling {url} with timeout={self.httptimeout}")
             if self.digestauth:
+                logging.debug("using Digest access authentication...") 
                 json_str = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
             elif self.username and self.password:
-                logging.debug(f"using basic auth for {url_anonymize(url)}") 
+                logging.debug("basic access authentication...") 
                 json_str = requests.get(url=url, auth=(self.username, self.password), timeout=float(self.httptimeout))
             else:
                 json_str = requests.get(url=url, timeout=float(self.httptimeout))
@@ -386,7 +386,7 @@ class DbusService:
             # check for Json
             if not json:
                 # will be logged when catched
-                raise ValueError(f"Converting response from {url_anonymize(url)} to JSON failed:\nstatus={json_str.status_code},\nresponse={json_str.text}")
+                raise ValueError(f"Converting response from {url} to JSON failed:\nstatus={json_str.status_code},\nresponse={json_str.text}")
             return json
         except:
             if (try_number < 3): # retry same call up to 3 times
@@ -482,10 +482,10 @@ class DbusService:
             successful = True
         except requests.exceptions.RequestException as exception:
             if self.last_update_successful:
-                logging.warning(f"HTTP Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {url_anonymize(str(exception))}")
+                logging.warning(f"HTTP Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {str(exception)}")
         except ValueError as error:
             if self.last_update_successful:
-                logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {url_anonymize(str(error))}")
+                logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {str(error)}")
         except Exception as error:
             if self.last_update_successful:
                 logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()})", exc_info=error)
