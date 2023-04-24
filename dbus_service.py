@@ -366,7 +366,7 @@ class DbusService:
                 logging.debug("using Digest access authentication...") 
                 json_str = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
             elif self.username and self.password:
-                logging.debug("basic access authentication...") 
+                logging.debug("using Basic access authentication...") 
                 json_str = requests.get(url=url, auth=(self.username, self.password), timeout=float(self.httptimeout))
             else:
                 json_str = requests.get(url=url, timeout=float(self.httptimeout))
