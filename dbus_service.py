@@ -129,15 +129,6 @@ class DbusService:
         gobject.timeout_add(self._get_sign_of_life_interval() * 60 * 1000, self._sign_of_life)
 
     ## read config file
-    def stringToBool(self, s):
-        if s == "False":
-            bool_flag = False
-        elif s == "True":
-            bool_flag = True
-        else:
-            raise ValueError(f"value '{s}' cannot be converted to boolean")
-        return bool_flag
-
     def _read_config_dtu(self, actual_inverter):
         config = self._get_config()
         self.pvinverternumber = actual_inverter
@@ -152,7 +143,7 @@ class DbusService:
         self.host = get_config_value(config, "Host", "INVERTER", self.pvinverternumber )
         self.username = get_config_value(config, "Username", "INVERTER", self.pvinverternumber )
         self.password = get_config_value(config, "Password", "INVERTER", self.pvinverternumber )
-        self.digestauth = self.stringToBool(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, "False" ))
+        self.digestauth = is_true(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, False ))
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
@@ -190,7 +181,7 @@ class DbusService:
         self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
         self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
         self.pvinverterphase = str(config[f"TEMPLATE{template_number}"]["Phase"])
-        self.digestauth = self.stringToBool(get_config_value(config, "DigestAuth", "TEMPLATE", template_number, "False"))
+        self.digestauth =  is_true(get_config_value(config, "DigestAuth", "TEMPLATE", template_number, False))
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
