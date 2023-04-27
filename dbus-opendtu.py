@@ -80,6 +80,9 @@ def main():
             "/Ac/L1/Energy/Forward": {"initial": None, "textformat": _kwh},
             "/Ac/L2/Energy/Forward": {"initial": None, "textformat": _kwh},
             "/Ac/L3/Energy/Forward": {"initial": None, "textformat": _kwh},
+            "/Ac/Out/L1/I": {"initial": None, "textformat": _a},
+            "/Ac/Out/L1/V": {"initial": None, "textformat": _v},
+            "/Dc/0/Voltage": {"initial": None, "textformat": _v},
         }
 
         if dtuvariant != constants.DTUVARIANT_TEMPLATE:

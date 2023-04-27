@@ -44,6 +44,7 @@ class DbusService:
     _registry = []
     _meter_data = None
     _test_meter_data = None
+    _servicename = None
 
     def __init__(
         self,
@@ -64,6 +65,7 @@ class DbusService:
         self._registry.append(self)
 
         self._last_update = 0
+        self._servicename = servicename
         self.last_update_successful = False
 
         if not istemplate:
@@ -460,23 +462,41 @@ class DbusService:
 
             pre = "/Ac/" + self.pvinverterphase
 
+            ''' TODO - Add DC voltage for Inverter '''
             if self.is_data_up2date():
                 (power, pvyield, current, voltage) = self.get_values_for_inverter()
 
                 if self.dry_run:
                     logging.info("DRY RUN. No data is sent!!")
                 else:
-                    self._dbusservice[pre + "/Voltage"] = voltage
-                    self._dbusservice[pre + "/Current"] = current
-                    self._dbusservice[pre + "/Power"] = power
-                    self._dbusservice["/Ac/Power"] = power
-                    if power > 0:
-                        self._dbusservice[pre + "/Energy/Forward"] = pvyield
-                        self._dbusservice["/Ac/Energy/Forward"] = pvyield
+                    if self._servicename != "com.victronenergy.inverter":
+                        ''' Do stuff if not inverter service '''
+                        self._dbusservice[pre + "/Voltage"] = voltage
+                        self._dbusservice[pre + "/Current"] = current
+                        self._dbusservice[pre + "/Power"] = power
+                        self._dbusservice["/Ac/Power"] = power
+                        if power > 0:
+                            self._dbusservice[pre + "/Energy/Forward"] = pvyield
+                            self._dbusservice["/Ac/Energy/Forward"] = pvyield
 
-                logging.debug("Inverter #%d Power (/Ac/Power): %s", self.pvinverternumber, power)
-                logging.debug("Inverter #%d Energy (/Ac/Energy/Forward): %s", self.pvinverternumber, pvyield)
-                logging.debug("---")
+                        logging.debug("Inverter #%d Power (/Ac/Power): %s", self.pvinverternumber, power)
+                        logging.debug("Inverter #%d Energy (/Ac/Energy/Forward): %s", self.pvinverternumber, pvyield)
+                        logging.debug("---")
+                    else:
+                        self._dbusservice["/Ac/Out/L1/V"] = voltage
+                        self._dbusservice["/Ac/Out/L1/I"] = current
+                        ''' TODO - replace 49 with real value '''
+                        self._dbusservice["/Dc/0/Voltage"] = 49 
+                        state = None
+                        if power > 0:
+                            state = 9
+                        else:
+                            state = 0
+                        self._dbusservice["/State"] = state 
+                        
+                        logging.debug("Inverter #%d Voltage (/Ac/Out/L1/V): %s", self.pvinverternumber, voltage)
+                        logging.debug("Inverter #%d Current (/Ac/Out/L1/I): %s", self.pvinverternumber, current)
+                        logging.debug("---")
 
             self._update_index()
             successful = True
