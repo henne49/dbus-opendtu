@@ -117,9 +117,14 @@ class DbusService:
             "/StatusCode", 0
         )  # Dummy path so VRM detects us as a PV-inverter.
 
-        # add path values to dbus if servicename is inverter 
+        # If the Servicname is an (AC-)Inverter, add the Mode path (to show it as ON)
+        # Also, we will set diffetent paths and variables in the _update(self) method.
+        # for this device class. For more information about the paths and ServiceNames...
+        # @see: https://github.com/victronenergy/venus/wiki/dbus
         if self._servicename == "com.victronenergy.inverter":
-            self._dbusservice.add_path("/Mode", 2)
+            # Set Mode to 2 to show it as ON
+            # 2=On;4=Off;5=Eco
+            self._dbusservice.add_path("/Mode", 2) 
 
         # add path values to dbus
         for path, settings in self._paths.items():
