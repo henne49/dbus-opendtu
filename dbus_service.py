@@ -117,6 +117,10 @@ class DbusService:
             "/StatusCode", 0
         )  # Dummy path so VRM detects us as a PV-inverter.
 
+        # add path values to dbus if servicename is inverter 
+        if self._servicename == "com.victronenergy.inverter":
+            self._dbusservice.add_path("/Mode", 2)
+
         # add path values to dbus
         for path, settings in self._paths.items():
             self._dbusservice.add_path(
@@ -169,6 +173,7 @@ class DbusService:
         self.custtotal = config[f"TEMPLATE{template_number}"]["CUST_Total"].split("/")
         self.custtotal_factor = config[f"TEMPLATE{template_number}"]["CUST_Total_Mult"]
         self.custvoltage = config[f"TEMPLATE{template_number}"]["CUST_Voltage"].split("/")
+        self.dccustvoltage = config[f"TEMPLATE{template_number}"]["CUST_DCVoltage"].split("/")
         self.custcurrent = config[f"TEMPLATE{template_number}"]["CUST_Current"].split("/")
         self.custapipath = config[f"TEMPLATE{template_number}"]["CUST_API_PATH"]
         self.serial = str(config[f"TEMPLATE{template_number}"]["CUST_SN"])
@@ -462,14 +467,27 @@ class DbusService:
 
             pre = "/Ac/" + self.pvinverterphase
 
-            ''' TODO - Add DC voltage for Inverter '''
             if self.is_data_up2date():
-                (power, pvyield, current, voltage) = self.get_values_for_inverter()
+                (power, pvyield, current, voltage, dc_voltage) = self.get_values_for_inverter()
 
                 if self.dry_run:
                     logging.info("DRY RUN. No data is sent!!")
                 else:
-                    if self._servicename != "com.victronenergy.inverter":
+                    if self._servicename == "com.victronenergy.inverter":
+                        self._dbusservice["/Ac/Out/L1/V"] = voltage
+                        self._dbusservice["/Ac/Out/L1/I"] = current
+                        self._dbusservice["/Dc/0/Voltage"] = dc_voltage 
+                        state = None
+                        if current > 0:
+                            state = 9
+                        else:
+                            state = 0
+                        self._dbusservice["/State"] = state 
+                        
+                        logging.debug("Inverter #%d Voltage (/Ac/Out/L1/V): %s", self.pvinverternumber, voltage)
+                        logging.debug("Inverter #%d Current (/Ac/Out/L1/I): %s", self.pvinverternumber, current)
+                        logging.debug("---")
+                    else:
                         ''' Do stuff if not inverter service '''
                         self._dbusservice[pre + "/Voltage"] = voltage
                         self._dbusservice[pre + "/Current"] = current
@@ -482,22 +500,7 @@ class DbusService:
                         logging.debug("Inverter #%d Power (/Ac/Power): %s", self.pvinverternumber, power)
                         logging.debug("Inverter #%d Energy (/Ac/Energy/Forward): %s", self.pvinverternumber, pvyield)
                         logging.debug("---")
-                    else:
-                        self._dbusservice["/Ac/Out/L1/V"] = voltage
-                        self._dbusservice["/Ac/Out/L1/I"] = current
-                        ''' TODO - replace 49 with real value '''
-                        self._dbusservice["/Dc/0/Voltage"] = 49 
-                        state = None
-                        if power > 0:
-                            state = 9
-                        else:
-                            state = 0
-                        self._dbusservice["/State"] = state 
-                        
-                        logging.debug("Inverter #%d Voltage (/Ac/Out/L1/V): %s", self.pvinverternumber, voltage)
-                        logging.debug("Inverter #%d Current (/Ac/Out/L1/I): %s", self.pvinverternumber, current)
-                        logging.debug("---")
-
+                        j
             self._update_index()
             successful = True
         except requests.exceptions.RequestException as exception:
@@ -535,7 +538,7 @@ class DbusService:
     def get_values_for_inverter(self):
         '''read data and return (power, pvyield, current, voltage)'''
         meter_data = self._get_data()
-        (power, pvyield, current, voltage) = (None, None, None, None)
+        (power, pvyield, current, voltage, dc_voltage) = (None, None, None, None, None)
 
         if self.dtuvariant == constants.DTUVARIANT_AHOY:
             power = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "P_AC")
@@ -548,6 +551,7 @@ class DbusService:
                     meter_data, self.pvinverternumber, "YieldTotal"
                 )
             voltage = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "U_AC")
+            dc_voltage = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "U_DC")
             current = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "I_AC")
 
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
@@ -566,6 +570,7 @@ class DbusService:
             else:
                 pvyield = meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["YieldTotal"]["v"]
             voltage = meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["Voltage"]["v"]
+            dc_voltage = meter_data["inverters"][self.pvinverternumber]["DC"]["0"]["Voltage"]["v"]
             current = (
                 meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["Current"]["v"]
                 if producing
@@ -577,9 +582,10 @@ class DbusService:
             power = float(get_nested(meter_data, self.custpower) * float(self.custpower_factor))
             pvyield = float(get_nested(meter_data, self.custtotal) * float(self.custtotal_factor))
             voltage = float(get_nested(meter_data, self.custvoltage))
+            dc_voltage = float(get_nested(meter_data, self.custdcvoltage))
             current = float(get_nested(meter_data, self.custcurrent))
 
-        return (power, pvyield, current, voltage)
+        return (power, pvyield, current, voltage, dc_voltage)
 
     def _handlechangedvalue(self, path, value):
         logging.debug("someone else updated %s to %s", path, value)
