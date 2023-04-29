@@ -6,21 +6,23 @@ import os
 import platform
 import sys
 import logging
-import requests  # for http GET #pylint: disable=E0401
-from requests.auth import HTTPDigestAuth #pylint: disable=E0401
 import time
+from vedbus import VeDbusService  # pylint: disable=E0401
+import requests  # for http GET #pylint: disable=E0401
+from requests.auth import HTTPDigestAuth  # pylint: disable=E0401
+
+# victron imports:
+import dbus  # pylint: disable=E0401
 
 # our imports:
 import constants
-from helpers import *
-
-# victron imports:
-import dbus #pylint: disable=E0401
+# TODO: This should be refactored to use helper (utils) as a module # pylint: disable=W0511
+from helpers import *  # pylint: disable=W0401,W0614
 
 if sys.version_info.major == 2:
-    import gobject #pylint: disable=E0401
+    import gobject  # pylint: disable=E0401
 else:
-    from gi.repository import GLib as gobject #pylint: disable=E0401
+    from gi.repository import GLib as gobject  # pylint: disable=E0401
 
 sys.path.insert(
     1,
@@ -29,8 +31,6 @@ sys.path.insert(
         "/opt/victronenergy/dbus-systemcalc-py/ext/velib_python",
     ),
 )
-from vedbus import VeDbusService #pylint: disable=E0401
-
 
 class PvInverterRegistry(type):
     '''Run a registry for all PV Inverter'''
@@ -68,22 +68,29 @@ class DbusService:
         self._servicename = servicename
         self.last_update_successful = False
 
+        # Initiale own properties
+        self.esptype = None
+        self.meter_data = None
+        self.dtuvariant = None
+
         if not istemplate:
             self._read_config_dtu(actual_inverter)
             self.numberofinverters = self.get_number_of_inverters()
         else:
             self._read_config_template(actual_inverter)
 
-        logging.debug("%s /DeviceInstance = %d", servicename, self.deviceinstance)
+        logging.debug("%s /DeviceInstance = %d",
+                      servicename, self.deviceinstance)
 
-        ### Allow for multiple Instance per process in DBUS
+        # Allow for multiple Instance per process in DBUS
         dbus_conn = (
             dbus.SessionBus()
             if "DBUS_SESSION_BUS_ADDRESS" in os.environ
             else dbus.SystemBus(private=True)
         )
 
-        self._dbusservice = VeDbusService(f"{servicename}.http_{self.deviceinstance}", dbus_conn)
+        self._dbusservice = VeDbusService(
+            f"{servicename}.http_{self.deviceinstance}", dbus_conn)
         self._paths = paths
 
         # Create the management objects, as specified in the ccgx dbus-api document
@@ -96,13 +103,12 @@ class DbusService:
 
         # Create the mandatory objects
         self._dbusservice.add_path("/DeviceInstance", self.deviceinstance)
-        # self._dbusservice.add_path('/ProductId', 16) # value used in ac_sensor_bridge.cpp of dbus-cgwacs
         self._dbusservice.add_path(
             "/ProductId", 0xFFFF
         )  # id assigned by Victron Support from SDM630v2.py
         self._dbusservice.add_path("/ProductName", productname)
         self._dbusservice.add_path("/CustomName", self._get_name())
-        logging.info(f"Name of Inverters found: {self._get_name()}")
+        logging.info("Name of Inverters found: %s", self._get_name())
         self._dbusservice.add_path("/Connected", 1)
 
         self._dbusservice.add_path("/Latency", None)
@@ -111,7 +117,8 @@ class DbusService:
         self._dbusservice.add_path(
             "/Position", self.acposition
         )  # normaly only needed for pvinverter
-        self._dbusservice.add_path("/Serial", self._get_serial(self.pvinverternumber))
+        self._dbusservice.add_path(
+            "/Serial", self._get_serial(self.pvinverternumber))
         self._dbusservice.add_path("/UpdateIndex", 0)
         self._dbusservice.add_path(
             "/StatusCode", 0
@@ -124,7 +131,7 @@ class DbusService:
         if self._servicename == "com.victronenergy.inverter":
             # Set Mode to 2 to show it as ON
             # 2=On;4=Off;5=Eco
-            self._dbusservice.add_path("/Mode", 2) 
+            self._dbusservice.add_path("/Mode", 2)
 
         # add path values to dbus
         for path, settings in self._paths.items():
@@ -137,77 +144,105 @@ class DbusService:
             )
 
         # add _sign_of_life 'timer' to get feedback in log every 5minutes
-        gobject.timeout_add(self._get_sign_of_life_interval() * 60 * 1000, self._sign_of_life)
+        gobject.timeout_add(self._get_sign_of_life_interval()
+                            * 60 * 1000, self._sign_of_life)
 
-    ## read config file
+    # read config file
     def _read_config_dtu(self, actual_inverter):
         config = self._get_config()
         self.pvinverternumber = actual_inverter
         self.dtuvariant = str(config["DEFAULT"]["DTU"])
         if self.dtuvariant not in (constants.DTUVARIANT_OPENDTU, constants.DTUVARIANT_AHOY):
-            raise ValueError(f"Error in config.ini: DTU must be one of {constants.DTUVARIANT_OPENDTU}, {constants.DTUVARIANT_AHOY}, {constants.DTUVARIANT_TEMPLATE}")
-        self.deviceinstance = int(config[f"INVERTER{self.pvinverternumber}"]["DeviceInstance"])
-        self.acposition = int(get_config_value(config, "AcPosition", "INVERTER", self.pvinverternumber ))
+            raise ValueError(
+                f"Error in config.ini: DTU must be one of \
+                {constants.DTUVARIANT_OPENDTU}, \
+                {constants.DTUVARIANT_AHOY}, \
+                {constants.DTUVARIANT_TEMPLATE}"
+            )
+        self.deviceinstance = int(
+            config[f"INVERTER{self.pvinverternumber}"]["DeviceInstance"])
+        self.acposition = int(get_config_value(
+            config, "AcPosition", "INVERTER", self.pvinverternumber))
         self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
         self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
-        self.pvinverterphase = str(config[f"INVERTER{self.pvinverternumber}"]["Phase"])
-        self.host = get_config_value(config, "Host", "INVERTER", self.pvinverternumber )
-        self.username = get_config_value(config, "Username", "INVERTER", self.pvinverternumber )
-        self.password = get_config_value(config, "Password", "INVERTER", self.pvinverternumber )
-        self.digestauth = is_true(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, False ))
+        self.pvinverterphase = str(
+            config[f"INVERTER{self.pvinverternumber}"]["Phase"])
+        self.host = get_config_value(
+            config, "Host", "INVERTER", self.pvinverternumber)
+        self.username = get_config_value(
+            config, "Username", "INVERTER", self.pvinverternumber)
+        self.password = get_config_value(
+            config, "Password", "INVERTER", self.pvinverternumber)
+        self.digestauth = is_true(get_config_value(
+            config, "DigestAuth", "INVERTER", self.pvinverternumber, False))
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
-        except Exception:
+        except ValueError as ex:
+            logging.debug("MagAgeTsLastSuccess: %s", ex)
+            logging.debug("MagAgeTsLastSuccess not set, using default")
             self.max_age_ts = 600
 
         try:
             self.dry_run = "0" != config["DEFAULT"]["DryRun"]
-        except Exception:
+        except Exception: # pylint: disable=broad-except
             self.dry_run = False
 
-        self.pollinginterval = int(config["DEFAULT"]["ESP8266PollingIntervall"])
+        self.pollinginterval = int(
+            config["DEFAULT"]["ESP8266PollingIntervall"])
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
 
     def _read_config_template(self, template_number):
         config = self._get_config()
         self.pvinverternumber = template_number
-        self.custpower = config[f"TEMPLATE{template_number}"]["CUST_Power"].split("/")
+        self.custpower = config[f"TEMPLATE{template_number}"]["CUST_Power"].split(
+            "/")
         self.custpower_factor = config[f"TEMPLATE{template_number}"]["CUST_Power_Mult"]
-        self.custtotal = config[f"TEMPLATE{template_number}"]["CUST_Total"].split("/")
+        self.custtotal = config[f"TEMPLATE{template_number}"]["CUST_Total"].split(
+            "/")
         self.custtotal_factor = config[f"TEMPLATE{template_number}"]["CUST_Total_Mult"]
-        self.custvoltage = config[f"TEMPLATE{template_number}"]["CUST_Voltage"].split("/")
-        self.dccustvoltage = config[f"TEMPLATE{template_number}"]["CUST_DCVoltage"].split("/")
-        self.custcurrent = config[f"TEMPLATE{template_number}"]["CUST_Current"].split("/")
+        self.custvoltage = config[f"TEMPLATE{template_number}"]["CUST_Voltage"].split(
+            "/")
+        self.custdcvoltage = config[f"TEMPLATE{template_number}"]["CUST_DCVoltage"].split(
+            "/")
+        self.custcurrent = config[f"TEMPLATE{template_number}"]["CUST_Current"].split(
+            "/")
         self.custapipath = config[f"TEMPLATE{template_number}"]["CUST_API_PATH"]
         self.serial = str(config[f"TEMPLATE{template_number}"]["CUST_SN"])
-        self.pollinginterval = int(config[f"TEMPLATE{template_number}"]["CUST_POLLING"])
+        self.pollinginterval = int(
+            config[f"TEMPLATE{template_number}"]["CUST_POLLING"])
         self.host = config[f"TEMPLATE{template_number}"]["Host"]
         self.username = config[f"TEMPLATE{template_number}"]["Username"]
         self.password = config[f"TEMPLATE{template_number}"]["Password"]
         self.dtuvariant = constants.DTUVARIANT_TEMPLATE
-        self.deviceinstance = int(config[f"TEMPLATE{template_number}"]["DeviceInstance"])
+        self.deviceinstance = int(
+            config[f"TEMPLATE{template_number}"]["DeviceInstance"])
         self.customname = config[f"TEMPLATE{template_number}"]["Name"]
-        self.acposition = int(config[f"TEMPLATE{template_number}"]["AcPosition"])
+        self.acposition = int(
+            config[f"TEMPLATE{template_number}"]["AcPosition"])
         self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
         self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
-        self.pvinverterphase = str(config[f"TEMPLATE{template_number}"]["Phase"])
-        self.digestauth =  is_true(get_config_value(config, "DigestAuth", "TEMPLATE", template_number, False))
+        self.pvinverterphase = str(
+            config[f"TEMPLATE{template_number}"]["Phase"])
+        self.digestauth = is_true(get_config_value(
+            config, "DigestAuth", "TEMPLATE", template_number, False))
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
-        except Exception:
+        except ValueError as ex:
+            logging.debug("MagAgeTsLastSuccess: %s", ex)
+            logging.debug("MagAgeTsLastSuccess not set, using default")
             self.max_age_ts = 600
 
         try:
             self.dry_run = "0" != config["DEFAULT"]["DryRun"]
-        except Exception:
+        except Exception: # pylint: disable=broad-except
             self.dry_run = False
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
 
-    ## get the Serialnumber
+    # get the Serialnumber
     def _get_serial(self, pvinverternumber):
 
         if self.dtuvariant in (constants.DTUVARIANT_AHOY, constants.DTUVARIANT_OPENDTU):
@@ -220,7 +255,8 @@ class DbusService:
 
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
             if not meter_data["inverters"][pvinverternumber]["serial"]:
-                raise ValueError("Response does not contain serial attribute try name")
+                raise ValueError(
+                    "Response does not contain serial attribute try name")
             serial = meter_data["inverters"][pvinverternumber]["serial"]
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
@@ -262,12 +298,12 @@ class DbusService:
             # Check for ESP8266 and limit polling
             try:
                 self.esptype = meter_data["generic"]["esp_type"]
-            except Exception:
+            except Exception: # pylint: disable=broad-except
                 self.esptype = meter_data["system"]["esp_type"]
 
             if self.esptype == "ESP8266":
                 polling_interval = self.pollinginterval
-                logging.info(f"ESP8266 detected, polling interval {polling_interval/1000} Sek.")
+                logging.info("ESP8266 detected, polling interval %d Sek.", polling_interval/1000)
             else:
                 polling_interval = 5000
 
@@ -280,7 +316,8 @@ class DbusService:
 
     def _get_config(self):
         config = configparser.ConfigParser()
-        config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
+        config.read(
+            f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
         return config
 
     def _get_sign_of_life_interval(self):
@@ -313,12 +350,12 @@ class DbusService:
         '''Get API base URL for all Template calls'''
         return f"http://{self.host}/{self.custapipath}"
 
-
     def _refresh_data(self):
         '''Fetch new data from the DTU API and store in locally if successful.'''
 
         if self.pvinverternumber != 0 and self.dtuvariant != constants.DTUVARIANT_TEMPLATE:
-            # only fetch new data when called for inverter 0 (background: data is kept at class level for all inverters)
+            # only fetch new data when called for inverter 0
+            # (background: data is kept at class level for all inverters)
             return
 
         url = self._get_status_url()
@@ -333,15 +370,23 @@ class DbusService:
         self.store_for_later_use(meter_data)
 
     def store_for_later_use(self, meter_data):
+        '''Store meter data for later use in other methods'''
         if self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             self.meter_data = meter_data
         else:
             DbusService._meter_data = meter_data
 
     def check_and_enrich_ahoy_data(self, meter_data):
+        ''' Check if Ahoy data is valid and enrich it with additional data'''
         if not "iv" in meter_data:
-            logging.info("You do not have the latest Ahoy Version to run this script, please upgrade your Ahoy to at least version 0.5.93")
-            raise ValueError("You do not have the latest Ahoy Version to run this script, please upgrade your Ahoy to at least version 0.5.93")
+            logging.info(
+                "You do not have the latest Ahoy Version to run this script, \
+                please upgrade your Ahoy to at least version 0.5.93"
+            )
+            raise ValueError(
+                    "You do not have the latest Ahoy Version to run this script, \
+                    please upgrade your Ahoy to at least version 0.5.93"
+                )
 
         # not needed: meter_data["record"] = self.fetch_ahoy_record_data()
 
@@ -355,9 +400,16 @@ class DbusService:
                 meter_data["inverter"].append(iv_data)
 
     def check_opendtu_data(self, meter_data):
+        ''' Check if OpenDTU data has the right format'''
         if not "AC" in meter_data["inverters"][self.pvinverternumber]:
-            logging.info("You do not have the latest OpenDTU Version to run this script, please upgrade your OpenDTU to at least version 4.4.3")
-            raise ValueError("You do not have the latest OpenDTU Version to run this script, please upgrade your OpenDTU to at least version 4.4.3")
+            logging.info(
+                "You do not have the latest OpenDTU Version to run this script, \
+                please upgrade your OpenDTU to at least version 4.4.3"
+            )
+            raise ValueError(
+                "You do not have the latest OpenDTU Version to run this script, \
+                please upgrade your OpenDTU to at least version 4.4.3"
+            )
 
     def fetch_ahoy_iv_data(self, inverter_number):
         '''Fetch inverter date from Ahoy device for one interter'''
@@ -370,19 +422,22 @@ class DbusService:
         return self.fetch_url(record_live_url)
 
     @timeit
-    def fetch_url(self, url, try_number = 1):
+    def fetch_url(self, url, try_number=1):
         '''Fetch JSON data from url. Throw an exception on any error. Only return on success.'''
         try:
-            logging.debug(f"calling {url} with timeout={self.httptimeout}")
+            logging.debug("calling %s with timeout=%f", url, self.httptimeout)
             if self.digestauth:
-                logging.debug("using Digest access authentication...") 
-                json_str = requests.get(url=url, auth=HTTPDigestAuth(self.username, self.password), timeout=float(self.httptimeout))
+                logging.debug("using Digest access authentication...")
+                json_str = requests.get(url=url, auth=HTTPDigestAuth(
+                    self.username, self.password), timeout=float(self.httptimeout))
             elif self.username and self.password:
-                logging.debug("using Basic access authentication...") 
-                json_str = requests.get(url=url, auth=(self.username, self.password), timeout=float(self.httptimeout))
+                logging.debug("using Basic access authentication...")
+                json_str = requests.get(url=url, auth=(
+                    self.username, self.password), timeout=float(self.httptimeout))
             else:
-                json_str = requests.get(url=url, timeout=float(self.httptimeout))
-            json_str.raise_for_status() # raise exception on bad status code
+                json_str = requests.get(
+                    url=url, timeout=float(self.httptimeout))
+            json_str.raise_for_status()  # raise exception on bad status code
 
             # check for response
             if not json_str:
@@ -393,15 +448,18 @@ class DbusService:
             try:
                 json = json_str.json()
             except json.decoder.JSONDecodeError as error:
-                logging.debug(f"JSONDecodeError: {str(error)}")
+                logging.debug("JSONDecodeError: %s", str(error))
 
             # check for Json
             if not json:
                 # will be logged when catched
-                raise ValueError(f"Converting response from {url} to JSON failed:\nstatus={json_str.status_code},\nresponse={json_str.text}")
+                raise ValueError(
+                        f"Converting response from {url} to JSON failed:\n\
+                        status={json_str.status_code},\nresponse={json_str.text}"
+                    )
             return json
-        except:
-            if (try_number < 3): # retry same call up to 3 times
+        except Exception: # pylint: disable=broad-except
+            if try_number < 3:  # retry same call up to 3 times
                 time.sleep(0.5)
                 return self.fetch_url(url, try_number + 1)
             else:
@@ -417,7 +475,7 @@ class DbusService:
             return self.meter_data
         else:
             return DbusService._meter_data
-    
+
     def set_test_data(self, test_data):
         '''Set Test Data to run test'''
         self._test_meter_data = test_data
@@ -479,25 +537,38 @@ class DbusService:
             successful = True
         except requests.exceptions.RequestException as exception:
             if self.last_update_successful:
-                logging.warning(f"HTTP Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {str(exception)}")
+                logging.warning(
+                    "HTTP Error at _update for inverter %i (%s): %s",
+                    self.pvinverternumber,  self._get_name(), str(exception)
+                )
         except ValueError as error:
             if self.last_update_successful:
-                logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()}): {str(error)}")
-        except Exception as error:
+                logging.warning(
+                    "HTTP Error at _update for inverter %i (%s): %s",
+                    self.pvinverternumber,  self._get_name(), str(error)
+                )
+        except Exception as error: # pylint: disable=broad-except
             if self.last_update_successful:
-                logging.warning(f"Error at _update for inverter {self.pvinverternumber} ({self._get_name()})", exc_info=error)
+                logging.warning(
+                    "Error at _update for inverter %i (%s): %s",
+                    self.pvinverternumber, self._get_name(), error
+                )
         finally:
             if successful:
                 if not self.last_update_successful:
-                    logging.warning(f"Recovered inverter {self.pvinverternumber} ({self._get_name()}): "
-                                    f"Successfully fetched data now: {'NOT (yet?)' if not self.is_data_up2date() else 'Is'} up-to-date")
+                    logging.warning(
+                        f"Recovered inverter {self.pvinverternumber} ({self._get_name()}): " +
+                        f"Successfully fetched data now: \
+                        {'NOT (yet?)' if not self.is_data_up2date() else 'Is'} up-to-date"
+                    )
                     self.last_update_successful = True
             else:
                 self.last_update_successful = False
 
-            # return true, otherwise add_timeout will be removed from GObject - see docs
-            # http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
-            return True
+        # return true, otherwise add_timeout will be removed from GObject - see docs
+        # http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html
+        # #function-gobject--timeout-add
+        return True
 
     def _update_index(self):
         if self.dry_run:
@@ -512,49 +583,58 @@ class DbusService:
     def get_values_for_inverter(self):
         '''read data and return (power, pvyield, current, voltage)'''
         meter_data = self._get_data()
-        (power, pvyield, current, voltage, dc_voltage) = (None, None, None, None, None)
+        (power, pvyield, current, voltage, dc_voltage) = (
+            None, None, None, None, None)
 
         if self.dtuvariant == constants.DTUVARIANT_AHOY:
-            power = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "P_AC")
+            power = get_ahoy_field_by_name(
+                meter_data, self.pvinverternumber, "P_AC")
             if self.useyieldday:
                 pvyield = (
-                    get_ahoy_field_by_name(meter_data, self.pvinverternumber, "YieldDay") / 1000
+                    get_ahoy_field_by_name(
+                        meter_data, self.pvinverternumber, "YieldDay") / 1000
                 )
             else:
                 pvyield = get_ahoy_field_by_name(
                     meter_data, self.pvinverternumber, "YieldTotal"
                 )
-            voltage = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "U_AC")
-            dc_voltage = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "U_DC")
-            current = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "I_AC")
+            voltage = get_ahoy_field_by_name(
+                meter_data, self.pvinverternumber, "U_AC")
+            dc_voltage = get_ahoy_field_by_name(
+                meter_data, self.pvinverternumber, "U_DC")
+            current = get_ahoy_field_by_name(
+                meter_data, self.pvinverternumber, "I_AC")
 
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
+            root_meter_data = meter_data["inverters"][self.pvinverternumber]
             producing = is_true(
-                meter_data["inverters"][self.pvinverternumber]["producing"]
+                root_meter_data["producing"]
             )
             power = (
-                meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["Power"]["v"]
+                root_meter_data["AC"]["0"]["Power"]["v"]
                 if producing
                 else 0
             )
             if self.useyieldday:
                 pvyield = (
-                    meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["YieldDay"]["v"] / 1000
+                    root_meter_data["AC"]["0"]["YieldDay"]["v"] / 1000
                 )
             else:
-                pvyield = meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["YieldTotal"]["v"]
-            voltage = meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["Voltage"]["v"]
-            dc_voltage = meter_data["inverters"][self.pvinverternumber]["DC"]["0"]["Voltage"]["v"]
+                pvyield = root_meter_data["AC"]["0"]["YieldTotal"]["v"]
+            voltage = root_meter_data["AC"]["0"]["Voltage"]["v"]
+            dc_voltage = root_meter_data["DC"]["0"]["Voltage"]["v"]
             current = (
-                meter_data["inverters"][self.pvinverternumber]["AC"]["0"]["Current"]["v"]
+                root_meter_data["AC"]["0"]["Current"]["v"]
                 if producing
                 else 0
             )
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             # logging.debug("JSON data: %s" % meter_data)
-            power = float(get_nested(meter_data, self.custpower) * float(self.custpower_factor))
-            pvyield = float(get_nested(meter_data, self.custtotal) * float(self.custtotal_factor))
+            power = float(get_nested(meter_data, self.custpower)
+                          * float(self.custpower_factor))
+            pvyield = float(get_nested(meter_data, self.custtotal)
+                            * float(self.custtotal_factor))
             voltage = float(get_nested(meter_data, self.custvoltage))
             dc_voltage = float(get_nested(meter_data, self.custdcvoltage))
             current = float(get_nested(meter_data, self.custcurrent))
@@ -563,25 +643,27 @@ class DbusService:
 
     def set_dbus_values(self):
         '''read data and set dbus values'''
-        (power, pvyield, current, voltage, dc_voltage) = self.get_values_for_inverter()
-        
+        (power, pvyield, current, voltage,
+         dc_voltage) = self.get_values_for_inverter()
+
         # This will be refactored later in classes
         if self._servicename == "com.victronenergy.inverter":
             self._dbusservice["/Ac/Out/L1/V"] = voltage
             self._dbusservice["/Ac/Out/L1/I"] = current
-            self._dbusservice["/Dc/0/Voltage"] = dc_voltage 
+            self._dbusservice["/Dc/0/Voltage"] = dc_voltage
             state = None
             if current > 0:
                 state = 9
             else:
                 state = 0
-            self._dbusservice["/State"] = state 
-            
-            logging.debug("Inverter #%d Voltage (/Ac/Out/L1/V): %s", self.pvinverternumber, voltage)
-            logging.debug("Inverter #%d Current (/Ac/Out/L1/I): %s", self.pvinverternumber, current)
+            self._dbusservice["/State"] = state
+
+            logging.debug("Inverter #%d Voltage (/Ac/Out/L1/V): %s",
+                          self.pvinverternumber, voltage)
+            logging.debug("Inverter #%d Current (/Ac/Out/L1/I): %s",
+                          self.pvinverternumber, current)
             logging.debug("---")
         else:
-            ''' Do stuff if not inverter service '''
             pre = "/Ac/" + self.pvinverterphase
             self._dbusservice[pre + "/Voltage"] = voltage
             self._dbusservice[pre + "/Current"] = current
@@ -591,8 +673,10 @@ class DbusService:
                 self._dbusservice[pre + "/Energy/Forward"] = pvyield
                 self._dbusservice["/Ac/Energy/Forward"] = pvyield
 
-            logging.debug("Inverter #%d Power (/Ac/Power): %s", self.pvinverternumber, power)
-            logging.debug("Inverter #%d Energy (/Ac/Energy/Forward): %s", self.pvinverternumber, pvyield)
+            logging.debug("Inverter #%d Power (/Ac/Power): %s",
+                          self.pvinverternumber, power)
+            logging.debug("Inverter #%d Energy (/Ac/Energy/Forward): %s",
+                          self.pvinverternumber, pvyield)
             logging.debug("---")
 
     def _handlechangedvalue(self, path, value):
