@@ -470,42 +470,11 @@ class DbusService:
             # update data from DTU once per _update call:
             self._refresh_data()
 
-            pre = "/Ac/" + self.pvinverterphase
-
             if self.is_data_up2date():
-                (power, pvyield, current, voltage, dc_voltage) = self.get_values_for_inverter()
-
                 if self.dry_run:
                     logging.info("DRY RUN. No data is sent!!")
                 else:
-                    if self._servicename == "com.victronenergy.inverter":
-                        self._dbusservice["/Ac/Out/L1/V"] = voltage
-                        self._dbusservice["/Ac/Out/L1/I"] = current
-                        self._dbusservice["/Dc/0/Voltage"] = dc_voltage 
-                        state = None
-                        if current > 0:
-                            state = 9
-                        else:
-                            state = 0
-                        self._dbusservice["/State"] = state 
-                        
-                        logging.debug("Inverter #%d Voltage (/Ac/Out/L1/V): %s", self.pvinverternumber, voltage)
-                        logging.debug("Inverter #%d Current (/Ac/Out/L1/I): %s", self.pvinverternumber, current)
-                        logging.debug("---")
-                    else:
-                        ''' Do stuff if not inverter service '''
-                        self._dbusservice[pre + "/Voltage"] = voltage
-                        self._dbusservice[pre + "/Current"] = current
-                        self._dbusservice[pre + "/Power"] = power
-                        self._dbusservice["/Ac/Power"] = power
-                        if power > 0:
-                            self._dbusservice[pre + "/Energy/Forward"] = pvyield
-                            self._dbusservice["/Ac/Energy/Forward"] = pvyield
-
-                        logging.debug("Inverter #%d Power (/Ac/Power): %s", self.pvinverternumber, power)
-                        logging.debug("Inverter #%d Energy (/Ac/Energy/Forward): %s", self.pvinverternumber, pvyield)
-                        logging.debug("---")
-                        j
+                    self.set_dbus_values()
             self._update_index()
             successful = True
         except requests.exceptions.RequestException as exception:
@@ -591,6 +560,40 @@ class DbusService:
             current = float(get_nested(meter_data, self.custcurrent))
 
         return (power, pvyield, current, voltage, dc_voltage)
+
+    def set_dbus_values(self):
+        '''read data and set dbus values'''
+        (power, pvyield, current, voltage, dc_voltage) = self.get_values_for_inverter()
+        
+        # This will be refactored later in classes
+        if self._servicename == "com.victronenergy.inverter":
+            self._dbusservice["/Ac/Out/L1/V"] = voltage
+            self._dbusservice["/Ac/Out/L1/I"] = current
+            self._dbusservice["/Dc/0/Voltage"] = dc_voltage 
+            state = None
+            if current > 0:
+                state = 9
+            else:
+                state = 0
+            self._dbusservice["/State"] = state 
+            
+            logging.debug("Inverter #%d Voltage (/Ac/Out/L1/V): %s", self.pvinverternumber, voltage)
+            logging.debug("Inverter #%d Current (/Ac/Out/L1/I): %s", self.pvinverternumber, current)
+            logging.debug("---")
+        else:
+            ''' Do stuff if not inverter service '''
+            pre = "/Ac/" + self.pvinverterphase
+            self._dbusservice[pre + "/Voltage"] = voltage
+            self._dbusservice[pre + "/Current"] = current
+            self._dbusservice[pre + "/Power"] = power
+            self._dbusservice["/Ac/Power"] = power
+            if power > 0:
+                self._dbusservice[pre + "/Energy/Forward"] = pvyield
+                self._dbusservice["/Ac/Energy/Forward"] = pvyield
+
+            logging.debug("Inverter #%d Power (/Ac/Power): %s", self.pvinverternumber, power)
+            logging.debug("Inverter #%d Energy (/Ac/Energy/Forward): %s", self.pvinverternumber, pvyield)
+            logging.debug("---")
 
     def _handlechangedvalue(self, path, value):
         logging.debug("someone else updated %s to %s", path, value)
