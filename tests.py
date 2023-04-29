@@ -52,12 +52,12 @@ def test_opendtu_producing(test_service):
     test_service.set_test_data(test_data)
     # current, power are 0 because inverter is not producing
     # (power, pvyield total, current, voltage)
-    assert test_service.get_values_for_inverter() == (0, 270.4660034, 0, 226.1999969)
+    assert test_service.get_values_for_inverter() == (0, 270.4660034, 0, 226.1999969, 0.699999988)
 
     test_data = load_json_file(OPENDTU_TEST_DATA_FILE, '"producing": false', '"producing":"1"')
     test_service.set_test_data(test_data)
     # (power, pvyield total, current, voltage)
-    assert test_service.get_values_for_inverter() == (31.79999924, 270.4660034, 0.140000001, 226.1999969)
+    assert test_service.get_values_for_inverter() == (31.79999924, 270.4660034, 0.140000001, 226.1999969, 0.699999988)
 
 
 def load_json_file(filename, find_str = None, replace_str = None):
@@ -84,7 +84,7 @@ def test_ahoy_values(test_service):
 
     test_service.set_test_data(test_data)
     # (power, pvyield total, current, voltage)
-    assert test_service.get_values_for_inverter() == (223.7, 422.603, 0.98, 229.5)
+    assert test_service.get_values_for_inverter() == (223.7, 422.603, 0.98, 229.5, 33.2)
 
 
 def test_ahoy_timestamp(test_service):
