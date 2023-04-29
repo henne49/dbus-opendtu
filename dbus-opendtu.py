@@ -83,6 +83,8 @@ def main():
             "/Ac/Out/L1/I": {"initial": None, "textformat": _a},
             "/Ac/Out/L1/V": {"initial": None, "textformat": _v},
             "/Dc/0/Voltage": {"initial": None, "textformat": _v},
+            "/Mode": {"initial": 2, "textformat": None},
+            "/State": {"initial": 9, "textformat": None}
         }
 
         if dtuvariant != constants.DTUVARIANT_TEMPLATE:
