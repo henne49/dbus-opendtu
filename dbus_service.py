@@ -6,23 +6,21 @@ import os
 import platform
 import sys
 import logging
-import time
-from vedbus import VeDbusService  # pylint: disable=E0401
 import requests  # for http GET #pylint: disable=E0401
-from requests.auth import HTTPDigestAuth  # pylint: disable=E0401
-
-# victron imports:
-import dbus  # pylint: disable=E0401
+from requests.auth import HTTPDigestAuth #pylint: disable=E0401
+import time
 
 # our imports:
 import constants
-# TODO: This should be refactored to use helper (utils) as a module # pylint: disable=W0511
-from helpers import *  # pylint: disable=W0401,W0614
+from helpers import *
+
+# victron imports:
+import dbus #pylint: disable=E0401
 
 if sys.version_info.major == 2:
-    import gobject  # pylint: disable=E0401
+    import gobject #pylint: disable=E0401
 else:
-    from gi.repository import GLib as gobject  # pylint: disable=E0401
+    from gi.repository import GLib as gobject #pylint: disable=E0401
 
 sys.path.insert(
     1,
@@ -31,6 +29,7 @@ sys.path.insert(
         "/opt/victronenergy/dbus-systemcalc-py/ext/velib_python",
     ),
 )
+from vedbus import VeDbusService #pylint: disable=E0401
 
 class PvInverterRegistry(type):
     '''Run a registry for all PV Inverter'''
@@ -132,6 +131,11 @@ class DbusService:
             # Set Mode to 2 to show it as ON
             # 2=On;4=Off;5=Eco
             self._dbusservice.add_path("/Mode", 2)
+            #set the SystemState flaf to 9=Inverting
+            #/SystemState/State     ->   0: Off
+            #                       ->   1: Low power
+            #                       ->   9: Inverting
+            self._dbusservice.add_path("/State", 9)
 
         # add path values to dbus
         for path, settings in self._paths.items():
@@ -204,10 +208,6 @@ class DbusService:
         self.custtotal_factor = config[f"TEMPLATE{template_number}"]["CUST_Total_Mult"]
         self.custvoltage = config[f"TEMPLATE{template_number}"]["CUST_Voltage"].split(
             "/")
-        self.custdcvoltage = config[f"TEMPLATE{template_number}"]["CUST_DCVoltage"].split(
-            "/")
-        self.custcurrent = config[f"TEMPLATE{template_number}"]["CUST_Current"].split(
-            "/")
         self.custapipath = config[f"TEMPLATE{template_number}"]["CUST_API_PATH"]
         self.serial = str(config[f"TEMPLATE{template_number}"]["CUST_SN"])
         self.pollinginterval = int(
@@ -228,6 +228,22 @@ class DbusService:
         self.digestauth = is_true(get_config_value(
             config, "DigestAuth", "TEMPLATE", template_number, False))
 
+        try:
+            self.custcurrent= config[f"TEMPLATE{template_number}"]["CUST_Current"].split(
+            "/")
+        except Exception: # pylint: disable=broad-except
+            # set to undefined because get_nested will solve this to 0
+            self.custcurrent = "[undefined]"
+            logging.debug("CUST_Current not set")
+
+        try:
+            self.custdcvoltage = config[f"TEMPLATE{template_number}"]["CUST_DCVoltage"].split(
+            "/")
+        except Exception: # pylint: disable=broad-except
+            # set to undefined because get_nested will solve this to 0
+            self.custdcvoltage = "[undefined]"
+            logging.debug("CUST_DCVoltage not set")
+        
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
         except ValueError as ex:
@@ -425,7 +441,7 @@ class DbusService:
     def fetch_url(self, url, try_number=1):
         '''Fetch JSON data from url. Throw an exception on any error. Only return on success.'''
         try:
-            logging.debug("calling %s with timeout=%f", url, self.httptimeout)
+            logging.debug("calling %s with timeout=%s", url, self.httptimeout)
             if self.digestauth:
                 logging.debug("using Digest access authentication...")
                 json_str = requests.get(url=url, auth=HTTPDigestAuth(
@@ -601,7 +617,7 @@ class DbusService:
             voltage = get_ahoy_field_by_name(
                 meter_data, self.pvinverternumber, "U_AC")
             dc_voltage = get_ahoy_field_by_name(
-                meter_data, self.pvinverternumber, "U_DC")
+                meter_data, self.pvinverternumber, "U_DC", False)
             current = get_ahoy_field_by_name(
                 meter_data, self.pvinverternumber, "I_AC")
 
@@ -651,13 +667,17 @@ class DbusService:
             self._dbusservice["/Ac/Out/L1/V"] = voltage
             self._dbusservice["/Ac/Out/L1/I"] = current
             self._dbusservice["/Dc/0/Voltage"] = dc_voltage
-            state = None
-            if current > 0:
+            
+            try:
+                float_current = float(current)
+            except ValueError:
+                float_current = 0
+            
+            if float_current > 0:
                 state = 9
             else:
                 state = 0
             self._dbusservice["/State"] = state
-
             logging.debug("Inverter #%d Voltage (/Ac/Out/L1/V): %s",
                           self.pvinverternumber, voltage)
             logging.debug("Inverter #%d Current (/Ac/Out/L1/I): %s",

@@ -39,7 +39,7 @@ def get_nested(meter_data, path):
                 value = 0
     return value
 
-def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname):
+def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname, ch0_fld_names = True):
     '''get the value by name instead of list index'''
     # fetch value from record call:
     #  - but there seem to be more than one value per type and Inverter, and we don't know which one to take
@@ -51,10 +51,21 @@ def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname):
     #         return val
     # raise ValueError(f"Fieldname {fieldname} not found in meter_data.")
 
-    ac_data_field_names = meter_data["ch0_fld_names"]
-    data_index = ac_data_field_names.index(fieldname)
-    ac_channel_index = 0
-    return meter_data["inverter"][actual_inverter]["ch"][ac_channel_index][data_index]
+    data = None
+
+    if(ch0_fld_names):
+        data_field_names = meter_data["ch0_fld_names"]
+        data_index = data_field_names.index(fieldname)
+        ac_channel_index = 0
+        data = meter_data["inverter"][actual_inverter]["ch"][ac_channel_index][data_index]
+    else:
+        data_field_names = meter_data["fld_names"]
+        data_index = data_field_names.index(fieldname)
+        # TODO - check if this channel has to be adjusted
+        dc_channel_index = 0 + 1 # 1 = DC1, 2 = DC2 etc.
+        data = meter_data["inverter"][actual_inverter]["ch"][dc_channel_index][data_index]
+    
+    return data
 
 def is_true(val):
     '''helper function to test for different true values'''
