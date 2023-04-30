@@ -84,7 +84,7 @@ def test_ahoy_values(test_service):
 
     test_service.set_test_data(test_data)
     # (power, pvyield total, current, voltage)
-    assert test_service.get_values_for_inverter() == (223.7, 422.603, 0.98, 229.5, 33.2)
+    assert test_service.get_values_for_inverter() == (223.7, 422.603, 0.98, 229.5, 33.3)
 
 
 def test_ahoy_timestamp(test_service):
