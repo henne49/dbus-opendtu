@@ -122,7 +122,10 @@ disable=raw-checker-failed,
         xreadlines-attribute,
         deprecated-sys-function,
         exception-escape,
-        comprehension-escape
+        comprehension-escape,
+        wildcard-import,                  # to ignore messages like 'from helpers import *'
+        unused-wildcard-import,           # same as above
+        logging-fstring-interpolation     # This diasbled the warning if usinf f-string in logging
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -301,7 +304,7 @@ indent-after-paren=4
 indent-string='    '
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=120 # This is just a proposal. I persanally prefer 97
 
 # Maximum number of lines in a module.
 max-module-lines=1000
