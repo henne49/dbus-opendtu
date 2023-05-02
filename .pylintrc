@@ -125,8 +125,8 @@ disable=raw-checker-failed,
         comprehension-escape,
         wildcard-import,                  # to ignore messages like 'from helpers import *'
         unused-wildcard-import,           # same as above
-        logging-fstring-interpolation     # This diasbled the warning if usinf f-string in logging
-
+        logging-fstring-interpolation,    # This diasbled the warning if usinf f-string in logging
+        fixme                             # TODO's wont be regonized. so this needs to be disabled
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where

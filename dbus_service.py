@@ -616,17 +616,8 @@ class DbusService:
             self._dbusservice["/Ac/Out/L1/V"] = voltage
             self._dbusservice["/Ac/Out/L1/I"] = current
             self._dbusservice["/Dc/0/Voltage"] = dc_voltage
+            self._dbusservice["/State"] = self.get_ac_inverter_state(current)
 
-            try:
-                float_current = float(current)
-            except ValueError:
-                float_current = 0
-
-            if float_current > 0:
-                state = 9
-            else:
-                state = 0
-            self._dbusservice["/State"] = state
             logging.debug(f"Inverter #{self.pvinverternumber} Voltage (/Ac/Out/L1/V): {voltage}")
             logging.debug(f"Inverter #{self.pvinverternumber} Current (/Ac/Out/L1/I): {current}")
             logging.debug("---")
@@ -643,6 +634,18 @@ class DbusService:
             logging.debug(f"Inverter #{self.pvinverternumber} Power (/Ac/Power): {power}")
             logging.debug(f"Inverter #{self.pvinverternumber} Energy (/Ac/Energy/Forward): {pvyield}")
             logging.debug("---")
+
+    def get_ac_inverter_state(self, current):
+        '''return the state of the inverter based on the current value'''
+        try:
+            float_current = float(current)
+        except ValueError:
+            float_current = 0
+        if float_current > 0:
+            ac_inverter_state = 9 # = Inverting
+        else:
+            ac_inverter_state = 0 # = Off
+        return ac_inverter_state
 
     def _handlechangedvalue(self, path, value):
         logging.debug("someone else updated %s to %s", path, value)
