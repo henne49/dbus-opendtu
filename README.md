@@ -143,6 +143,9 @@ The following servicenames are supported:
 * com.victronenergy.pvinverter
 * com.victronenergy.inverter
 
+The difference between the two is that the first one is used as a PV inverter connected to the grid like a Fronius or SMA inverter. The second one is used for a battery inverter like a Victron AC Inverter.
+For more Information about non-pv-inverters, see this [Issue #42](https://github.com/henne49/dbus-opendtu/issues/42).
+
 It is possible that other servicenames are supported, but not tested. If you have a device with a different servicename, please open an issue.
   
 ### Videos how to install
