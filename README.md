@@ -27,7 +27,7 @@
   * [Security settings in OpenDTU](#security-settings-in-opendtu)
 * [Inspiration](#inspiration)
 * [Furher reading](#further-reading)
-  * [used documentation](#used-documentation) 
+  * [used documentation](#used-documentation)
   * [Discussions on the web](#discussions-on-the-web)
 
 ---
@@ -213,7 +213,7 @@ Thats it 😄
 
 ## Tested Devices
 
-The code allows you to query either an Ahoy or OpenDTU Device, plus multiple template based (PV) Inverter in a single script. 
+The code allows you to query either an Ahoy or OpenDTU Device, plus multiple template based (PV) Inverter in a single script.
 
 Following combinations are possible:
 
@@ -234,11 +234,11 @@ All [configuration](#configuration) is done via config.ini. Examples are comment
 
 ## Troubleshooting
 
-Please open a new issue on github, only here we can work on your problem in a structured way: https://github.com/henne49/dbus-opendtu/issues/new/choose
+Please open a new issue on github, only here we can work on your problem in a structured way: <https://github.com/henne49/dbus-opendtu/issues/new/choose>
 
 ⚠️ **Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert, once debugging and troubleshooting is complete. Rerun the script and share the current.log file**.
 
-Please provide the config.ini and JSON file and upload to the github issues, you can download the JSON file using your browser or using a commandline like tool like curl. 
+Please provide the config.ini and JSON file and upload to the github issues, you can download the JSON file using your browser or using a commandline like tool like curl
 
 | Type of DTU | URL |
 | ------------- | ------------- |
