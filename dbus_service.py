@@ -175,11 +175,7 @@ class DbusService:
             logging.debug("MagAgeTsLastSuccess not set, using default")
             self.max_age_ts = 600
 
-        try:
-            self.dry_run = "0" != config["DEFAULT"]["DryRun"]
-        except Exception:
-            self.dry_run = False
-
+        self.dry_run = is_true(config["DEFAULT"]["DryRun"]) 
         self.pollinginterval = int(config["DEFAULT"]["ESP8266PollingIntervall"])
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
@@ -228,10 +224,7 @@ class DbusService:
             logging.debug("MagAgeTsLastSuccess not set, using default")
             self.max_age_ts = 600
 
-        try:
-            self.dry_run = "0" != config["DEFAULT"]["DryRun"]
-        except Exception:
-            self.dry_run = False
+        self.dry_run = is_true(config["DEFAULT"]["DryRun"])
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
 
