@@ -390,7 +390,16 @@ class DbusService:
                     "You do not have the latest Ahoy Version to run this script, \
                     please upgrade your Ahoy to at least version 0.5.93"
                 )
-
+         # Check for Attribute (inverter)
+        if (self._servicename == "com.victronenergy.inverter" and
+            not "fld_names" in meter_data):
+            logging.info("Response from OpenDTU does not contain fld_names in data")
+            raise ValueError("Response from OpenDTU does not contain fld_names in data")
+        # Check for Attribute (pv-inverter)
+        if (self._servicename == "com.victronenergy.pvinverter" and
+            not "ch0_fld_names" in meter_data):
+            logging.info("Response from OpenDTU does not contain ch0_fld_names data")
+            raise ValueError("Response from OpenDTU does not contain ch0_fld_names data")
         # not needed: meter_data["record"] = self.fetch_ahoy_record_data()
 
         meter_data["inverter"] = []
@@ -404,6 +413,7 @@ class DbusService:
 
     def check_opendtu_data(self, meter_data):
         ''' Check if OpenDTU data has the right format'''
+        # Check for OpenDTU Version
         if not "AC" in meter_data["inverters"][self.pvinverternumber]:
             logging.info(
                 "You do not have the latest OpenDTU Version to run this script, \
@@ -413,6 +423,16 @@ class DbusService:
                 "You do not have the latest OpenDTU Version to run this script, \
                 please upgrade your OpenDTU to at least version 4.4.3"
             )
+        # Check for Attribute (inverter)
+        if (self._servicename == "com.victronenergy.inverter" and
+            not "DC" in meter_data["inverters"][self.pvinverternumber]):
+            logging.info("Response from OpenDTU does not contain DC data")
+            raise ValueError("Response from OpenDTU does not contain DC data")
+        # Check for Attribute (pv-inverter)
+        if (self._servicename == "com.victronenergy.pvinverter" and
+            not "Voltage" in meter_data["inverters"][self.pvinverternumber]["AC"]):
+            logging.info("Response from OpenDTU does not contain Voltage data")
+            raise ValueError("Response from OpenDTU does not contain Voltage data")
 
     def fetch_ahoy_iv_data(self, inverter_number):
         '''Fetch inverter date from Ahoy device for one interter'''
