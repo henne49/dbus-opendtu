@@ -62,7 +62,7 @@ def test_opendtu_producing(test_service):
 
 def load_json_file(filename, find_str = None, replace_str = None):
     '''Load json data from filename (relative to main file). If given, find_str is replaced by replace_str'''
-    with open(f"{(os.path.dirname(os.path.realpath(__file__)))}/{filename}") as file:
+    with open(f"{(os.path.dirname(os.path.realpath(__file__)))}/{filename}", encoding="utf-8") as file:
         json_str = file.read()
         if find_str is not None:
             json_str = json_str.replace(find_str, replace_str)
