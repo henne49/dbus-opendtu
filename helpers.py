@@ -5,7 +5,6 @@
 
 # system imports
 import functools
-import re   # pylint: disable=unused-import
 import time
 
 # our imports:
@@ -18,10 +17,8 @@ def get_config_value(config, name, inverter_or_template, pvinverternumber, defau
         return config[f"{inverter_or_template}{pvinverternumber}"][name]
     else:
         if defaultvalue is None:
-            raise ValueError(
-                f"config entry '{name}' not found. \
-                Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section"
-            )
+            raise ValueError(f"config entry '{name}' not found. \
+                Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
         else:
             return defaultvalue
 
@@ -59,6 +56,8 @@ def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname, use_ch0_fld_n
 
     data = None
 
+    # If "use_ch0_fld_names" is true, then the field names from the ch0_fld_names section in the JSON is used 
+    # instead of the "fld_names" channel which includes DC-Parameter like "U_DC"
     if use_ch0_fld_names:
         data_field_names = meter_data["ch0_fld_names"]
         data_index = data_field_names.index(fieldname)
