@@ -1,7 +1,7 @@
 '''DbusService and PvInverterRegistry'''
 
 # File specific rules
-# pylint: disable=E0401,C0411,C0413,W0718
+# pylint: disable=E0401,C0411,C0413,broad-except
 
 # system imports:
 import configparser
@@ -53,10 +53,13 @@ class DbusService:
         servicename,
         paths,
         actual_inverter,
-        productname="OpenDTU",
-        connection="OpenDTU HTTP JSON service",
         istemplate=False,
     ):
+
+        # This is (for now) not used elsewhere and is more of a constant
+        # than a contstuctor attribute
+        productname="OpenDTU"
+        connection="TCP/IP (HTTP)"
 
         if servicename == "testing":
             self.max_age_ts = 600
