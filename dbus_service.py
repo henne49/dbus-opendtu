@@ -120,7 +120,7 @@ class DbusService:
         self._dbusservice.add_path("/StatusCode", 0)  # Dummy path so VRM detects us as a PV-inverter.
 
         # If the Servicname is an (AC-)Inverter, add the Mode path (to show it as ON)
-        # Also, we will set diffetent paths and variables in the _update(self) method.
+        # Also, we will set different paths and variables in the _update(self) method.
         # for this device class. For more information about the paths and ServiceNames...
         # @see: https://github.com/victronenergy/venus/wiki/dbus
         if self._servicename == "com.victronenergy.inverter":
@@ -395,9 +395,8 @@ class DbusService:
             not "fld_names" in meter_data):
             logging.info("Response from OpenDTU does not contain fld_names in data")
             raise ValueError("Response from OpenDTU does not contain fld_names in data")
-        # Check for Attribute (pv-inverter)
-        if (self._servicename == "com.victronenergy.pvinverter" and
-            not "ch0_fld_names" in meter_data):
+        # Check for an additonal Attribute
+        if not "ch0_fld_names" in meter_data:
             logging.info("Response from OpenDTU does not contain ch0_fld_names data")
             raise ValueError("Response from OpenDTU does not contain ch0_fld_names data")
         # not needed: meter_data["record"] = self.fetch_ahoy_record_data()
@@ -428,9 +427,8 @@ class DbusService:
             not "DC" in meter_data["inverters"][self.pvinverternumber]):
             logging.info("Response from OpenDTU does not contain DC data")
             raise ValueError("Response from OpenDTU does not contain DC data")
-        # Check for Attribute (pv-inverter)
-        if (self._servicename == "com.victronenergy.pvinverter" and
-            not "Voltage" in meter_data["inverters"][self.pvinverternumber]["AC"]):
+        # Check for another Attribute
+        if not "Voltage" in meter_data["inverters"][self.pvinverternumber]["AC"]:
             logging.info("Response from OpenDTU does not contain Voltage data")
             raise ValueError("Response from OpenDTU does not contain Voltage data")
 
