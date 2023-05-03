@@ -146,6 +146,30 @@ class DbusService:
         # add _sign_of_life 'timer' to get feedback in log every 5minutes
         gobject.timeout_add(self._get_sign_of_life_interval() * 60 * 1000, self._sign_of_life)
 
+    @staticmethod
+    def get_ac_inverter_state(current):
+        '''return the state of the inverter based on the current value'''
+        try:
+            float_current = float(current)
+        except ValueError:
+            float_current = 0
+        if float_current > 0:
+            ac_inverter_state = 9 # = Inverting
+        else:
+            ac_inverter_state = 0 # = Off
+        return ac_inverter_state
+
+    @staticmethod
+    def _handlechangedvalue(path, value):
+        logging.debug("someone else updated %s to %s", path, value)
+        return True  # accept the change
+
+    @staticmethod
+    def _get_config():
+        config = configparser.ConfigParser()
+        config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
+        return config
+
     # read config file
     def _read_config_dtu(self, actual_inverter):
         config = self._get_config()
@@ -175,7 +199,7 @@ class DbusService:
             logging.debug("MagAgeTsLastSuccess not set, using default")
             self.max_age_ts = 600
 
-        self.dry_run = is_true(config["DEFAULT"]["DryRun"]) 
+        self.dry_run = is_true(config["DEFAULT"]["DryRun"])
         self.pollinginterval = int(config["DEFAULT"]["ESP8266PollingIntervall"])
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
@@ -298,11 +322,6 @@ class DbusService:
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             polling_interval = self.pollinginterval
         return polling_interval
-
-    def _get_config(self):
-        config = configparser.ConfigParser()
-        config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
-        return config
 
     def _get_sign_of_life_interval(self):
         '''Get intervall in seconds how often sign of life logs should be created.'''
@@ -442,8 +461,9 @@ class DbusService:
                         status={json_str.status_code},\nresponse={json_str.text}"
                     )
             return json
-        except Exception: # pylint: disable=broad-except
-            if try_number < 3:  # retry same call up to 3 times
+        except Exception:
+            # retry same call up to 3 times
+            if try_number < 3: # pylint: disable=no-else-return
                 time.sleep(0.5)
                 return self.fetch_url(url, try_number + 1)
             else:
@@ -457,8 +477,8 @@ class DbusService:
 
         if self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             return self.meter_data
-        else:
-            return DbusService._meter_data
+
+        return DbusService._meter_data
 
     def set_test_data(self, test_data):
         '''Set Test Data to run test'''
@@ -483,12 +503,11 @@ class DbusService:
                 "is_data_up2date: inverter #%d: age_seconds=%d, max_age_ts=%d",
                 self.pvinverternumber, age_seconds, self.max_age_ts
             )
-            return age_seconds >= 0 and age_seconds < self.max_age_ts
+            return 0 <= age_seconds < self.max_age_ts
 
-        elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
+        if self.dtuvariant == constants.DTUVARIANT_OPENDTU:
             return is_true(meter_data["inverters"][self.pvinverternumber]["reachable"])
-        else:
-            return True
+        return True
 
     def get_ts_last_success(self, meter_data):
         '''return ts_last_success from the meter_data structure - depending on the API version'''
@@ -630,19 +649,3 @@ class DbusService:
             logging.debug(f"Inverter #{self.pvinverternumber} Power (/Ac/Power): {power}")
             logging.debug(f"Inverter #{self.pvinverternumber} Energy (/Ac/Energy/Forward): {pvyield}")
             logging.debug("---")
-
-    def get_ac_inverter_state(self, current):
-        '''return the state of the inverter based on the current value'''
-        try:
-            float_current = float(current)
-        except ValueError:
-            float_current = 0
-        if float_current > 0:
-            ac_inverter_state = 9 # = Inverting
-        else:
-            ac_inverter_state = 0 # = Off
-        return ac_inverter_state
-
-    def _handlechangedvalue(self, path, value):
-        logging.debug("someone else updated %s to %s", path, value)
-        return True  # accept the change
