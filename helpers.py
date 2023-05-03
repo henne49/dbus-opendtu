@@ -1,7 +1,7 @@
 '''Module containing various helper functions'''
 
 # File specific rules
-# pylint: disable=W0718
+# pylint: disable=broad-except
 
 # system imports
 import functools
@@ -15,19 +15,19 @@ def get_config_value(config, name, inverter_or_template, pvinverternumber, defau
     '''check if config value exist in current inverter/template's section, otherwise throw error'''
     if name in config[f"{inverter_or_template}{pvinverternumber}"]:
         return config[f"{inverter_or_template}{pvinverternumber}"][name]
-    else:
-        if defaultvalue is None:
-            raise ValueError(f"config entry '{name}' not found. \
-                Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
-        else:
-            return defaultvalue
+
+    if defaultvalue is None:
+        raise ValueError(f"config entry '{name}' not found. \
+            Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
+
+    return defaultvalue
 
 def get_default_config(config, name, defaultvalue):
     '''check if config value exist in DEFAULT section, otherwise return defaultvalue'''
     if name in config["DEFAULT"]:
         return config["DEFAULT"][name]
-    else:
-        return defaultvalue
+
+    return defaultvalue
 
 def get_nested(meter_data, path):
     '''Try to extract 'path' from nested array 'meter_data' (derived from json document) and return the found value'''
@@ -56,7 +56,7 @@ def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname, use_ch0_fld_n
 
     data = None
 
-    # If "use_ch0_fld_names" is true, then the field names from the ch0_fld_names section in the JSON is used 
+    # If "use_ch0_fld_names" is true, then the field names from the ch0_fld_names section in the JSON is used
     # instead of the "fld_names" channel which includes DC-Parameter like "U_DC"
     if use_ch0_fld_names:
         data_field_names = meter_data["ch0_fld_names"]
