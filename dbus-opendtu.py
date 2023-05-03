@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 '''module to read data from dtu/template and show in VenusOS'''
 
+
+# File specific rules
+# pylint: disable=broad-except
+
 # system imports:
 import logging
 import os
@@ -51,7 +55,7 @@ def main():
     try:
         logging.info("Start")
 
-        from dbus.mainloop.glib import DBusGMainLoop #pylint: disable=E0401
+        from dbus.mainloop.glib import DBusGMainLoop #pylint: disable=E0401,C0415
 
         # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
         DBusGMainLoop(set_as_default=True)
@@ -99,7 +103,13 @@ def main():
             if number_of_inverters > 1:
                 # start our main-service if there are more than 1 inverter
                 for actual_inverter in range(number_of_inverters - 1):
-                    servicename=get_config_value(config, "Servicename", "INVERTER", actual_inverter + 1, "com.victronenergy.pvinverter")
+                    servicename=get_config_value(
+                        config,
+                        "Servicename",
+                        "INVERTER",
+                        actual_inverter + 1,
+                        "com.victronenergy.pvinverter"
+                    )
                     DbusService(
                         servicename=servicename,
                         paths=paths,
@@ -108,7 +118,13 @@ def main():
 
         for actual_template in range(number_of_templates):
             logging.info("Registering Templates")
-            servicename = get_config_value(config, "Servicename", "TEMPLATE", actual_template, "com.victronenergy.pvinverter")
+            servicename = get_config_value(
+                config,
+                "Servicename",
+                "TEMPLATE",
+                actual_template,
+                "com.victronenergy.pvinverter"
+            )
             service = DbusService(
                 servicename=servicename,
                 paths=paths,
