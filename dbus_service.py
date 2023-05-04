@@ -572,8 +572,8 @@ class DbusService:
                 if not self.last_update_successful:
                     logging.warning(
                         f"Recovered inverter {self.pvinverternumber} ({self._get_name()}): " +
-                        f"Successfully fetched data now: \
-                        {'NOT (yet?)' if not self.is_data_up2date() else 'Is'} up-to-date"
+                        f"Successfully fetched data now: " +
+                        f"{'NOT (yet?)' if not self.is_data_up2date() else 'Is'} up-to-date"
                     )
                     self.last_update_successful = True
             else:
