@@ -382,14 +382,10 @@ class DbusService:
     def check_and_enrich_ahoy_data(self, meter_data):
         ''' Check if Ahoy data is valid and enrich it with additional data'''
         if not "iv" in meter_data:
-            logging.info(
-                "You do not have the latest Ahoy Version to run this script, \
-                please upgrade your Ahoy to at least version 0.5.93"
-            )
-            raise ValueError(
-                    "You do not have the latest Ahoy Version to run this script, \
-                    please upgrade your Ahoy to at least version 0.5.93"
-                )
+            logging.info("You do not have the latest Ahoy Version to run this script,"
+                "please upgrade your Ahoy to at least version 0.5.93")
+            raise ValueError("You do not have the latest Ahoy Version to run this script,"
+                    "please upgrade your Ahoy to at least version 0.5.93")
          # Check for Attribute (inverter)
         if (self._servicename == "com.victronenergy.inverter" and
             not "fld_names" in meter_data):
@@ -414,14 +410,10 @@ class DbusService:
         ''' Check if OpenDTU data has the right format'''
         # Check for OpenDTU Version
         if not "AC" in meter_data["inverters"][self.pvinverternumber]:
-            logging.info(
-                "You do not have the latest OpenDTU Version to run this script, \
-                please upgrade your OpenDTU to at least version 4.4.3"
-            )
-            raise ValueError(
-                "You do not have the latest OpenDTU Version to run this script, \
-                please upgrade your OpenDTU to at least version 4.4.3"
-            )
+            logging.info("You do not have the latest OpenDTU Version to run this script,"
+                "please upgrade your OpenDTU to at least version 4.4.3")
+            raise ValueError("You do not have the latest OpenDTU Version to run this script,"
+                "please upgrade your OpenDTU to at least version 4.4.3")
         # Check for Attribute (inverter)
         if (self._servicename == "com.victronenergy.inverter" and
             not "DC" in meter_data["inverters"][self.pvinverternumber]):
@@ -557,22 +549,22 @@ class DbusService:
             successful = True
         except requests.exceptions.RequestException as exception:
             if self.last_update_successful:
-                logging.warning(f"HTTP Error at _update for inverter \
-                    {self.pvinverternumber} ({self._get_name()}): {str(exception)}")
+                logging.warning(f"HTTP Error at _update for inverter "
+                    f"{self.pvinverternumber} ({self._get_name()}): {str(exception)}")
         except ValueError as error:
             if self.last_update_successful:
-                logging.warning(f"Error at _update for inverter \
-                    {self.pvinverternumber} ({self._get_name()}): {str(error)}")
+                logging.warning(f"Error at _update for inverter "
+                    f"{self.pvinverternumber} ({self._get_name()}): {str(error)}")
         except Exception as error: # pylint: disable=broad-except
             if self.last_update_successful:
-                logging.warning(f"Error at _update for inverter \
-                    {self.pvinverternumber} ({self._get_name()})", exc_info=error)
+                logging.warning(f"Error at _update for inverter "
+                    f"{self.pvinverternumber} ({self._get_name()})", exc_info=error)
         finally:
             if successful:
                 if not self.last_update_successful:
                     logging.warning(
-                        f"Recovered inverter {self.pvinverternumber} ({self._get_name()}): " +
-                        f"Successfully fetched data now: " +
+                        f"Recovered inverter {self.pvinverternumber} ({self._get_name()}): "
+                        f"Successfully fetched data now: "
                         f"{'NOT (yet?)' if not self.is_data_up2date() else 'Is'} up-to-date"
                     )
                     self.last_update_successful = True
