@@ -420,7 +420,7 @@ class DbusService:
             logging.info("Response from OpenDTU does not contain DC data")
             raise ValueError("Response from OpenDTU does not contain DC data")
         # Check for another Attribute
-        if not "Voltage" in meter_data["inverters"][self.pvinverternumber]["AC"]:
+        if not "Voltage" in meter_data["inverters"][self.pvinverternumber]["AC"]["0"]:
             logging.info("Response from OpenDTU does not contain Voltage data")
             raise ValueError("Response from OpenDTU does not contain Voltage data")
 
