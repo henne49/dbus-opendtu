@@ -624,11 +624,11 @@ class DbusService:
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             # logging.debug("JSON data: %s" % meter_data)
-            power = float(get_nested(meter_data, self.custpower) * float(self.custpower_factor))
-            pvyield = float(get_nested(meter_data, self.custtotal) * float(self.custtotal_factor))
-            voltage = float(get_nested(meter_data, self.custvoltage))
-            dc_voltage = float(get_nested(meter_data, self.custdcvoltage))
-            current = float(get_nested(meter_data, self.custcurrent))
+            power = float(null_check(get_nested(meter_data, self.custpower)) * float(self.custpower_factor))
+            pvyield = float(null_check(get_nested(meter_data, self.custtotal)) * float(self.custtotal_factor))
+            voltage = float(null_check(get_nested(meter_data, self.custvoltage)))
+            dc_voltage = float(null_check(get_nested(meter_data, self.custdcvoltage)))
+            current = float(null_check(get_nested(meter_data, self.custcurrent)))
 
         return (power, pvyield, current, voltage, dc_voltage)
 

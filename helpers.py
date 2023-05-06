@@ -42,6 +42,13 @@ def get_nested(meter_data, path):
                 value = 0
     return value
 
+def null_check(value):
+    ''' check if value is null or NULL and return 0 instead'''
+    if value == "null" or value == "NULL":
+        return 0
+    else:
+        return value
+
 def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname, use_ch0_fld_names = True):
     '''get the value by name instead of list index'''
     # fetch value from record call:
