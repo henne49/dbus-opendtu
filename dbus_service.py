@@ -4,6 +4,7 @@
 # pylint: disable=E0401,C0411,C0413,broad-except
 
 # system imports:
+from vedbus import VeDbusService
 import configparser
 import os
 import platform
@@ -32,7 +33,7 @@ sys.path.insert(
         "/opt/victronenergy/dbus-systemcalc-py/ext/velib_python",
     ),
 )
-from vedbus import VeDbusService
+
 
 class PvInverterRegistry(type):
     '''Run a registry for all PV Inverter'''
@@ -58,8 +59,8 @@ class DbusService:
 
         # This is (for now) not used elsewhere and is more of a constant
         # than a contstuctor attribute
-        productname="OpenDTU"
-        connection="TCP/IP (HTTP)"
+        productname = "OpenDTU"
+        connection = "TCP/IP (HTTP)"
 
         if servicename == "testing":
             self.max_age_ts = 600
@@ -99,7 +100,7 @@ class DbusService:
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path("/Mgmt/ProcessName", __file__)
         self._dbusservice.add_path("/Mgmt/ProcessVersion",
-            "Unkown version, and running on Python " + platform.python_version())
+                                   "Unkown version, and running on Python " + platform.python_version())
         self._dbusservice.add_path("/Mgmt/Connection", connection)
 
         # Create the mandatory objects
@@ -126,10 +127,10 @@ class DbusService:
             # Set Mode to 2 to show it as ON
             # 2=On;4=Off;5=Eco
             self._dbusservice.add_path("/Mode", 2)
-            #set the SystemState flaf to 9=Inverting
-            #/SystemState/State     ->   0: Off
-            #                       ->   1: Low power
-            #                       ->   9: Inverting
+            # set the SystemState flaf to 9=Inverting
+            # /SystemState/State     ->   0: Off
+            #                        ->   1: Low power
+            #                        ->   9: Inverting
             self._dbusservice.add_path("/State", 9)
 
         # add path values to dbus
@@ -153,9 +154,9 @@ class DbusService:
         except ValueError:
             float_current = 0
         if float_current > 0:
-            ac_inverter_state = 9 # = Inverting
+            ac_inverter_state = 9  # = Inverting
         else:
-            ac_inverter_state = 0 # = Off
+            ac_inverter_state = 0  # = Off
         return ac_inverter_state
 
     @staticmethod
@@ -225,7 +226,7 @@ class DbusService:
         self.digestauth = is_true(get_config_value(config, "DigestAuth", "TEMPLATE", template_number, False))
 
         try:
-            self.custcurrent= config[f"TEMPLATE{template_number}"]["CUST_Current"].split("/")
+            self.custcurrent = config[f"TEMPLATE{template_number}"]["CUST_Current"].split("/")
         except Exception:
             # set to undefined because get_nested will solve this to 0
             self.custcurrent = "[undefined]"
@@ -304,7 +305,7 @@ class DbusService:
             # Check for ESP8266 and limit polling
             try:
                 self.esptype = meter_data["generic"]["esp_type"]
-            except Exception: # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 self.esptype = meter_data["system"]["esp_type"]
 
             if self.esptype == "ESP8266":
@@ -380,10 +381,10 @@ class DbusService:
         ''' Check if Ahoy data is valid and enrich it with additional data'''
         if not "iv" in meter_data:
             raise ValueError("You do not have the latest Ahoy Version to run this script,"
-                    "please upgrade your Ahoy to at least version 0.5.93")
+                             "please upgrade your Ahoy to at least version 0.5.93")
          # Check for Attribute (inverter)
         if (self._servicename == "com.victronenergy.inverter" and
-            not "fld_names" in meter_data):
+                not "fld_names" in meter_data):
             raise ValueError("Response from OpenDTU does not contain fld_names in data")
         # Check for an additonal Attribute
         if not "ch0_fld_names" in meter_data:
@@ -404,10 +405,10 @@ class DbusService:
         # Check for OpenDTU Version
         if not "AC" in meter_data["inverters"][self.pvinverternumber]:
             raise ValueError("You do not have the latest OpenDTU Version to run this script,"
-                "please upgrade your OpenDTU to at least version 4.4.3")
+                             "please upgrade your OpenDTU to at least version 4.4.3")
         # Check for Attribute (inverter)
         if (self._servicename == "com.victronenergy.inverter" and
-            not "DC" in meter_data["inverters"][self.pvinverternumber]):
+                not "DC" in meter_data["inverters"][self.pvinverternumber]):
             raise ValueError("Response from OpenDTU does not contain DC data")
         # Check for another Attribute
         if not "Voltage" in meter_data["inverters"][self.pvinverternumber]["AC"]["0"]:
@@ -460,7 +461,7 @@ class DbusService:
             return json
         except Exception:
             # retry same call up to 3 times
-            if try_number < 3: # pylint: disable=no-else-return
+            if try_number < 3:  # pylint: disable=no-else-return
                 time.sleep(0.5)
                 return self.fetch_url(url, try_number + 1)
             else:
@@ -529,15 +530,15 @@ class DbusService:
         except requests.exceptions.RequestException as exception:
             if self.last_update_successful:
                 logging.warning(f"HTTP Error at _update for inverter "
-                    f"{self.pvinverternumber} ({self._get_name()}): {str(exception)}")
+                                f"{self.pvinverternumber} ({self._get_name()}): {str(exception)}")
         except ValueError as error:
             if self.last_update_successful:
                 logging.warning(f"Error at _update for inverter "
-                    f"{self.pvinverternumber} ({self._get_name()}): {str(error)}")
-        except Exception as error: # pylint: disable=broad-except
+                                f"{self.pvinverternumber} ({self._get_name()}): {str(error)}")
+        except Exception as error:  # pylint: disable=broad-except
             if self.last_update_successful:
                 logging.warning(f"Error at _update for inverter "
-                    f"{self.pvinverternumber} ({self._get_name()})", exc_info=error)
+                                f"{self.pvinverternumber} ({self._get_name()})", exc_info=error)
         finally:
             if successful:
                 if not self.last_update_successful:
