@@ -17,8 +17,8 @@ def get_config_value(config, name, inverter_or_template, pvinverternumber, defau
         return config[f"{inverter_or_template}{pvinverternumber}"][name]
 
     if defaultvalue is None:
-        raise ValueError(f"config entry '{name}' not found. \
-            Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section")
+        raise ValueError(f"config entry '{name}' not found. "
+                         f"(Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section.)")
 
     return defaultvalue
 

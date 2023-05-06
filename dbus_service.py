@@ -99,8 +99,7 @@ class DbusService:
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path("/Mgmt/ProcessName", __file__)
         self._dbusservice.add_path("/Mgmt/ProcessVersion",
-            "Unkown version, and running on Python " + platform.python_version(),
-        )
+            "Unkown version, and running on Python " + platform.python_version())
         self._dbusservice.add_path("/Mgmt/Connection", connection)
 
         # Create the mandatory objects
@@ -176,12 +175,10 @@ class DbusService:
         self.pvinverternumber = actual_inverter
         self.dtuvariant = str(config["DEFAULT"]["DTU"])
         if self.dtuvariant not in (constants.DTUVARIANT_OPENDTU, constants.DTUVARIANT_AHOY):
-            raise ValueError(
-                f"Error in config.ini: DTU must be one of \
+            raise ValueError(f"Error in config.ini: DTU must be one of \
                 {constants.DTUVARIANT_OPENDTU}, \
                 {constants.DTUVARIANT_AHOY}, \
-                {constants.DTUVARIANT_TEMPLATE}"
-            )
+                {constants.DTUVARIANT_TEMPLATE}")
         self.deviceinstance = int(config[f"INVERTER{self.pvinverternumber}"]["DeviceInstance"])
         self.acposition = int(get_config_value(config, "AcPosition", "INVERTER", self.pvinverternumber))
         self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
@@ -382,18 +379,14 @@ class DbusService:
     def check_and_enrich_ahoy_data(self, meter_data):
         ''' Check if Ahoy data is valid and enrich it with additional data'''
         if not "iv" in meter_data:
-            logging.info("You do not have the latest Ahoy Version to run this script,"
-                "please upgrade your Ahoy to at least version 0.5.93")
             raise ValueError("You do not have the latest Ahoy Version to run this script,"
                     "please upgrade your Ahoy to at least version 0.5.93")
          # Check for Attribute (inverter)
         if (self._servicename == "com.victronenergy.inverter" and
             not "fld_names" in meter_data):
-            logging.info("Response from OpenDTU does not contain fld_names in data")
             raise ValueError("Response from OpenDTU does not contain fld_names in data")
         # Check for an additonal Attribute
         if not "ch0_fld_names" in meter_data:
-            logging.info("Response from OpenDTU does not contain ch0_fld_names data")
             raise ValueError("Response from OpenDTU does not contain ch0_fld_names data")
         # not needed: meter_data["record"] = self.fetch_ahoy_record_data()
 
@@ -410,18 +403,14 @@ class DbusService:
         ''' Check if OpenDTU data has the right format'''
         # Check for OpenDTU Version
         if not "AC" in meter_data["inverters"][self.pvinverternumber]:
-            logging.info("You do not have the latest OpenDTU Version to run this script,"
-                "please upgrade your OpenDTU to at least version 4.4.3")
             raise ValueError("You do not have the latest OpenDTU Version to run this script,"
                 "please upgrade your OpenDTU to at least version 4.4.3")
         # Check for Attribute (inverter)
         if (self._servicename == "com.victronenergy.inverter" and
             not "DC" in meter_data["inverters"][self.pvinverternumber]):
-            logging.info("Response from OpenDTU does not contain DC data")
             raise ValueError("Response from OpenDTU does not contain DC data")
         # Check for another Attribute
         if not "Voltage" in meter_data["inverters"][self.pvinverternumber]["AC"]["0"]:
-            logging.info("Response from OpenDTU does not contain Voltage data")
             raise ValueError("Response from OpenDTU does not contain Voltage data")
 
     def fetch_ahoy_iv_data(self, inverter_number):
@@ -466,10 +455,8 @@ class DbusService:
             # check for Json
             if not json:
                 # will be logged when catched
-                raise ValueError(
-                        f"Converting response from {url} to JSON failed:\n\
-                        status={json_str.status_code},\nresponse={json_str.text}"
-                    )
+                raise ValueError(f"Converting response from {url} to JSON failed: "
+                                 f"status={json_str.status_code},\nresponse={json_str.text}")
             return json
         except Exception:
             # retry same call up to 3 times
@@ -509,10 +496,8 @@ class DbusService:
         if self.dtuvariant == constants.DTUVARIANT_AHOY:
             ts_last_success = self.get_ts_last_success(meter_data)
             age_seconds = time.time() - ts_last_success
-            logging.debug(
-                "is_data_up2date: inverter #%d: age_seconds=%d, max_age_ts=%d",
-                self.pvinverternumber, age_seconds, self.max_age_ts
-            )
+            logging.debug("is_data_up2date: inverter #%d: age_seconds=%d, max_age_ts=%d",
+                          self.pvinverternumber, age_seconds, self.max_age_ts)
             return 0 <= age_seconds < self.max_age_ts
 
         if self.dtuvariant == constants.DTUVARIANT_OPENDTU:
@@ -524,14 +509,8 @@ class DbusService:
         return meter_data["inverter"][self.pvinverternumber]["ts_last_success"]
 
     def _sign_of_life(self):
-        logging.debug(
-            "Last inverter #%d _update() call: %s",
-            self.pvinverternumber, self._last_update
-        )
-        logging.info(
-            "Last inverter #%d '/Ac/Power': %s",
-            self.pvinverternumber, self._dbusservice["/Ac/Power"]
-        )
+        logging.debug("Last inverter #%d _update() call: %s", self.pvinverternumber, self._last_update)
+        logging.info("Last inverter #%d '/Ac/Power': %s", self.pvinverternumber, self._dbusservice["/Ac/Power"])
         return True
 
     def _update(self):
@@ -588,12 +567,10 @@ class DbusService:
     def get_values_for_inverter(self):
         '''read data and return (power, pvyield, current, voltage, dc-voltage)'''
         meter_data = self._get_data()
-        (power, pvyield, current, voltage, dc_voltage) = (
-            None, None, None, None, None)
+        (power, pvyield, current, voltage, dc_voltage) = (None, None, None, None, None)
 
         if self.dtuvariant == constants.DTUVARIANT_AHOY:
-            power = get_ahoy_field_by_name(
-                meter_data, self.pvinverternumber, "P_AC")
+            power = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "P_AC")
             if self.useyieldday:
                 pvyield = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "YieldDay") / 1000
             else:
@@ -605,22 +582,18 @@ class DbusService:
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
             root_meter_data = meter_data["inverters"][self.pvinverternumber]
             producing = is_true(root_meter_data["producing"])
-            power = (
-                root_meter_data["AC"]["0"]["Power"]["v"]
-                if producing
-                else 0
-            )
+            power = (root_meter_data["AC"]["0"]["Power"]["v"]
+                     if producing
+                     else 0)
             if self.useyieldday:
                 pvyield = root_meter_data["AC"]["0"]["YieldDay"]["v"] / 1000
             else:
                 pvyield = root_meter_data["AC"]["0"]["YieldTotal"]["v"]
             voltage = root_meter_data["AC"]["0"]["Voltage"]["v"]
             dc_voltage = root_meter_data["DC"]["0"]["Voltage"]["v"]
-            current = (
-                root_meter_data["AC"]["0"]["Current"]["v"]
-                if producing
-                else 0
-            )
+            current = (root_meter_data["AC"]["0"]["Current"]["v"]
+                       if producing
+                       else 0)
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             # logging.debug("JSON data: %s" % meter_data)

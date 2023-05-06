@@ -43,9 +43,7 @@ def main():
         datefmt="%Y-%m-%d %H:%M:%S",
         level=logging_level,
         handlers=[
-            logging.FileHandler(
-                f"{(os.path.dirname(os.path.realpath(__file__)))}/current.log"
-            ),
+            logging.FileHandler(f"{(os.path.dirname(os.path.realpath(__file__)))}/current.log"),
             logging.StreamHandler(),
         ],
     )
