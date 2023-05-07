@@ -207,9 +207,12 @@ class DbusService:
         self.pvinverternumber = template_number
         self.custpower = config[f"TEMPLATE{template_number}"]["CUST_Power"].split("/")
         self.custpower_factor = config[f"TEMPLATE{template_number}"]["CUST_Power_Mult"]
+        self.custpower_default = get_default_template_config(config, template_number, "CUST_Power_Default", None)
         self.custtotal = config[f"TEMPLATE{template_number}"]["CUST_Total"].split("/")
         self.custtotal_factor = config[f"TEMPLATE{template_number}"]["CUST_Total_Mult"]
+        self.custtotal_default = get_default_template_config(config, template_number, "CUST_Total_Default", None)
         self.custvoltage = config[f"TEMPLATE{template_number}"]["CUST_Voltage"].split("/")
+        self.custvoltage_default = get_default_template_config(config, template_number, "CUST_Voltage_Default", None)
         self.custapipath = config[f"TEMPLATE{template_number}"]["CUST_API_PATH"]
         self.serial = str(config[f"TEMPLATE{template_number}"]["CUST_SN"])
         self.pollinginterval = int(config[f"TEMPLATE{template_number}"]["CUST_POLLING"])
@@ -231,6 +234,7 @@ class DbusService:
             # set to undefined because get_nested will solve this to 0
             self.custcurrent = "[undefined]"
             logging.debug("CUST_Current not set")
+        self.custcurrent_default = get_default_template_config(config, template_number, "CUST_Current_Default", None)
 
         try:
             self.custdcvoltage = config[f"TEMPLATE{template_number}"]["CUST_DCVoltage"].split("/")
@@ -238,6 +242,8 @@ class DbusService:
             # set to undefined because get_nested will solve this to 0
             self.custdcvoltage = "[undefined]"
             logging.debug("CUST_DCVoltage not set")
+        self.custdcvoltage_default = get_default_template_config(
+            config, template_number, "CUST_DCVoltage_Default", None)
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
@@ -598,11 +604,11 @@ class DbusService:
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             # logging.debug("JSON data: %s" % meter_data)
-            power = float(null_check(get_nested(meter_data, self.custpower)) * float(self.custpower_factor))
-            pvyield = float(null_check(get_nested(meter_data, self.custtotal)) * float(self.custtotal_factor))
-            voltage = float(null_check(get_nested(meter_data, self.custvoltage)))
-            dc_voltage = float(null_check(get_nested(meter_data, self.custdcvoltage)))
-            current = float(null_check(get_nested(meter_data, self.custcurrent)))
+            power = float((get_nested(meter_data, self.custpower)) * float(self.custpower_factor))
+            pvyield = float((get_nested(meter_data, self.custtotal)) * float(self.custtotal_factor))
+            voltage = float((get_nested(meter_data, self.custvoltage)))
+            dc_voltage = float((get_nested(meter_data, self.custdcvoltage)))
+            current = float((get_nested(meter_data, self.custcurrent)))
 
         return (power, pvyield, current, voltage, dc_voltage)
 

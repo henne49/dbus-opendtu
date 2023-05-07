@@ -45,12 +45,28 @@ def get_nested(meter_data, path):
     return value
 
 
-def null_check(value):
-    ''' check if value is null or NULL and return 0 instead'''
-    if value == "null" or value == "NULL":
-        return 0
-    else:
-        return value
+def get_default_template_config(config: dict, template_number: int, name: str, defaultvalue: any = None) -> any:
+    '''check if config value exist in TEMPLATE section, otherwise return defaultvalue'''
+    if name in config[f"TEMPLATE{template_number}"]:
+        return config[f"TEMPLATE{template_number}"][name]
+
+    return defaultvalue
+
+
+def try_get_value(value: str, expected_type: [str, int, float, bool],
+                  new_value: [None, str, int, float, bool]) -> [None, str, int, float, bool]:
+    ''' Try to convert value to expected_type, otherwise return new_value'''
+    try:
+        if expected_type == int:
+            return int(value)
+        if expected_type == float:
+            return float(value)
+        if expected_type == bool:
+            return is_true(value)
+    except Exception:
+        return new_value
+
+    return value  # fallback
 
 
 def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname, use_ch0_fld_names=True):
