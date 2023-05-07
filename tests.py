@@ -60,13 +60,14 @@ def test_opendtu_producing(test_service):
     assert test_service.get_values_for_inverter() == (31.79999924, 270.4660034, 0.140000001, 226.1999969, 0.699999988)
 
 
-def load_json_file(filename, find_str = None, replace_str = None):
+def load_json_file(filename, find_str=None, replace_str=None):
     '''Load json data from filename (relative to main file). If given, find_str is replaced by replace_str'''
     with open(f"{(os.path.dirname(os.path.realpath(__file__)))}/{filename}", encoding="utf-8") as file:
         json_str = file.read()
         if find_str is not None:
             json_str = json_str.replace(find_str, replace_str)
         return json.loads(json_str)
+
 
 def load_ahoy_test_data():
     '''Load Test data for Ahoy'''
@@ -99,6 +100,7 @@ def test_ahoy_timestamp(test_service):
     test_data["inverter"][0]["ts_last_success"] = time.time() - 10
     test_service.set_test_data(test_data)
     assert test_service.is_data_up2date() is True
+
 
 def test_ahoy_get_number_of_inverters(test_service):
     '''test if get_number_of_inverters works correctly'''

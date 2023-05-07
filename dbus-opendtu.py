@@ -20,9 +20,9 @@ from helpers import *
 from dbus_service import DbusService
 
 if sys.version_info.major == 2:
-    import gobject #pylint: disable=E0401
+    import gobject  # pylint: disable=E0401
 else:
-    from gi.repository import GLib as gobject #pylint: disable=E0401
+    from gi.repository import GLib as gobject  # pylint: disable=E0401
 
 
 def main():
@@ -43,9 +43,7 @@ def main():
         datefmt="%Y-%m-%d %H:%M:%S",
         level=logging_level,
         handlers=[
-            logging.FileHandler(
-                f"{(os.path.dirname(os.path.realpath(__file__)))}/current.log"
-            ),
+            logging.FileHandler(f"{(os.path.dirname(os.path.realpath(__file__)))}/current.log"),
             logging.StreamHandler(),
         ],
     )
@@ -55,16 +53,16 @@ def main():
     try:
         logging.info("Start")
 
-        from dbus.mainloop.glib import DBusGMainLoop #pylint: disable=E0401,C0415
+        from dbus.mainloop.glib import DBusGMainLoop  # pylint: disable=E0401,C0415
 
         # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
         DBusGMainLoop(set_as_default=True)
 
         # formatting
-        _kwh = lambda p, v: (str(round(v, 2)) + "KWh")
-        _a = lambda p, v: (str(round(v, 1)) + "A")
-        _w = lambda p, v: (str(round(v, 1)) + "W")
-        _v = lambda p, v: (str(round(v, 1)) + "V")
+        def _kwh(p, v): return (str(round(v, 2)) + "KWh")
+        def _a(p, v): return (str(round(v, 1)) + "A")
+        def _w(p, v): return (str(round(v, 1)) + "W")
+        def _v(p, v): return (str(round(v, 1)) + "V")
 
         paths = {
             "/Ac/Energy/Forward": {
@@ -91,7 +89,7 @@ def main():
 
         if dtuvariant != constants.DTUVARIANT_TEMPLATE:
             logging.info("Registering dtu devices")
-            servicename=get_config_value(config, "Servicename", "INVERTER", 0, "com.victronenergy.pvinverter")
+            servicename = get_config_value(config, "Servicename", "INVERTER", 0, "com.victronenergy.pvinverter")
             service = DbusService(
                 servicename=servicename,
                 paths=paths,
@@ -103,7 +101,7 @@ def main():
             if number_of_inverters > 1:
                 # start our main-service if there are more than 1 inverter
                 for actual_inverter in range(number_of_inverters - 1):
-                    servicename=get_config_value(
+                    servicename = get_config_value(
                         config,
                         "Servicename",
                         "INVERTER",
