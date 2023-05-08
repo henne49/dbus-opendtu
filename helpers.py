@@ -102,7 +102,7 @@ def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname, use_ch0_fld_n
 
 def is_true(val):
     '''helper function to test for different true values'''
-    return val in (1, '1', True, "True", "true")
+    return val in (1, '1', True, "True", "TRUE", "true")
 
 
 def timeit(func):
