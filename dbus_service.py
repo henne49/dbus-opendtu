@@ -604,11 +604,40 @@ class DbusService:
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             # logging.debug("JSON data: %s" % meter_data)
-            power = float((get_nested(meter_data, self.custpower)) * float(self.custpower_factor))
-            pvyield = float((get_nested(meter_data, self.custtotal)) * float(self.custtotal_factor))
-            voltage = float((get_nested(meter_data, self.custvoltage)))
-            dc_voltage = float((get_nested(meter_data, self.custdcvoltage)))
-            current = float((get_nested(meter_data, self.custcurrent)))
+            get_power = get_nested(meter_data, self.custpower)
+            power_value = try_get_value(get_power, float, self.custpower_default)
+            if isinstance(power_value, float) or isinstance(power_value, int):
+                power = float(power_value * float(self.custpower_factor))
+            else:
+                power = power_value
+
+            get_pv_yield = get_nested(meter_data, self.custtotal)
+            pvyield_value = try_get_value(get_pv_yield, float, self.custtotal_default)
+            if isinstance(pvyield_value, float) or isinstance(pvyield_value, int):
+                pvyield = float(pvyield_value * float(self.custtotal_factor))
+            else:
+                pvyield = pvyield_value
+
+            get_voltage = get_nested(meter_data, self.custvoltage)
+            voltage_value = try_get_value(get_voltage, float, self.custvoltage_default)
+            if isinstance(voltage_value, float) or isinstance(voltage_value, int):
+                voltage = float(voltage_value)
+            else:
+                voltage = voltage_value
+
+            get_dc_voltage = get_nested(meter_data, self.custdcvoltage)
+            dc_voltage_value = try_get_value(get_dc_voltage, float, self.custdcvoltage_default)
+            if isinstance(dc_voltage_value, float) or isinstance(dc_voltage_value, int):
+                dc_voltage = float(dc_voltage_value)
+            else:
+                dc_voltage = dc_voltage_value
+
+            get_current = get_nested(meter_data, self.custcurrent)
+            current_value = try_get_value(get_current, float, self.custcurrent_default)
+            if isinstance(current_value, float) or isinstance(current_value, int):
+                current = float(current_value)
+            else:
+                current = current_value
 
         return (power, pvyield, current, voltage, dc_voltage)
 

@@ -54,6 +54,12 @@ meter_data = json.loads(
     '{"TotalStartTime": "2020-01-05T12:41:22", "Total": 13.48712, "Yesterday": 0, '
     '"Today": 0, "Power": 190, "ApparentPower": 0, "ReactivePower": 0, "Factor": 0, '
     '"Voltage": 0, "Current": 0}}}')
+
+meter_data_null = json.loads(
+    '{"StatusSNS": {"Time": "2021-02-03T15:12:52", "Switch1": "ON", "ENERGY": '
+    '{"TotalStartTime": "2020-01-05T12:41:22", "Total": 13.48712, "Yesterday": 0, '
+    '"Today": 0, "Power": null, "ApparentPower": null, "ReactivePower": null, "Factor": null, '
+    '"Voltage": 225.66, "Current": null}}}')
 # endregion
 
 
@@ -66,7 +72,20 @@ class TestHelpersFunctions(unittest.TestCase):
         self.config = dbus_service.DbusService._get_config()
 
         self.custpower = self.config["TEMPLATE0"]["CUST_Power"].split("/")
+        self.custpower_factor = self.config["TEMPLATE0"]["CUST_Power_Mult"]
+        self.custpower_default = get_default_template_config(self.config, 0, "CUST_Power_Default", None)
         self.custtotal = self.config["TEMPLATE0"]["CUST_Total"].split("/")
+        self.custtotal_factor = self.config["TEMPLATE0"]["CUST_Total_Mult"]
+        self.custtotal_default = get_default_template_config(self.config, 0, "CUST_Total_Default", None)
+        self.custvoltage = self.config["TEMPLATE0"]["CUST_Voltage"].split("/")
+        self.custvoltage_default = get_default_template_config(
+            self.config, 0, "CUST_Voltage_Default", None)
+        # self.custdcvoltage = self.config["TEMPLATE0"]["CUST_DCVoltage"].split("/")
+        # self.custdcvoltage_default = get_default_template_config(
+        #     self.config, 0, "CUST_DCVoltage_Default", None)
+        self.custcurrent = self.config["TEMPLATE0"]["CUST_Current"].split("/")
+        self.custcurrent_default = get_default_template_config(
+            self.config, 0, "CUST_Current_Default", None)
 
     def test_get_config_value(self):
         ''' Test the get_config_value() function. '''
@@ -139,6 +158,48 @@ class TestHelpersFunctions(unittest.TestCase):
             return 1
 
         self.assertEqual(test_function(), 1)
+
+    def test_part_get_values_for_inverts(self):
+        ''' Test part of get_values_for_inverter() function, which is in dbus_service 
+        but heavily uses functions in helpers.py. '''
+
+        get_power = get_nested(meter_data_null, self.custpower)
+        power_value = try_get_value(get_power, float, self.custpower_default)
+        if isinstance(power_value, float) or isinstance(power_value, int):
+            power = float(power_value * float(self.custpower_factor))
+        else:
+            power = power_value
+
+        get_pv_yield = get_nested(meter_data_null, self.custtotal)
+        pvyield_value = try_get_value(get_pv_yield, float, self.custtotal_default)
+        if isinstance(pvyield_value, float) or isinstance(pvyield_value, int):
+            pvyield = float(pvyield_value * float(self.custtotal_factor))
+        else:
+            pvyield = pvyield_value
+
+        get_voltage = get_nested(meter_data_null, self.custvoltage)
+        voltage_value = try_get_value(get_voltage, float, self.custvoltage_default)
+        if isinstance(voltage_value, float) or isinstance(voltage_value, int):
+            voltage = float(voltage_value)
+        else:
+            voltage = voltage_value
+
+        # get_dc_voltage = get_nested(meter_data, self.custdcvoltage)
+        # dc_voltage_value = try_get_value(get_dc_voltage, float, self.custdcvoltage_default)
+        # dc_voltage = float(dc_voltage_value)
+        # print()
+
+        get_current = get_nested(meter_data_null, self.custcurrent)
+        current_value = try_get_value(get_current, float, self.custcurrent_default)
+        if isinstance(current_value, float) or isinstance(current_value, int):
+            current = float(current_value)
+        else:
+            current = current_value
+
+        self.assertEqual(power, None)
+        self.assertEqual(pvyield, 13.48712)
+        self.assertEqual(voltage, 225.66)
+        self.assertEqual(current, None)
 
 
 if __name__ == '__main__':
