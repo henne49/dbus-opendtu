@@ -4,7 +4,6 @@
 # pylint: disable=E0401,C0411,C0413,broad-except
 
 # system imports:
-from vedbus import VeDbusService
 import configparser
 import os
 import platform
@@ -33,6 +32,7 @@ sys.path.insert(
         "/opt/victronenergy/dbus-systemcalc-py/ext/velib_python",
     ),
 )
+from vedbus import VeDbusService  # noqa - must be placed after the sys.path.insert
 
 
 class PvInverterRegistry(type):
