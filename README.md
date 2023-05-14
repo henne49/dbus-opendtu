@@ -121,11 +121,16 @@ This applies to each `TEMPLATE[X]` section. X is the number of Template starting
 | CUST_POLLING | Polling interval in ms for Device |
 | CUST_Total | Path in JSON where to find total Energy |
 | CUST_Total_Mult | Multiplier to convert W per minute for example in kWh|
+| CUST_Total_Default | [optional] Default value if no value is found in JSON |
 | CUST_Power | Path in JSON where to find actual Power |
 | CUST_Power_Mult | Multiplier to convert W in negative or positive |
+| CUST_Power_Default | [optional] Default value if no value is found in JSON |
 | CUST_Voltage | Path in JSON where to find actual Voltage |
+| CUST_Voltage_Default | [optional] Default value if no value is found in JSON |
 | CUST_Current | Path in JSON where to find actual Current |
+| CUST_Current_Default | [optional] Default value if no value is found in JSON |
 | CUST_DCVoltage | Path in JSON where to find actual DC Voltage (e.g. Batterie voltage) *1|
+| CUST_DCVoltage_Default | [optional] Default value if no value is found in JSON |
 | Phase | which Phase L1, L2, L3 to show|
 | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
 | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |

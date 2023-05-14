@@ -1,7 +1,7 @@
 '''DbusService and PvInverterRegistry'''
 
 # File specific rules
-# pylint: disable=E0401,C0411,C0413,broad-except
+# pylint: disable=broad-except, import-error, wrong-import-order, wrong-import-position
 
 # system imports:
 import configparser
@@ -170,6 +170,18 @@ class DbusService:
         config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
         return config
 
+    @staticmethod
+    def get_processed_meter_value(meter_data: dict, value: str, default_value: any, factor: int = 1) -> any:
+        '''return the processed meter value by applying the factor and return a default value due an Exception'''
+        get_raw_value = get_value_by_path(meter_data, value)
+        raw_value = parse_to_expected_type(get_raw_value, float, default_value)
+        if isinstance(raw_value, (float, int)):
+            value = float(raw_value * float(factor))
+        else:
+            value = default_value
+
+        return value
+
     # read config file
     def _read_config_dtu(self, actual_inverter):
         config = self._get_config()
@@ -207,12 +219,12 @@ class DbusService:
         self.pvinverternumber = template_number
         self.custpower = config[f"TEMPLATE{template_number}"]["CUST_Power"].split("/")
         self.custpower_factor = config[f"TEMPLATE{template_number}"]["CUST_Power_Mult"]
-        self.custpower_default = get_default_template_config(config, template_number, "CUST_Power_Default", None)
+        self.custpower_default = get_config_value(config,  "CUST_Power_Default", "TEMPLATE", template_number, None)
         self.custtotal = config[f"TEMPLATE{template_number}"]["CUST_Total"].split("/")
         self.custtotal_factor = config[f"TEMPLATE{template_number}"]["CUST_Total_Mult"]
-        self.custtotal_default = get_default_template_config(config, template_number, "CUST_Total_Default", None)
+        self.custtotal_default = get_config_value(config,  "CUST_Total_Default", "TEMPLATE", template_number, None)
         self.custvoltage = config[f"TEMPLATE{template_number}"]["CUST_Voltage"].split("/")
-        self.custvoltage_default = get_default_template_config(config, template_number, "CUST_Voltage_Default", None)
+        self.custvoltage_default = get_config_value(config,  "CUST_Voltage_Default", "TEMPLATE", template_number, None)
         self.custapipath = config[f"TEMPLATE{template_number}"]["CUST_API_PATH"]
         self.serial = str(config[f"TEMPLATE{template_number}"]["CUST_SN"])
         self.pollinginterval = int(config[f"TEMPLATE{template_number}"]["CUST_POLLING"])
@@ -234,7 +246,7 @@ class DbusService:
             # set to undefined because get_nested will solve this to 0
             self.custcurrent = "[undefined]"
             logging.debug("CUST_Current not set")
-        self.custcurrent_default = get_default_template_config(config, template_number, "CUST_Current_Default", None)
+        self.custcurrent_default = get_config_value(config,  "CUST_Current_Default", "TEMPLATE", template_number, None)
 
         try:
             self.custdcvoltage = config[f"TEMPLATE{template_number}"]["CUST_DCVoltage"].split("/")
@@ -242,8 +254,8 @@ class DbusService:
             # set to undefined because get_nested will solve this to 0
             self.custdcvoltage = "[undefined]"
             logging.debug("CUST_DCVoltage not set")
-        self.custdcvoltage_default = get_default_template_config(
-            config, template_number, "CUST_DCVoltage_Default", None)
+        self.custdcvoltage_default = get_config_value(
+            config,  "CUST_DCVoltage_Default", "TEMPLATE", template_number, None)
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
@@ -603,41 +615,12 @@ class DbusService:
                        else 0)
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
-            # logging.debug("JSON data: %s" % meter_data)
-            get_power = get_nested(meter_data, self.custpower)
-            power_value = try_get_value(get_power, float, self.custpower_default)
-            if isinstance(power_value, float) or isinstance(power_value, int):
-                power = float(power_value * float(self.custpower_factor))
-            else:
-                power = power_value
-
-            get_pv_yield = get_nested(meter_data, self.custtotal)
-            pvyield_value = try_get_value(get_pv_yield, float, self.custtotal_default)
-            if isinstance(pvyield_value, float) or isinstance(pvyield_value, int):
-                pvyield = float(pvyield_value * float(self.custtotal_factor))
-            else:
-                pvyield = pvyield_value
-
-            get_voltage = get_nested(meter_data, self.custvoltage)
-            voltage_value = try_get_value(get_voltage, float, self.custvoltage_default)
-            if isinstance(voltage_value, float) or isinstance(voltage_value, int):
-                voltage = float(voltage_value)
-            else:
-                voltage = voltage_value
-
-            get_dc_voltage = get_nested(meter_data, self.custdcvoltage)
-            dc_voltage_value = try_get_value(get_dc_voltage, float, self.custdcvoltage_default)
-            if isinstance(dc_voltage_value, float) or isinstance(dc_voltage_value, int):
-                dc_voltage = float(dc_voltage_value)
-            else:
-                dc_voltage = dc_voltage_value
-
-            get_current = get_nested(meter_data, self.custcurrent)
-            current_value = try_get_value(get_current, float, self.custcurrent_default)
-            if isinstance(current_value, float) or isinstance(current_value, int):
-                current = float(current_value)
-            else:
-                current = current_value
+            power = self.get_processed_meter_value(
+                meter_data, self.custpower, self.custpower_default, self.custpower_factor)
+            pvyield = self.get_processed_meter_value(
+                meter_data, self.custtotal, self.custtotal_default, self.custtotal_factor)
+            voltage = self.get_processed_meter_value(meter_data, self.custvoltage, self.custpower_default)
+            current = self.get_processed_meter_value(meter_data, self.custcurrent, self.custpower_default)
 
         return (power, pvyield, current, voltage, dc_voltage)
 

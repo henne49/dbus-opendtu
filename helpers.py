@@ -11,12 +11,12 @@ import time
 import logging
 
 
-def get_config_value(config, name, inverter_or_template, pvinverternumber, defaultvalue=None):
+def get_config_value(config, name, inverter_or_template, inverter_or_tpl_number, defaultvalue=None):
     '''check if config value exist in current inverter/template's section, otherwise throw error'''
-    if name in config[f"{inverter_or_template}{pvinverternumber}"]:
-        return config[f"{inverter_or_template}{pvinverternumber}"][name]
+    if name in config[f"{inverter_or_template}{inverter_or_tpl_number}"]:
+        return config[f"{inverter_or_template}{inverter_or_tpl_number}"][name]
 
-    if defaultvalue is None:
+    if defaultvalue is None and inverter_or_template == "INVERTER":
         raise ValueError(f"config entry '{name}' not found. "
                          f"(Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section.)")
 
@@ -31,7 +31,7 @@ def get_default_config(config, name, defaultvalue):
     return defaultvalue
 
 
-def get_nested(meter_data, path):
+def get_value_by_path(meter_data, path):
     '''Try to extract 'path' from nested array 'meter_data' (derived from json document) and return the found value'''
     value = meter_data
     for path_entry in path:
@@ -45,26 +45,19 @@ def get_nested(meter_data, path):
     return value
 
 
-def get_default_template_config(config: dict, template_number: int, name: str, defaultvalue: any = None) -> any:
-    '''check if config value exist in TEMPLATE section, otherwise return defaultvalue'''
-    if name in config[f"TEMPLATE{template_number}"]:
-        return config[f"TEMPLATE{template_number}"][name]
-
-    return defaultvalue
-
-
-def try_get_value(value: str, expected_type: [str, int, float, bool],
-                  new_value: [None, str, int, float, bool]) -> [None, str, int, float, bool]:
+def parse_to_expected_type(value: str, expected_type: [str, int, float, bool],
+                           default: [None, str, int, float, bool]) -> [None, str, int, float, bool]:
     ''' Try to convert value to expected_type, otherwise return new_value'''
     try:
-        if expected_type == int:
-            return int(value)
-        if expected_type == float:
-            return float(value)
-        if expected_type == bool:
-            return is_true(value)
-    except Exception:
-        return new_value
+        conversion_functions = {
+            str: str,
+            int: int,
+            float: float,
+            bool: is_true
+        }
+        return conversion_functions[expected_type](value)
+    except (ValueError, TypeError, KeyError):
+        return default
 
     return value  # fallback
 

@@ -1,5 +1,8 @@
 ''' This file contains the unit tests for the helper functions in the helpers.py file. '''
 
+# file ignores
+# pylint: disable=too-many-instance-attributes
+
 import sys
 import os
 import unittest
@@ -19,9 +22,8 @@ import dbus_service  # noqa pylint: disable=wrong-import-position
 
 def get_ahoy_meterdata(filename):
     ''' Load the meter data from the json file. '''
-    file_json = open(filename, encoding="utf-8")
-    json_meter_data = json.load(file_json)
-    file_json.close()
+    with open(filename, encoding="utf-8") as file_json:
+        json_meter_data = json.load(file_json)
     json_meter_data["inverter"] = []
     for inverter_number in range(len(json_meter_data["iv"])):
         if is_true(json_meter_data["iv"][inverter_number]):
@@ -40,9 +42,8 @@ def fetch_ahoy_iv_data(inverter_number):
     # Check if the file exists, otherwise return an empty dict.
     if not os.path.isfile(filename):
         return {}
-    file_json = open(filename, encoding="utf-8")
-    data = json.load(file_json)
-    file_json.close()
+    with open(filename, encoding="utf-8") as file_json:
+        data = json.load(file_json)
     return data
 
 
@@ -69,23 +70,20 @@ class TestHelpersFunctions(unittest.TestCase):
     def setUp(self):
         ''' Setup the test environment. '''
         # TODO: Create a mock config file and use that instead of the real one.
-        self.config = dbus_service.DbusService._get_config()
+        self.config = dbus_service.DbusService._get_config()  # pylint: disable=protected-access
 
         self.custpower = self.config["TEMPLATE0"]["CUST_Power"].split("/")
         self.custpower_factor = self.config["TEMPLATE0"]["CUST_Power_Mult"]
-        self.custpower_default = get_default_template_config(self.config, 0, "CUST_Power_Default", None)
+        self.custpower_default = get_config_value(self.config, "CUST_Power_Default", "TEMPLATE", 0,  None)
         self.custtotal = self.config["TEMPLATE0"]["CUST_Total"].split("/")
         self.custtotal_factor = self.config["TEMPLATE0"]["CUST_Total_Mult"]
-        self.custtotal_default = get_default_template_config(self.config, 0, "CUST_Total_Default", None)
+        self.custtotal_default = get_config_value(self.config, "CUST_Total_Default", "TEMPLATE", 0, None)
         self.custvoltage = self.config["TEMPLATE0"]["CUST_Voltage"].split("/")
-        self.custvoltage_default = get_default_template_config(
-            self.config, 0, "CUST_Voltage_Default", None)
-        # self.custdcvoltage = self.config["TEMPLATE0"]["CUST_DCVoltage"].split("/")
-        # self.custdcvoltage_default = get_default_template_config(
-        #     self.config, 0, "CUST_DCVoltage_Default", None)
+        self.custvoltage_default = get_config_value(
+            self.config, "CUST_Voltage_Default", "TEMPLATE", 0, None)
         self.custcurrent = self.config["TEMPLATE0"]["CUST_Current"].split("/")
-        self.custcurrent_default = get_default_template_config(
-            self.config, 0, "CUST_Current_Default", None)
+        self.custcurrent_default = get_config_value(
+            self.config, "CUST_Current_Default", "TEMPLATE", 0, None)
 
     def test_get_config_value(self):
         ''' Test the get_config_value() function. '''
@@ -93,7 +91,7 @@ class TestHelpersFunctions(unittest.TestCase):
         self.assertEqual(get_config_value(self.config, "Username", "TEMPLATE", 0), "")
         self.assertEqual(get_config_value(self.config, "not_exist", "TEMPLATE", 0, "default"), "default")
         with self.assertRaises(ValueError):
-            get_config_value(self.config, "not_exist", "TEMPLATE", 0)
+            get_config_value(self.config, "not_exist", "INVERTER", 0)
 
     def test_get_default_config(self):
         ''' Test the get_default_config() function. '''
@@ -103,27 +101,22 @@ class TestHelpersFunctions(unittest.TestCase):
 
     def test_get_nested(self):
         ''' Test the get_nested() function. '''
-        self.assertEqual(get_nested(meter_data, self.custpower), 190)
-        self.assertEqual(get_nested(meter_data, self.custtotal), 13.48712)
-        self.assertEqual(get_nested(meter_data, ["StatusSNS", "ENERGY", "not_there"]), 0)
-        self.assertEqual(get_nested(meter_data, ["StatusSNS", "Switch1"]), "ON")
-
-    def test_get_default_template_config(self):
-        ''' Test the get_default_template_config() function. '''
-        self.assertEqual(get_default_template_config(self.config, 0, "CUST_POLLING"), "2000")
-        self.assertEqual(get_default_template_config(self.config, 0, "not_exist", "default"), "default")
+        self.assertEqual(get_value_by_path(meter_data, self.custpower), 190)
+        self.assertEqual(get_value_by_path(meter_data, self.custtotal), 13.48712)
+        self.assertEqual(get_value_by_path(meter_data, ["StatusSNS", "ENERGY", "not_there"]), 0)
+        self.assertEqual(get_value_by_path(meter_data, ["StatusSNS", "Switch1"]), "ON")
 
     def test_try_get_value(self):
         ''' Test the try_get_value() function. '''
-        self.assertEqual(try_get_value("test", str, "default"), "test")
-        self.assertEqual(try_get_value("test", str, None), "test")
-        self.assertEqual(try_get_value("test", int, 0), 0)
-        self.assertEqual(try_get_value("test", int, None), None)
-        self.assertEqual(try_get_value("test", float, 0.0), 0.0)
-        self.assertEqual(try_get_value("test", float, None), None)
-        self.assertEqual(try_get_value("test", bool, False), False)
-        self.assertEqual(try_get_value("1", bool, None), True)
-        self.assertEqual(try_get_value(None, None, None), None)
+        self.assertEqual(parse_to_expected_type("test", str, "default"), "test")
+        self.assertEqual(parse_to_expected_type("test", str, None), "test")
+        self.assertEqual(parse_to_expected_type("test", int, 0), 0)
+        self.assertEqual(parse_to_expected_type("test", int, None), None)
+        self.assertEqual(parse_to_expected_type("test", float, 0.0), 0.0)
+        self.assertEqual(parse_to_expected_type("test", float, None), None)
+        self.assertEqual(parse_to_expected_type("test", bool, False), False)
+        self.assertEqual(parse_to_expected_type("1", bool, None), True)
+        self.assertEqual(parse_to_expected_type(None, None, None), None)
 
     def test_get_ahoy_field_by_name(self):
         ''' Test the get_ahoy_field_by_name() function. '''
@@ -163,38 +156,31 @@ class TestHelpersFunctions(unittest.TestCase):
         ''' Test part of get_values_for_inverter() function, which is in dbus_service 
         but heavily uses functions in helpers.py. '''
 
-        get_power = get_nested(meter_data_null, self.custpower)
-        power_value = try_get_value(get_power, float, self.custpower_default)
-        if isinstance(power_value, float) or isinstance(power_value, int):
-            power = float(power_value * float(self.custpower_factor))
-        else:
-            power = power_value
+        power = dbus_service.DbusService.get_processed_meter_value(
+            meter_data_null,
+            self.custpower,
+            self.custpower_default,
+            self.custpower_factor
+        )
 
-        get_pv_yield = get_nested(meter_data_null, self.custtotal)
-        pvyield_value = try_get_value(get_pv_yield, float, self.custtotal_default)
-        if isinstance(pvyield_value, float) or isinstance(pvyield_value, int):
-            pvyield = float(pvyield_value * float(self.custtotal_factor))
-        else:
-            pvyield = pvyield_value
+        pvyield = dbus_service.DbusService.get_processed_meter_value(
+            meter_data_null,
+            self.custtotal,
+            self.custtotal_default,
+            self.custtotal_factor
+        )
 
-        get_voltage = get_nested(meter_data_null, self.custvoltage)
-        voltage_value = try_get_value(get_voltage, float, self.custvoltage_default)
-        if isinstance(voltage_value, float) or isinstance(voltage_value, int):
-            voltage = float(voltage_value)
-        else:
-            voltage = voltage_value
+        voltage = dbus_service.DbusService.get_processed_meter_value(
+            meter_data_null,
+            self.custvoltage,
+            self.custpower_default,
+        )
 
-        # get_dc_voltage = get_nested(meter_data, self.custdcvoltage)
-        # dc_voltage_value = try_get_value(get_dc_voltage, float, self.custdcvoltage_default)
-        # dc_voltage = float(dc_voltage_value)
-        # print()
-
-        get_current = get_nested(meter_data_null, self.custcurrent)
-        current_value = try_get_value(get_current, float, self.custcurrent_default)
-        if isinstance(current_value, float) or isinstance(current_value, int):
-            current = float(current_value)
-        else:
-            current = current_value
+        current = dbus_service.DbusService.get_processed_meter_value(
+            meter_data_null,
+            self.custcurrent,
+            self.custpower_default,
+        )
 
         self.assertEqual(power, None)
         self.assertEqual(pvyield, 13.48712)
