@@ -14,6 +14,9 @@
     * [Template options](#template-options)
   * [Service names](#service-names)
   * [Videos how to install](#videos-how-to-install)
+  * [Use Cases](#use-cases)
+    * [Use Case 1: Using a Pv Inverter](#use-case-1-use-a-pv-inverter)
+    * [Use Case 2: Using a (Battery) Inverter](#use-case-2-use-a-battery-inverter)
 * [Usage](#usage)
   * [Check if script is running](#check-if-script-is-running)
   * [How to debug](#how-to-debug)
@@ -160,6 +163,78 @@ Here are some videos on how to install and use the script. They are in German, b
 
 * <https://youtu.be/PpjCz33pGkk> Meine Energiewende
 * <https://youtu.be/UNuIOa72eP4> Schatten PV
+
+### Use Cases
+
+In this section we describe some use cases and how to configure the script for them.
+
+#### **Use case 1: Use a PV-Inverter**
+
+In order to use a PV-Inverter, you need to know the IP address of the DTU (in my case Ahoy) and the servicename of the PV-Inverter. The servicename is `com.victronenergy.pvinverter`.
+
+A Basic configuration could look like this:
+
+```ini
+[DEFAULT]
+# Which DTU to be used ahoy, opendtu, template
+DTU=ahoy
+
+#Possible Options for Log Level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+#To keep current.log small use ERROR
+Logging=ERROR
+
+#IP of Device to query <-- THIS IS THE IP OF THE DTU
+Host=192.168.1.74
+
+### Ahoy Inverter
+# AcPosition 0=AC input 1; 1=AC output; 2=AC output 2
+# 1st inverter
+[INVERTER0]
+Phase=L1
+DeviceInstance=34
+AcPosition=0
+```
+
+The result will be that the first inverter is shown in the Remote Console of Venus OS.
+
+![Remote Console](./img/ahoy-as-pv-inverter.png)
+
+#### **Use case 2: Use a Battery-Inverter**
+
+In order to use a Battery-Inverter, you need to know the IP address o
+f the DTU (in my case Ahoy) and the servicename of the Battery-Inverter. The servicename is `com.victronenergy.inverter`.
+
+The Term Battery-Inverter is used for a device which is connected to the grid and can discharge a battery. This is different from a PV-Inverter, which is only connected to PV-Modules and feed in energy.
+
+You might want to use a Battery-Inverter to use a battery to store energy from a MPPT Charger / Ac Charger etc. and use it later.
+
+A Basic configuration could look like this:
+
+```ini
+[DEFAULT]
+# Which DTU to be used ahoy, opendtu, template
+DTU=ahoy
+
+#Possible Options for Log Level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+#To keep current.log small use ERROR
+Logging=ERROR
+
+#IP of Device to query <-- THIS IS THE IP OF THE DTU
+Host=192.168.1.74
+
+### Ahoy Inverter
+# AcPosition 0=AC input 1; 1=AC output; 2=AC output 2
+# 1st inverter
+[INVERTER0]
+Phase=L1
+DeviceInstance=34
+AcPosition=0
+Servicename=com.victronenergy.inverter
+```
+
+The Result looks like this:
+
+![Battery-Inverter](./img/ahoy-as-inverter.png)
 
 ---
 
