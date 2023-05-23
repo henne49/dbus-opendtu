@@ -45,9 +45,9 @@ def get_value_by_path(meter_data, path):
     return value
 
 
-def parse_to_expected_type(value: str, expected_type: [str, int, float, bool],
-                           default: [None, str, int, float, bool]) -> [None, str, int, float, bool]:
-    ''' Try to convert value to expected_type, otherwise return new_value'''
+def convert_to_expected_type(value: str, expected_type: [str, int, float, bool],
+                             default: [None, str, int, float, bool]) -> [None, str, int, float, bool]:
+    ''' Try to convert value to expected_type, otherwise return default'''
     try:
         conversion_functions = {
             str: str,
@@ -58,8 +58,6 @@ def parse_to_expected_type(value: str, expected_type: [str, int, float, bool],
         return conversion_functions[expected_type](value)
     except (ValueError, TypeError, KeyError):
         return default
-
-    return value  # fallback
 
 
 def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname, use_ch0_fld_names=True):

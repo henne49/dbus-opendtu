@@ -174,7 +174,7 @@ class DbusService:
     def get_processed_meter_value(meter_data: dict, value: str, default_value: any, factor: int = 1) -> any:
         '''return the processed meter value by applying the factor and return a default value due an Exception'''
         get_raw_value = get_value_by_path(meter_data, value)
-        raw_value = parse_to_expected_type(get_raw_value, float, default_value)
+        raw_value = convert_to_expected_type(get_raw_value, float, default_value)
         if isinstance(raw_value, (float, int)):
             value = float(raw_value * float(factor))
         else:
@@ -194,23 +194,23 @@ class DbusService:
                 {constants.DTUVARIANT_TEMPLATE}")
         self.deviceinstance = int(config[f"INVERTER{self.pvinverternumber}"]["DeviceInstance"])
         self.acposition = int(get_config_value(config, "AcPosition", "INVERTER", self.pvinverternumber))
-        self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
-        self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
+        self.signofliveinterval = get_config_value(config, "SignOfLifeLog", "DEFAULT", "", 1)
+        self.useyieldday = int(get_config_value(config, "useYieldDay", "DEFAULT", "", 0))
         self.pvinverterphase = str(config[f"INVERTER{self.pvinverternumber}"]["Phase"])
         self.host = get_config_value(config, "Host", "INVERTER", self.pvinverternumber)
-        self.username = get_config_value(config, "Username", "INVERTER", self.pvinverternumber)
-        self.password = get_config_value(config, "Password", "INVERTER", self.pvinverternumber)
+        self.username = get_config_value(config, "Username", "DEFAULT", "", self.pvinverternumber)
+        self.password = get_config_value(config, "Password", "DEFAULT", "", self.pvinverternumber)
         self.digestauth = is_true(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, False))
 
         try:
-            self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
-        except ValueError as ex:
-            logging.debug("MagAgeTsLastSuccess: %s", ex)
-            logging.debug("MagAgeTsLastSuccess not set, using default")
+            self.max_age_ts = int(config["DEFAULT"]["MaxAgeTsLastSuccess"])
+        except (KeyError, ValueError) as ex:
+            logging.debug("MaxAgeTsLastSuccess: %s", ex)
+            logging.debug("MaxAgeTsLastSuccess not set, using default")
             self.max_age_ts = 600
 
         self.dry_run = is_true(get_default_config(config, "DryRun", False))
-        self.pollinginterval = int(config["DEFAULT"]["ESP8266PollingIntervall"])
+        self.pollinginterval = int(get_config_value(config, "ESP8266PollingIntervall", "DEFAULT", "", 10000))
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
 
@@ -235,8 +235,8 @@ class DbusService:
         self.deviceinstance = int(config[f"TEMPLATE{template_number}"]["DeviceInstance"])
         self.customname = config[f"TEMPLATE{template_number}"]["Name"]
         self.acposition = int(config[f"TEMPLATE{template_number}"]["AcPosition"])
-        self.signofliveinterval = config["DEFAULT"]["SignOfLifeLog"]
-        self.useyieldday = int(config["DEFAULT"]["useYieldDay"])
+        self.signofliveinterval = get_config_value(config, "SignOfLifeLog", "DEFAULT", "", 1)
+        self.useyieldday = int(get_config_value(config, "useYieldDay", "DEFAULT", "", 0))
         self.pvinverterphase = str(config[f"TEMPLATE{template_number}"]["Phase"])
         self.digestauth = is_true(get_config_value(config, "DigestAuth", "TEMPLATE", template_number, False))
 
@@ -258,10 +258,10 @@ class DbusService:
             config,  "CUST_DCVoltage_Default", "TEMPLATE", template_number, None)
 
         try:
-            self.max_age_ts = int(config["DEFAULT"]["MagAgeTsLastSuccess"])
-        except ValueError as ex:
-            logging.debug("MagAgeTsLastSuccess: %s", ex)
-            logging.debug("MagAgeTsLastSuccess not set, using default")
+            self.max_age_ts = int(config["DEFAULT"]["MaxAgeTsLastSuccess"])
+        except (KeyError, ValueError) as ex:
+            logging.debug("MaxAgeTsLastSuccess: %s", ex)
+            logging.debug("MaxAgeTsLastSuccess not set, using default")
             self.max_age_ts = 600
 
         self.dry_run = is_true(get_default_config(config, "DryRun", False))

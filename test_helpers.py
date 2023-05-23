@@ -83,7 +83,7 @@ class TestHelpersFunctions(unittest.TestCase):
             self.config, "CUST_Voltage_Default", "TEMPLATE", 0, None)
         self.custcurrent = self.config["TEMPLATE0"]["CUST_Current"].split("/")
         self.custcurrent_default = get_config_value(
-            self.config, "CUST_Current_Default", "TEMPLATE", 0, None)
+            self.config, "CUST_Current_Default", "TEMPLATE", 0)
 
     def test_get_config_value(self):
         ''' Test the get_config_value() function. '''
@@ -99,24 +99,24 @@ class TestHelpersFunctions(unittest.TestCase):
         self.assertEqual(get_default_config(self.config, "not_exist", "default"), "default")
         self.assertEqual(get_default_config(self.config, "DTU", "empty"), "opendtu")
 
-    def test_get_nested(self):
+    def test_get_value_by_path(self):
         ''' Test the get_nested() function. '''
         self.assertEqual(get_value_by_path(meter_data, self.custpower), 190)
         self.assertEqual(get_value_by_path(meter_data, self.custtotal), 13.48712)
         self.assertEqual(get_value_by_path(meter_data, ["StatusSNS", "ENERGY", "not_there"]), 0)
         self.assertEqual(get_value_by_path(meter_data, ["StatusSNS", "Switch1"]), "ON")
 
-    def test_try_get_value(self):
-        ''' Test the try_get_value() function. '''
-        self.assertEqual(parse_to_expected_type("test", str, "default"), "test")
-        self.assertEqual(parse_to_expected_type("test", str, None), "test")
-        self.assertEqual(parse_to_expected_type("test", int, 0), 0)
-        self.assertEqual(parse_to_expected_type("test", int, None), None)
-        self.assertEqual(parse_to_expected_type("test", float, 0.0), 0.0)
-        self.assertEqual(parse_to_expected_type("test", float, None), None)
-        self.assertEqual(parse_to_expected_type("test", bool, False), False)
-        self.assertEqual(parse_to_expected_type("1", bool, None), True)
-        self.assertEqual(parse_to_expected_type(None, None, None), None)
+    def test_convert_to_expected_type(self):
+        ''' Test the convert_to_expected_type() function. '''
+        self.assertEqual(convert_to_expected_type("test", str, "default"), "test")
+        self.assertEqual(convert_to_expected_type("test", str, None), "test")
+        self.assertEqual(convert_to_expected_type("test", int, 0), 0)
+        self.assertEqual(convert_to_expected_type("test", int, None), None)
+        self.assertEqual(convert_to_expected_type("test", float, 0.0), 0.0)
+        self.assertEqual(convert_to_expected_type("test", float, None), None)
+        self.assertEqual(convert_to_expected_type("test", bool, False), False)
+        self.assertEqual(convert_to_expected_type("1", bool, None), True)
+        self.assertEqual(convert_to_expected_type(None, None, None), None)
 
     def test_get_ahoy_field_by_name(self):
         ''' Test the get_ahoy_field_by_name() function. '''
