@@ -53,7 +53,7 @@ After that call the `install.sh script.
 The following commands should do everything for you:
 
 ```bash
-wget https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
+wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
 mv /data/dbus-opendtu-main /data/dbus-opendtu
 chmod a+x /data/dbus-opendtu/install.sh
