@@ -149,20 +149,22 @@ Example for JSON PATH: use keywords separated by /
 The following servicenames are supported:
 
 * com.victronenergy.pvinverter
-* com.victronenergy.inverter
-* others can work but are not tested or undocumented yet
+* com.victronenergy.inverter (non-PV - see below)
+* others might work but are not tested or undocumented yet
 
-The difference between the two is that the first one is used as a PV inverter connected to the grid like a Fronius or SMA inverter. The second one is used for a battery inverter like a Victron AC Inverter.
-For more Information about non-pv-inverters, see this [Issue #42](https://github.com/henne49/dbus-opendtu/issues/42).
+**Note: Non-PV inverters are BETA! The functionality will be limited** (due to limited understanding of Victrons/Venus's behavior).
 
-**Note: Non PV Inverter are BETA! The functionality might be limited**
+The difference between the two is that the first one (com.victronenergy.pvinverter) is used as a PV inverter connected to PV and the grid (like a Fronius or SMA inverter).
+The second one (com.victronenergy.inverter) is used for a battery inverter like a Victron AC inverter and is - from Victron's view - not connected to the grid.
+For more Information about non-PV inverters, see this [Issue #42](https://github.com/henne49/dbus-opendtu/issues/42).
+Also, please note the use case about non-PV inverters below.
 
-It is possible that other servicenames are supported, but not tested. If you have a device with a different servicename, please open an issue.
+It is possible that other servicenames are supported, but they have not been tested by us. If you have a device with a different servicename, please open an issue. Any help or research is welcome and appreciated.
   
 ### Videos how to install
 
 Here are some videos on how to install and use the script. They are in German, but you can use subtitles and auto-translate to your language.
-*(Don't be confused that the config they used is not the actual one.)*
+*(Don't be confused that the config they used is not the up-to-date.)*
 
 * <https://youtu.be/PpjCz33pGkk> Meine Energiewende
 * <https://youtu.be/UNuIOa72eP4> Schatten PV
@@ -171,9 +173,9 @@ Here are some videos on how to install and use the script. They are in German, b
 
 In this section we describe some use cases and how to configure the script for them.
 
-#### **Use case 1: Use a PV-Inverter**
+#### **Use case 1: Use a PV inverter**
 
-In order to use a PV-Inverter, you need to know the IP address of the DTU (in my case Ahoy) and the servicename of the PV-Inverter. The servicename is `com.victronenergy.pvinverter`.
+In order to use a PV inverter, you need to know the IP address of the DTU (in my case Ahoy) and the servicename of the PV-Inverter. The servicename is `com.victronenergy.pvinverter`.
 
 A Basic configuration could look like this:
 
@@ -202,15 +204,15 @@ The result will be that the first inverter is shown in the Remote Console of Ven
 
 ![Remote Console](./img/ahoy-as-pv-inverter.png)
 
-#### **Use case 2: Use a Battery-Inverter**
+#### **Use case 2: Use a battery inverter**
 
-**NOTE: BETA - Victron never intended to use a Non-PV Inverter (besides Multiplus, Quattro, etc.) to be connected to the existing grid directly (Grid synchronization).**
+**NOTE: BETA - Victron never intended to use a Non-PV inverter (besides Multiplus, Quattro, etc.) to be connected to the existing grid directly (Grid synchronization).**
 
-In order to use a Battery-Inverter, you need to know the IP address of the DTU (in my case Ahoy) and the servicename of the Battery-Inverter. The servicename is `com.victronenergy.inverter`.
+In order to use a battery inverter, you need to know the IP address of the DTU (in my case Ahoy) and the servicename of the battery inverter. The servicename is `com.victronenergy.inverter`.
 
-The Term Battery-Inverter is used for a device which is connected to the grid and can discharge a battery. This is different from a PV-Inverter, which is only connected to PV-Modules and feed in energy.
+The term battery inverter is used for a device that is connected to the grid and can discharge a battery. This is different from a PV inverter, which is only connected to PV-Modules and feeds in energy.
 
-You might want to use a Battery-Inverter to use a battery to store energy from a MPPT Charger / Ac Charger etc. and use it later.
+You might want to use a battery inverter to use a battery to store energy from an MPPT charger / AC charger etc. and use it later.
 
 A Basic configuration could look like this:
 
@@ -244,11 +246,11 @@ The Result looks like this:
 
 ## Usage
 
-This are some useful commands which helps to use the script or to debug.
+These are some useful commands which help to use the script or to debug.
 
-### Check if script is running
+### Check if the script is running
 
-`svstat /service/dbus-opendtu` show if the service (our script) is running. If number of seconds show is low, the it is probably restarting and you should look into `/data/dbus-opendtu/current.log`.
+`svstat /service/dbus-opendtu` show if the service (our script) is running. If the number of seconds shown is low, it is probably restarting and you should look into `/data/dbus-opendtu/current.log`.
 
 ### How to debug
 
