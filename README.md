@@ -150,9 +150,12 @@ The following servicenames are supported:
 
 * com.victronenergy.pvinverter
 * com.victronenergy.inverter
+* others can work but are not tested or undocumented yet
 
 The difference between the two is that the first one is used as a PV inverter connected to the grid like a Fronius or SMA inverter. The second one is used for a battery inverter like a Victron AC Inverter.
 For more Information about non-pv-inverters, see this [Issue #42](https://github.com/henne49/dbus-opendtu/issues/42).
+
+**Note: Non PV Inverter are BETA! The functionality might be limited**
 
 It is possible that other servicenames are supported, but not tested. If you have a device with a different servicename, please open an issue.
   
@@ -201,8 +204,9 @@ The result will be that the first inverter is shown in the Remote Console of Ven
 
 #### **Use case 2: Use a Battery-Inverter**
 
-In order to use a Battery-Inverter, you need to know the IP address o
-f the DTU (in my case Ahoy) and the servicename of the Battery-Inverter. The servicename is `com.victronenergy.inverter`.
+**NOTE: BETA - Victron never intended to use a Non-PV Inverter (besides Multiplus, Quattro, etc.) to be connected to the existing grid directly (Grid synchronization).**
+
+In order to use a Battery-Inverter, you need to know the IP address of the DTU (in my case Ahoy) and the servicename of the Battery-Inverter. The servicename is `com.victronenergy.inverter`.
 
 The Term Battery-Inverter is used for a device which is connected to the grid and can discharge a battery. This is different from a PV-Inverter, which is only connected to PV-Modules and feed in energy.
 
