@@ -11,12 +11,12 @@ import time
 import logging
 
 
-def get_config_value(config, name, inverter_or_template, pvinverternumber, defaultvalue=None):
+def get_config_value(config, name, inverter_or_template, inverter_or_tpl_number, defaultvalue=None):
     '''check if config value exist in current inverter/template's section, otherwise throw error'''
-    if name in config[f"{inverter_or_template}{pvinverternumber}"]:
-        return config[f"{inverter_or_template}{pvinverternumber}"][name]
+    if name in config[f"{inverter_or_template}{inverter_or_tpl_number}"]:
+        return config[f"{inverter_or_template}{inverter_or_tpl_number}"][name]
 
-    if defaultvalue is None:
+    if defaultvalue is None and inverter_or_template == "INVERTER":
         raise ValueError(f"config entry '{name}' not found. "
                          f"(Hint: Deprecated Host ONPREMISE entries must be moved to DEFAULT section.)")
 
@@ -31,7 +31,7 @@ def get_default_config(config, name, defaultvalue):
     return defaultvalue
 
 
-def get_nested(meter_data, path):
+def get_value_by_path(meter_data, path):
     '''Try to extract 'path' from nested array 'meter_data' (derived from json document) and return the found value'''
     value = meter_data
     for path_entry in path:
@@ -43,6 +43,21 @@ def get_nested(meter_data, path):
             except Exception:
                 value = 0
     return value
+
+
+def convert_to_expected_type(value: str, expected_type: [str, int, float, bool],
+                             default: [None, str, int, float, bool]) -> [None, str, int, float, bool]:
+    ''' Try to convert value to expected_type, otherwise return default'''
+    try:
+        conversion_functions = {
+            str: str,
+            int: int,
+            float: float,
+            bool: is_true
+        }
+        return conversion_functions[expected_type](value)
+    except (ValueError, TypeError, KeyError):
+        return default
 
 
 def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname, use_ch0_fld_names=True):
@@ -78,7 +93,7 @@ def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname, use_ch0_fld_n
 
 def is_true(val):
     '''helper function to test for different true values'''
-    return val in (1, '1', True, "True", "true")
+    return val in (1, '1', True, "True", "TRUE", "true")
 
 
 def timeit(func):

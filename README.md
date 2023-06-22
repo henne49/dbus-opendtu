@@ -14,6 +14,9 @@
     * [Template options](#template-options)
   * [Service names](#service-names)
   * [Videos how to install](#videos-how-to-install)
+  * [Use Cases](#use-cases)
+    * [Use Case 1: Using a Pv Inverter](#use-case-1-use-a-pv-inverter)
+    * [Use Case 2: Using a (Battery) Inverter](#use-case-2-use-a-battery-inverter)
 * [Usage](#usage)
   * [Check if script is running](#check-if-script-is-running)
   * [How to debug](#how-to-debug)
@@ -121,11 +124,16 @@ This applies to each `TEMPLATE[X]` section. X is the number of Template starting
 | CUST_POLLING | Polling interval in ms for Device |
 | CUST_Total | Path in JSON where to find total Energy |
 | CUST_Total_Mult | Multiplier to convert W per minute for example in kWh|
+| CUST_Total_Default | [optional] Default value if no value is found in JSON |
 | CUST_Power | Path in JSON where to find actual Power |
 | CUST_Power_Mult | Multiplier to convert W in negative or positive |
+| CUST_Power_Default | [optional] Default value if no value is found in JSON |
 | CUST_Voltage | Path in JSON where to find actual Voltage |
+| CUST_Voltage_Default | [optional] Default value if no value is found in JSON |
 | CUST_Current | Path in JSON where to find actual Current |
+| CUST_Current_Default | [optional] Default value if no value is found in JSON |
 | CUST_DCVoltage | Path in JSON where to find actual DC Voltage (e.g. Batterie voltage) *1|
+| CUST_DCVoltage_Default | [optional] Default value if no value is found in JSON |
 | Phase | which Phase L1, L2, L3 to show|
 | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
 | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
@@ -141,30 +149,108 @@ Example for JSON PATH: use keywords separated by /
 The following servicenames are supported:
 
 * com.victronenergy.pvinverter
-* com.victronenergy.inverter
+* com.victronenergy.inverter (non-PV - see below)
+* others might work but are not tested or undocumented yet
 
-The difference between the two is that the first one is used as a PV inverter connected to the grid like a Fronius or SMA inverter. The second one is used for a battery inverter like a Victron AC Inverter.
-For more Information about non-pv-inverters, see this [Issue #42](https://github.com/henne49/dbus-opendtu/issues/42).
+**Note: Non-PV inverters are BETA! The functionality will be limited** (due to limited understanding of Victrons/Venus's behavior).
 
-It is possible that other servicenames are supported, but not tested. If you have a device with a different servicename, please open an issue.
+The difference between the two is that the first one (com.victronenergy.pvinverter) is used as a PV inverter connected to PV and the grid (like a Fronius or SMA inverter).
+The second one (com.victronenergy.inverter) is used for a battery inverter like a Victron AC inverter and is - from Victron's view - not connected to the grid.
+For more Information about non-PV inverters, see this [Issue #42](https://github.com/henne49/dbus-opendtu/issues/42).
+Also, please note the use case about non-PV inverters below.
+
+It is possible that other servicenames are supported, but they have not been tested by us. If you have a device with a different servicename, please open an issue. Any help or research is welcome and appreciated.
   
 ### Videos how to install
 
 Here are some videos on how to install and use the script. They are in German, but you can use subtitles and auto-translate to your language.
-*(Don't be confused that the config they used is not the actual one.)*
+*(Don't be confused that the config they used is not the up-to-date.)*
 
 * <https://youtu.be/PpjCz33pGkk> Meine Energiewende
 * <https://youtu.be/UNuIOa72eP4> Schatten PV
+
+### Use Cases
+
+In this section we describe some use cases and how to configure the script for them.
+
+#### **Use case 1: Use a PV inverter**
+
+In order to use a PV inverter, you need to know the IP address of the DTU (in my case Ahoy) and the servicename of the PV-Inverter. The servicename is `com.victronenergy.pvinverter`.
+
+A Basic configuration could look like this:
+
+```ini
+[DEFAULT]
+# Which DTU to be used ahoy, opendtu, template
+DTU=ahoy
+
+#Possible Options for Log Level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+#To keep current.log small use ERROR
+Logging=ERROR
+
+#IP of Device to query <-- THIS IS THE IP OF THE DTU
+Host=192.168.1.74
+
+### Ahoy Inverter
+# AcPosition 0=AC input 1; 1=AC output; 2=AC output 2
+# 1st inverter
+[INVERTER0]
+Phase=L1
+DeviceInstance=34
+AcPosition=0
+```
+
+The result will be that the first inverter is shown in the Remote Console of Venus OS.
+
+![Remote Console](./img/ahoy-as-pv-inverter.png)
+
+#### **Use case 2: Use a battery inverter**
+
+**NOTE: BETA - Victron never intended to use a Non-PV inverter (besides Multiplus, Quattro, etc.) to be connected to the existing grid directly (Grid synchronization).**
+
+In order to use a battery inverter, you need to know the IP address of the DTU (in my case Ahoy) and the servicename of the battery inverter. The servicename is `com.victronenergy.inverter`.
+
+The term battery inverter is used for a device that is connected to the grid and can discharge a battery. This is different from a PV inverter, which is only connected to PV-Modules and feeds in energy.
+
+You might want to use a battery inverter to use a battery to store energy from an MPPT charger / AC charger etc. and use it later.
+
+A Basic configuration could look like this:
+
+```ini
+[DEFAULT]
+# Which DTU to be used ahoy, opendtu, template
+DTU=ahoy
+
+#Possible Options for Log Level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+#To keep current.log small use ERROR
+Logging=ERROR
+
+#IP of Device to query <-- THIS IS THE IP OF THE DTU
+Host=192.168.1.74
+
+### Ahoy Inverter
+# AcPosition 0=AC input 1; 1=AC output; 2=AC output 2
+# 1st inverter
+[INVERTER0]
+Phase=L1
+DeviceInstance=34
+AcPosition=0
+Servicename=com.victronenergy.inverter
+```
+
+The Result looks like this:
+
+![Battery-Inverter](./img/ahoy-as-inverter.png)
 
 ---
 
 ## Usage
 
-This are some useful commands which helps to use the script or to debug.
+These are some useful commands which help to use the script or to debug.
 
-### Check if script is running
+### Check if the script is running
 
-`svstat /service/dbus-opendtu` show if the service (our script) is running. If number of seconds show is low, the it is probably restarting and you should look into `/data/dbus-opendtu/current.log`.
+`svstat /service/dbus-opendtu` show if the service (our script) is running. If the number of seconds shown is low, it is probably restarting and you should look into `/data/dbus-opendtu/current.log`.
 
 ### How to debug
 

@@ -30,7 +30,7 @@ def main():
     # configure logging
     config = configparser.ConfigParser()
     config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
-    logging_level = config["DEFAULT"]["Logging"]
+    logging_level = config["DEFAULT"]["Logging"].upper()
     dtuvariant = config["DEFAULT"]["DTU"]
 
     try:
@@ -58,11 +58,19 @@ def main():
         # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
         DBusGMainLoop(set_as_default=True)
 
-        # formatting
-        def _kwh(p, v): return (str(round(v, 2)) + "KWh")
-        def _a(p, v): return (str(round(v, 1)) + "A")
-        def _w(p, v): return (str(round(v, 1)) + "W")
-        def _v(p, v): return (str(round(v, 1)) + "V")
+        # region formatting
+        def _kwh(_p, value: float) -> str:
+            return f"{round(value, 2)}KWh"
+
+        def _a(_p, value: float) -> str:
+            return f"{round(value, 1)}A"
+
+        def _w(_p, value: float) -> str:
+            return f"{round(value, 1)}W"
+
+        def _v(_p, value: float) -> str:
+            return f"{round(value, 1)}V"
+        # endregion
 
         paths = {
             "/Ac/Energy/Forward": {
