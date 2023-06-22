@@ -639,10 +639,24 @@ class DbusService:
             logging.debug(f"Inverter #{self.pvinverternumber} Current (/Ac/Out/L1/I): {current}")
             logging.debug("---")
         else:
-            pre = "/Ac/" + self.pvinverterphase
+            pre = "/Ac/"
+
+            # three-phase inverter: split total power equally over all three phases
+            if ("3P" == self.pvinverterphase):
+                powerthird = power/3
+                self._dbusservice[pre + "L1/Power"] = powerthird
+                self._dbusservice[pre + "L2/Power"] = powerthird
+                self._dbusservice[pre + "L3/Power"] = powerthird
+
+                # all other values are statically mapped to phase one
+                pre = pre + "L1"
+
+            else:
+                pre = pre + self.pvinverterphase
+                self._dbusservice[pre + "/Power"] = power
+
             self._dbusservice[pre + "/Voltage"] = voltage
             self._dbusservice[pre + "/Current"] = current
-            self._dbusservice[pre + "/Power"] = power
             self._dbusservice["/Ac/Power"] = power
             if power > 0:
                 self._dbusservice[pre + "/Energy/Forward"] = pvyield

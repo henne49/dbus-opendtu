@@ -104,7 +104,7 @@ This applies to each `INVERTER[X]` section. X is the number of Inverter starting
 
 | Config value        | Explanation   |
 |-------------------- | ------------- |
-| Phase | which Phase L1, L2, L3 to show|
+| Phase | which Phase L1, L2, L3 to show; use 3P to split power equally over three phases (i.e. Hoymiles micro-inverters only report total power, not seperated by phase)|
 | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
 | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
 | Servicename | e.g. com.victronenergy.pvinverter see [Service names](#service-names) |
@@ -134,7 +134,7 @@ This applies to each `TEMPLATE[X]` section. X is the number of Template starting
 | CUST_Current_Default | [optional] Default value if no value is found in JSON |
 | CUST_DCVoltage | Path in JSON where to find actual DC Voltage (e.g. Batterie voltage) *1|
 | CUST_DCVoltage_Default | [optional] Default value if no value is found in JSON |
-| Phase | which Phase L1, L2, L3 to show|
+| Phase | which Phase L1, L2, L3 to show; use 3P to split power equally over three phases (i.e. Hoymiles micro-inverters only report total power, not seperated by phase)|
 | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
 | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
 | Name | Name to be shown in VenusOS, use a descriptive name |
