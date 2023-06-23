@@ -642,14 +642,15 @@ class DbusService:
             # three-phase inverter: split total power equally over all three phases
             if ("3P" == self.pvinverterphase):
                 powerthird = power/3
-                realCurrent = power / 3 / voltage
-                self._dbusservice["/Ac/L1/Voltage"] = 230 
+                L1Voltage = voltage - 170 # 400V - 170V = 230V
+                realCurrent = power / 3 / L1Voltage
+                self._dbusservice["/Ac/L1/Voltage"] = L1Voltage 
                 self._dbusservice["/Ac/L1/Current"] = realCurrent
                 self._dbusservice["/Ac/L1/Power"] = powerthird
-                self._dbusservice["/Ac/L2/Voltage"] = 230 
+                self._dbusservice["/Ac/L2/Voltage"] = L1Voltage 
                 self._dbusservice["/Ac/L2/Current"] = realCurrent
                 self._dbusservice["/Ac/L2/Power"] = powerthird
-                self._dbusservice["/Ac/L3/Voltage"] = 230 
+                self._dbusservice["/Ac/L3/Voltage"] = L1Voltage 
                 self._dbusservice["/Ac/L3/Current"] = realCurrent
                 self._dbusservice["/Ac/L3/Power"] = powerthird
 
