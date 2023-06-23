@@ -639,28 +639,34 @@ class DbusService:
             logging.debug(f"Inverter #{self.pvinverternumber} Current (/Ac/Out/L1/I): {current}")
             logging.debug("---")
         else:
-            pre = "/Ac/"
-
             # three-phase inverter: split total power equally over all three phases
             if ("3P" == self.pvinverterphase):
                 powerthird = power/3
-                self._dbusservice[pre + "L1/Power"] = powerthird
-                self._dbusservice[pre + "L2/Power"] = powerthird
-                self._dbusservice[pre + "L3/Power"] = powerthird
+                realCurrent = power / 3 / voltage
+                self._dbusservice["/Ac/L1/Voltage"] = 230 
+                self._dbusservice["/Ac/L1/Current"] = realCurrent
+                self._dbusservice["/Ac/L1/Power"] = powerthird
+                self._dbusservice["/Ac/L2/Voltage"] = 230 
+                self._dbusservice["/Ac/L2/Current"] = realCurrent
+                self._dbusservice["/Ac/L2/Power"] = powerthird
+                self._dbusservice["/Ac/L3/Voltage"] = 230 
+                self._dbusservice["/Ac/L3/Current"] = realCurrent
+                self._dbusservice["/Ac/L3/Power"] = powerthird
 
-                # all other values are statically mapped to phase one
-                pre = pre + "L1"
-
+                if power > 0:
+                    self._dbusservice["/Ac/L1/Energy/Forward"] = pvyield / 3
+                    self._dbusservice["/Ac/L2/Energy/Forward"] = pvyield / 3
+                    self._dbusservice["/Ac/L3/Energy/Forward"] = pvyield / 3
+                    self._dbusservice["/Ac/Energy/Forward"] = pvyield
             else:
-                pre = pre + self.pvinverterphase
+                pre = "/Ac/" + self.pvinverterphase
+                self._dbusservice[pre + "/Voltage"] = voltage
+                self._dbusservice[pre + "/Current"] = current
                 self._dbusservice[pre + "/Power"] = power
-
-            self._dbusservice[pre + "/Voltage"] = voltage
-            self._dbusservice[pre + "/Current"] = current
-            self._dbusservice["/Ac/Power"] = power
-            if power > 0:
-                self._dbusservice[pre + "/Energy/Forward"] = pvyield
-                self._dbusservice["/Ac/Energy/Forward"] = pvyield
+                self._dbusservice["/Ac/Power"] = power
+                if power > 0:
+                    self._dbusservice[pre + "/Energy/Forward"] = pvyield
+                    self._dbusservice["/Ac/Energy/Forward"] = pvyield
 
             logging.debug(f"Inverter #{self.pvinverternumber} Power (/Ac/Power): {power}")
             logging.debug(f"Inverter #{self.pvinverternumber} Energy (/Ac/Energy/Forward): {pvyield}")
