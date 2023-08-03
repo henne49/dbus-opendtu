@@ -39,20 +39,20 @@ def main():
     except Exception:
         number_of_templates = 0
 
-	log_rotate_handler = logging.handlers.RotatingFileHandler(
-		maxBytes=5*1024*1024*10,
-		backupCount=2,
-		encoding=None,
-		delay=0,
-		filename="%s/current.log" % (os.path.dirname(os.path.realpath(__file__)))
-	)
+    log_rotate_handler = logging.handlers.RotatingFileHandler(
+        maxBytes=5*1024*1024*10,
+        backupCount=2,
+        encoding=None,
+        delay=0,
+        filename="%s/current.log" % (os.path.dirname(os.path.realpath(__file__)))
+    )
     logging.basicConfig(
         format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         level=logging_level,
         handlers=[
             logging.StreamHandler(),
-			log_rotate_handler
+            log_rotate_handler
         ],
     )
 
