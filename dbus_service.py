@@ -639,14 +639,42 @@ class DbusService:
             logging.debug(f"Inverter #{self.pvinverternumber} Current (/Ac/Out/L1/I): {current}")
             logging.debug("---")
         else:
-            pre = "/Ac/" + self.pvinverterphase
-            self._dbusservice[pre + "/Voltage"] = voltage
-            self._dbusservice[pre + "/Current"] = current
-            self._dbusservice[pre + "/Power"] = power
-            self._dbusservice["/Ac/Power"] = power
-            if power > 0:
-                self._dbusservice[pre + "/Energy/Forward"] = pvyield
-                self._dbusservice["/Ac/Energy/Forward"] = pvyield
+            # three-phase inverter: split total power equally over all three phases
+            if ("3P" == self.pvinverterphase):
+                powerthird = power/3
+
+                #Single Phase Voltage = (3-Phase Voltage) / (sqrt(3))
+                # This formula assumes that the three-phase voltage is balanced and that 
+                # the phase angles are 120 degrees apart
+                # sqrt(3) = 1.73205080757 <-- So we do not need to include Math Library
+                singlePhaseVoltage = voltage / 1.73205080757
+                
+                realCurrent = power / 3 / singlePhaseVoltage
+                
+                self._dbusservice["/Ac/L1/Voltage"] = singlePhaseVoltage 
+                self._dbusservice["/Ac/L1/Current"] = realCurrent
+                self._dbusservice["/Ac/L1/Power"] = powerthird
+                self._dbusservice["/Ac/L2/Voltage"] = singlePhaseVoltage 
+                self._dbusservice["/Ac/L2/Current"] = realCurrent
+                self._dbusservice["/Ac/L2/Power"] = powerthird
+                self._dbusservice["/Ac/L3/Voltage"] = singlePhaseVoltage 
+                self._dbusservice["/Ac/L3/Current"] = realCurrent
+                self._dbusservice["/Ac/L3/Power"] = powerthird
+
+                if power > 0:
+                    self._dbusservice["/Ac/L1/Energy/Forward"] = pvyield / 3
+                    self._dbusservice["/Ac/L2/Energy/Forward"] = pvyield / 3
+                    self._dbusservice["/Ac/L3/Energy/Forward"] = pvyield / 3
+                    self._dbusservice["/Ac/Energy/Forward"] = pvyield
+            else:
+                pre = "/Ac/" + self.pvinverterphase
+                self._dbusservice[pre + "/Voltage"] = voltage
+                self._dbusservice[pre + "/Current"] = current
+                self._dbusservice[pre + "/Power"] = power
+                self._dbusservice["/Ac/Power"] = power
+                if power > 0:
+                    self._dbusservice[pre + "/Energy/Forward"] = pvyield
+                    self._dbusservice["/Ac/Energy/Forward"] = pvyield
 
             logging.debug(f"Inverter #{self.pvinverternumber} Power (/Ac/Power): {power}")
             logging.debug(f"Inverter #{self.pvinverternumber} Energy (/Ac/Energy/Forward): {pvyield}")
