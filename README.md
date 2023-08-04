@@ -104,10 +104,12 @@ This applies to each `INVERTER[X]` section. X is the number of Inverter starting
 
 | Config value        | Explanation   |
 |-------------------- | ------------- |
-| Phase | which Phase L1, L2, L3 to show; use 3P to split power equally over three phases (i.e. Hoymiles micro-inverters only report total power, not seperated by phase)|
+| Phase | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters |
 | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
 | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
 | Servicename | e.g. com.victronenergy.pvinverter see [Service names](#service-names) |
+
+Note: Use 3P to split power equally over three phases (use this for Hoymiles three-phase micro-inverters as they report total power only, not seperated by phase).
 
 #### Template options
 
