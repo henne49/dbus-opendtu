@@ -104,10 +104,12 @@ This applies to each `INVERTER[X]` section. X is the number of Inverter starting
 
 | Config value        | Explanation   |
 |-------------------- | ------------- |
-| Phase | which Phase L1, L2, L3 to show; use 3P to split power equally over three phases (i.e. Hoymiles micro-inverters only report total power, not seperated by phase)|
+| Phase | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters *1 |
 | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
 | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
 | Servicename | e.g. com.victronenergy.pvinverter see [Service names](#service-names) |
+
+*1: Use 3P to split power equally over three phases (use this for Hoymiles three-phase micro-inverters as they report total power only, not seperated by phase).
 
 #### Template options
 
@@ -132,9 +134,9 @@ This applies to each `TEMPLATE[X]` section. X is the number of Template starting
 | CUST_Voltage_Default | [optional] Default value if no value is found in JSON |
 | CUST_Current | Path in JSON where to find actual Current |
 | CUST_Current_Default | [optional] Default value if no value is found in JSON |
-| CUST_DCVoltage | Path in JSON where to find actual DC Voltage (e.g. Batterie voltage) *1|
+| CUST_DCVoltage | Path in JSON where to find actual DC Voltage (e.g. Batterie voltage) *2|
 | CUST_DCVoltage_Default | [optional] Default value if no value is found in JSON |
-| Phase | which Phase L1, L2, L3 to show; use 3P to split power equally over three phases (i.e. Hoymiles micro-inverters only report total power, not seperated by phase)|
+| Phase | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters *3 |
 | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
 | AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
 | Name | Name to be shown in VenusOS, use a descriptive name |
@@ -142,7 +144,8 @@ This applies to each `TEMPLATE[X]` section. X is the number of Template starting
 
 Example for JSON PATH: use keywords separated by /
 
-*1: is only used if Servicename is com.victronenergy.inverter
+*2: is only used if Servicename is com.victronenergy.inverter
+*3: Use 3P to split power equally over three phases (use this for Hoymiles three-phase micro-inverters as they report total power only, not seperated by phase).
 
 ### Service names
 
