@@ -138,7 +138,7 @@ This applies to each `TEMPLATE[X]` section. X is the number of Template starting
 | CUST_DCVoltage_Default | [optional] Default value if no value is found in JSON |
 | Phase | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters *3 |
 | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
-| AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
+| AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2 please do not use) |
 | Name | Name to be shown in VenusOS, use a descriptive name |
 | Servicename | e.g. com.victronenergy.pvinverter see [Service names](#service-names) |
 
