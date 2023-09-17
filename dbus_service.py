@@ -409,13 +409,15 @@ class DbusService:
             raise ValueError("Response from OpenDTU does not contain ch0_fld_names data")
         # not needed: meter_data["record"] = self.fetch_ahoy_record_data()
 
+        # add the field "inverter" to meter_data:
+        # This will contain an array of the "iv" data from all inverters.
         meter_data["inverter"] = []
         for inverter_number in range(len(meter_data["iv"])):
             if is_true(meter_data["iv"][inverter_number]):
                 iv_data = self.fetch_ahoy_iv_data(inverter_number)
                 while len(meter_data["inverter"]) < inverter_number:
-                    # there was a gap
-                    meter_data.append({})
+                    # there was a gap in the sequence of inverter numbers -> fill in a dummy value
+                    meter_data["inverter"].append({})
                 meter_data["inverter"].append(iv_data)
 
     def check_opendtu_data(self, meter_data):

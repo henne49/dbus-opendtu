@@ -24,13 +24,16 @@ def get_ahoy_meterdata(filename):
     ''' Load the meter data from the json file. '''
     with open(filename, encoding="utf-8") as file_json:
         json_meter_data = json.load(file_json)
+
+    # add the field "inverter" to meter_data:
+    # This will contain an array of the "iv" data from all inverters.
     json_meter_data["inverter"] = []
     for inverter_number in range(len(json_meter_data["iv"])):
         if is_true(json_meter_data["iv"][inverter_number]):
             iv_data = fetch_ahoy_iv_data(inverter_number)
             while len(json_meter_data["inverter"]) < inverter_number:
-                # there was a gap
-                json_meter_data.append({})
+                # there was a gap in the sequence of inverter numbers -> fill in a dummy value
+                json_meter_data["inverter"].append({})
             json_meter_data["inverter"].append(iv_data)
 
     return json_meter_data
@@ -128,6 +131,12 @@ class TestHelpersFunctions(unittest.TestCase):
         self.assertEqual(get_ahoy_field_by_name(meter_data_ahoy, 0, "I_AC"), 0.98)
         self.assertEqual(get_ahoy_field_by_name(meter_data_ahoy, 0, "I_DC", False), 1.75)
         self.assertEqual(get_ahoy_field_by_name(meter_data_ahoy, 0, "P_DC", False), 58.1)
+
+    def test_get_ahoy_gap_in_inverter_sequence(self):
+        ''' Test the special case when there is a gap in the sequence of inverters IDs.'''
+        meter_data_ahoy_bad_sequence = get_ahoy_meterdata(
+            filename='./docs/ahoy_0.7.36_live_gap_in_inverter_sequence.json')
+        self.assertEqual(get_ahoy_field_by_name(meter_data_ahoy_bad_sequence, 1, "P_AC"), 223.7)
 
     def test_is_true(self):
         ''' Test the is_true() function. '''
