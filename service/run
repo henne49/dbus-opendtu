@@ -1,5 +1,4 @@
 #!/bin/sh
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 exec 2>&1
-python $(realpath $SCRIPT_DIR/../dbus-opendtu.py)
+exec /data/dbus-opendtu/dbus-opendtu.py

@@ -44,7 +44,13 @@ It works upon [openDTU](https://github.com/tbnobody/OpenDTU) respectively [AhoyD
 
 ---
 
-## Installation
+## Automatic installation with package manager SetupHelper
+
+You need to install [SetupHelper](https://github.com/kwindrem/SetupHelper) before to install/uninstall this package.
+As a bonus, it provides also the automatic reinstallation of the package after a VenusOs update.
+
+
+## Manual installation
 
 With the scripts in this repo, it should be easy possible to install, uninstall, restart a service that connects the OpenDTU or Ahoy to the VenusOS and GX devices from Victron.
 

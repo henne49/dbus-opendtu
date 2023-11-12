@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# adds dbus-opendtu package
+
+origPackageName="dbus-opendtu"
+packageLogFile="/var/log/$origPackageName/current"
+
+#### following lines incorporate SetupHelper utilities into this script
+# Refer to the SetupHelper ReadMe file for details.
+    
+source "/data/SetupHelper/CommonResources"
+
+#### end of lines to include SetupHelper
+
+#### running manually and OK to proceed - prompt for input
+if [ $scriptAction == 'NONE' ] ; then
+    echo
+    echo "The $origPackageName package adds support for Hoymiles and other inverters"
+	echo "You need to adjust the /data/$origPackageName/config.ini file for your system!"
+    echo
+    standardActionPrompt
+fi
+
+#### here to do the actual work
+
+if [ $scriptAction == 'INSTALL' ] ; then
+    logMessage "++ Installing $origPackageName"
+
+    installService $origPackageName
+fi
+
+# #### uninstalling - check scriptAction again
+# if an install step failed package needs to be removed
+if [ $scriptAction == 'UNINSTALL' ] ; then
+    logMessage "++ Uninstalling $origPackageName"
+
+    removeService $origPackageName
+fi
+
+# thats all folks - SCRIPT EXITS INSIDE THE FUNCTION
+endScript
