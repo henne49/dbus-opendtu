@@ -6,7 +6,8 @@
 ## Table of contents
 
 * [Introduction](#introduction)
-* [Installation](#installation)
+* [Automatic installation](#automatic-installation-with-setuphelper)
+* [Manual installation](#manual-installation)
   * [Get the code](#get-the-code)
   * [Configuration](#configuration)
     * [Default options](#default-options)
@@ -44,7 +45,7 @@ It works upon [openDTU](https://github.com/tbnobody/OpenDTU) respectively [AhoyD
 
 ---
 
-## Automatic installation with package manager SetupHelper
+## Automatic installation with SetupHelper
 
 You need to install [SetupHelper](https://github.com/kwindrem/SetupHelper) before to install/uninstall this package.
 As a bonus, it provides also the automatic reinstallation of the package after a VenusOs update.
