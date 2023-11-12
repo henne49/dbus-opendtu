@@ -50,6 +50,21 @@ It works upon [openDTU](https://github.com/tbnobody/OpenDTU) respectively [AhoyD
 You need to install [SetupHelper](https://github.com/kwindrem/SetupHelper) before to install/uninstall this package.
 As a bonus, it provides also the automatic reinstallation of the package after a VenusOs update.
 
+After first installation, the module is not working because of a missing configuration file. You need to create it
+from config.ini.sample by copying it:
+
+```bash
+cp /data/dbus-opendtu/config.ini.sample /data/dbus-opendtu/config.ini
+```
+
+⚠️**Then, edit it according to your needs before proceeding**⚠️ see [Configuration](#configuration) for details.
+
+```bash
+nano /data/dbus-opendtu/config.ini
+```
+
+When updating the software, your configuration is preserved since all modifications due to new software features go to config.ini.sample 
+(of course, you need to check if adapations of your config.ini is required).
 
 ## Manual installation
 
@@ -69,9 +84,10 @@ mv /data/dbus-opendtu-main /data/dbus-opendtu
 chmod a+x /data/dbus-opendtu/install.sh
 ```
 
-⚠️**Edit the following configuration file according to your needs before proceeding**⚠️ see [Configuration](#configuration) for details.
+⚠️**Copy and edit the following configuration file according to your needs before proceeding**⚠️ see [Configuration](#configuration) for details.
 
 ```bash
+cp /data/dbus-opendtu/config.ini.sample /data/dbus-opendtu/config.ini
 nano /data/dbus-opendtu/config.ini
 ```
 
