@@ -662,12 +662,14 @@ class DbusService:
                 self._dbusservice["/Ac/L3/Voltage"] = singlePhaseVoltage 
                 self._dbusservice["/Ac/L3/Current"] = realCurrent
                 self._dbusservice["/Ac/L3/Power"] = powerthird
+                self._dbusservice["/Ac/Power"] = power
 
                 if power > 0:
                     self._dbusservice["/Ac/L1/Energy/Forward"] = pvyield / 3
                     self._dbusservice["/Ac/L2/Energy/Forward"] = pvyield / 3
                     self._dbusservice["/Ac/L3/Energy/Forward"] = pvyield / 3
                     self._dbusservice["/Ac/Energy/Forward"] = pvyield
+                    
             else:
                 pre = "/Ac/" + self.pvinverterphase
                 self._dbusservice[pre + "/Voltage"] = voltage
