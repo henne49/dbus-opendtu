@@ -277,7 +277,7 @@ class DbusService:
         if self.dtuvariant == constants.DTUVARIANT_AHOY:
             if not meter_data["inverter"][pvinverternumber]["name"]:
                 raise ValueError("Response does not contain name")
-                serial = meter_data["inverter"][pvinverternumber]["serial"]
+            serial = meter_data["inverter"][pvinverternumber]["serial"]
 
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
             if not meter_data["inverters"][pvinverternumber]["serial"]:
@@ -652,7 +652,7 @@ class DbusService:
                 singlePhaseVoltage = voltage / 1.73205080757
                 if self.dtuvariant == constants.DTUVARIANT_AHOY:
                     singlePhaseVoltage = voltage
-                    self._dbusservice["/Ac/Power"] = power    # added by GCG
+                    self._dbusservice["/Ac/Power"] = power
 
                 realCurrent = power / 3 / singlePhaseVoltage
                 
