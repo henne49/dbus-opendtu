@@ -277,7 +277,7 @@ class DbusService:
         if self.dtuvariant == constants.DTUVARIANT_AHOY:
             if not meter_data["inverter"][pvinverternumber]["name"]:
                 raise ValueError("Response does not contain name")
-            serial = meter_data["inverter"][pvinverternumber]["name"]
+            serial = meter_data["inverter"][pvinverternumber]["serial"]
 
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
             if not meter_data["inverters"][pvinverternumber]["serial"]:
@@ -650,7 +650,10 @@ class DbusService:
                 # the phase angles are 120 degrees apart
                 # sqrt(3) = 1.73205080757 <-- So we do not need to include Math Library
                 singlePhaseVoltage = voltage / 1.73205080757
-                
+                if self.dtuvariant == constants.DTUVARIANT_AHOY:
+                    singlePhaseVoltage = voltage
+                    self._dbusservice["/Ac/Power"] = power
+
                 realCurrent = power / 3 / singlePhaseVoltage
                 
                 self._dbusservice["/Ac/L1/Voltage"] = singlePhaseVoltage 
@@ -662,12 +665,14 @@ class DbusService:
                 self._dbusservice["/Ac/L3/Voltage"] = singlePhaseVoltage 
                 self._dbusservice["/Ac/L3/Current"] = realCurrent
                 self._dbusservice["/Ac/L3/Power"] = powerthird
+                self._dbusservice["/Ac/Power"] = power
 
                 if power > 0:
                     self._dbusservice["/Ac/L1/Energy/Forward"] = pvyield / 3
                     self._dbusservice["/Ac/L2/Energy/Forward"] = pvyield / 3
                     self._dbusservice["/Ac/L3/Energy/Forward"] = pvyield / 3
                     self._dbusservice["/Ac/Energy/Forward"] = pvyield
+                    
             else:
                 pre = "/Ac/" + self.pvinverterphase
                 self._dbusservice[pre + "/Voltage"] = voltage
