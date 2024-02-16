@@ -1,6 +1,9 @@
+
+
 # dbus-opendtu
 
 > **Attention:**
+> ⚠️OpenDTU v24.2.12 breaking API changes, do not upgrade to this version, stay on previous version v24.1.26 (latest know working version), until we have updated the code
 > ⚠️For any problems with OpenDTU prior v4.4.3 version, please update to the latest code where most Issues are fixed. OpenDTU changed the API. The same applies to AhoyDTU.⚠️
 
 ## Table of contents
