@@ -1,0 +1,48 @@
+{
+    "hints": {
+        "default_password": true,
+        "radio_problem": false,
+        "time_sync": false
+    },
+    "inverters": [
+        {
+            "data_age": 5,
+            "limit_absolute": 600,
+            "limit_relative": 100,
+            "name": "HM-600",
+            "order": 0,
+            "poll_enabled": true,
+            "producing": true,
+            "reachable": true,
+            "serial": "114182940773"
+        },
+        {
+            "data_age": 8973,
+            "limit_absolute": -1,
+            "limit_relative": 0,
+            "name": "Test",
+            "order": 0,
+            "poll_enabled": true,
+            "producing": false,
+            "reachable": false,
+            "serial": "114182000001"
+        }
+    ],
+    "total": {
+        "Power": {
+            "d": 1,
+            "u": "W",
+            "v": 12.39999962
+        },
+        "YieldDay": {
+            "d": 0,
+            "u": "Wh",
+            "v": 30
+        },
+        "YieldTotal": {
+            "d": 3,
+            "u": "kWh",
+            "v": 0.029999999
+        }
+    }
+}

@@ -1,0 +1,163 @@
+{
+    "hints": {
+        "default_password": true,
+        "radio_problem": false,
+        "time_sync": false
+    },
+    "inverters": [
+        {
+            "AC": {
+                "0": {
+                    "Current": {
+                        "d": 2,
+                        "u": "A",
+                        "v": 0.050000001
+                    },
+                    "Frequency": {
+                        "d": 2,
+                        "u": "Hz",
+                        "v": 49.97999954
+                    },
+                    "Power": {
+                        "d": 1,
+                        "u": "W",
+                        "v": 12.10000038
+                    },
+                    "PowerFactor": {
+                        "d": 3,
+                        "u": "",
+                        "v": 1
+                    },
+                    "ReactivePower": {
+                        "d": 1,
+                        "u": "var",
+                        "v": 0
+                    },
+                    "Voltage": {
+                        "d": 1,
+                        "u": "V",
+                        "v": 226.3999939
+                    }
+                }
+            },
+            "data_age": 49,
+            "DC": {
+                "0": {
+                    "Current": {
+                        "d": 2,
+                        "u": "A",
+                        "v": 0.400000006
+                    },
+                    "name": {
+                        "u": ""
+                    },
+                    "Power": {
+                        "d": 1,
+                        "u": "W",
+                        "v": 12.60000038
+                    },
+                    "Voltage": {
+                        "d": 1,
+                        "u": "V",
+                        "v": 31.29999924
+                    },
+                    "YieldDay": {
+                        "d": 0,
+                        "u": "Wh",
+                        "v": 4
+                    },
+                    "YieldTotal": {
+                        "d": 3,
+                        "u": "kWh",
+                        "v": 0.004
+                    }
+                },
+                "1": {
+                    "Current": {
+                        "d": 2,
+                        "u": "A",
+                        "v": 0.01
+                    },
+                    "name": {
+                        "u": ""
+                    },
+                    "Power": {
+                        "d": 1,
+                        "u": "W",
+                        "v": 0
+                    },
+                    "Voltage": {
+                        "d": 1,
+                        "u": "V",
+                        "v": 0.5
+                    },
+                    "YieldDay": {
+                        "d": 0,
+                        "u": "Wh",
+                        "v": 0
+                    },
+                    "YieldTotal": {
+                        "d": 3,
+                        "u": "kWh",
+                        "v": 0
+                    }
+                }
+            },
+            "events": 12,
+            "INV": {
+                "0": {
+                    "Efficiency": {
+                        "d": 3,
+                        "u": "%",
+                        "v": 96.03174591
+                    },
+                    "Power DC": {
+                        "d": 1,
+                        "u": "W",
+                        "v": 12.60000038
+                    },
+                    "Temperature": {
+                        "d": 1,
+                        "u": "°C",
+                        "v": 18.5
+                    },
+                    "YieldDay": {
+                        "d": 0,
+                        "u": "Wh",
+                        "v": 4
+                    },
+                    "YieldTotal": {
+                        "d": 3,
+                        "u": "kWh",
+                        "v": 0.004
+                    }
+                }
+            },
+            "limit_absolute": 600,
+            "limit_relative": 100,
+            "name": "HM-600",
+            "order": 0,
+            "poll_enabled": true,
+            "producing": true,
+            "reachable": false,
+            "serial": "114182000000"
+        }
+    ],
+    "total": {
+        "Power": {
+            "d": 1,
+            "u": "W",
+            "v": 12.10000038
+        },
+        "YieldDay": {
+            "d": 0,
+            "u": "Wh",
+            "v": 4
+        },
+        "YieldTotal": {
+            "d": 3,
+            "u": "kWh",
+            "v": 0.004
+        }
+    }
+}

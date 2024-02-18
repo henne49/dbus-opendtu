@@ -419,7 +419,7 @@ class DbusService:
                     # there was a gap in the sequence of inverter numbers -> fill in a dummy value
                     meter_data["inverter"].append({})
                 meter_data["inverter"].append(iv_data)
-
+        
     def check_opendtu_data(self, meter_data):
         ''' Check if OpenDTU data has the right format'''
         # Check for OpenDTU Version
@@ -433,6 +433,11 @@ class DbusService:
         # Check for another Attribute
         if not "Voltage" in meter_data["inverters"][self.pvinverternumber]["AC"]["0"]:
             raise ValueError("Response from OpenDTU does not contain Voltage data")
+    
+    def fetch_opendtu_inverter_data(self, inverter_serial):
+        '''Fetch inverter date from OpenDTU device for one interter'''
+        iv_url = self.get_opendtu_base_url() + "?inv=" + inverter_serial
+        return self.fetch_url(iv_url)
 
     def fetch_ahoy_iv_data(self, inverter_number):
         '''Fetch inverter date from Ahoy device for one interter'''
@@ -601,7 +606,10 @@ class DbusService:
             current = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "I_AC")
 
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
-            root_meter_data = meter_data["inverters"][self.pvinverternumber]
+            if "AC" in meter_data["inverters"][self.pvinverternumber]:
+                root_meter_data = meter_data["inverters"][self.pvinverternumber]
+            else:
+                root_meter_data = self.fetch_opendtu_inverter_data(self.pvinverternumber,meter_data["inverters"][self.pvinverternumber]["serial"])
             producing = is_true(root_meter_data["producing"])
             power = (root_meter_data["AC"]["0"]["Power"]["v"]
                      if producing
