@@ -418,14 +418,14 @@ class DbusService:
                     # there was a gap in the sequence of inverter numbers -> fill in a dummy value
                     meter_data["inverter"].append({})
                 meter_data["inverter"].append(iv_data)
-        
+
     def check_opendtu_data(self, meter_data):
         ''' Check if OpenDTU data has the right format'''
         # Check for OpenDTU Version
         if not "serial" in meter_data["inverters"][self.pvinverternumber]:
             raise ValueError("You do not have the latest OpenDTU Version to run this script,"
                              "please upgrade your OpenDTU to at least version 4.4.3")
-    
+
     def fetch_opendtu_inverter_data(self, inverter_serial):
         '''Fetch inverter date from OpenDTU device for one interter'''
         iv_url = self._get_status_url() + "?inv=" + inverter_serial
@@ -664,7 +664,7 @@ class DbusService:
                 powerthird = power/3
 
                 #Single Phase Voltage = (3-Phase Voltage) / (sqrt(3))
-                # This formula assumes that the three-phase voltage is balanced and that 
+                # This formula assumes that the three-phase voltage is balanced and that
                 # the phase angles are 120 degrees apart
                 # sqrt(3) = 1.73205080757 <-- So we do not need to include Math Library
                 singlePhaseVoltage = voltage / 1.73205080757
@@ -673,14 +673,14 @@ class DbusService:
                     self._dbusservice["/Ac/Power"] = power
 
                 realCurrent = power / 3 / singlePhaseVoltage
-                
-                self._dbusservice["/Ac/L1/Voltage"] = singlePhaseVoltage 
+
+                self._dbusservice["/Ac/L1/Voltage"] = singlePhaseVoltage
                 self._dbusservice["/Ac/L1/Current"] = realCurrent
                 self._dbusservice["/Ac/L1/Power"] = powerthird
-                self._dbusservice["/Ac/L2/Voltage"] = singlePhaseVoltage 
+                self._dbusservice["/Ac/L2/Voltage"] = singlePhaseVoltage
                 self._dbusservice["/Ac/L2/Current"] = realCurrent
                 self._dbusservice["/Ac/L2/Power"] = powerthird
-                self._dbusservice["/Ac/L3/Voltage"] = singlePhaseVoltage 
+                self._dbusservice["/Ac/L3/Voltage"] = singlePhaseVoltage
                 self._dbusservice["/Ac/L3/Current"] = realCurrent
                 self._dbusservice["/Ac/L3/Power"] = powerthird
                 self._dbusservice["/Ac/Power"] = power
@@ -690,7 +690,7 @@ class DbusService:
                     self._dbusservice["/Ac/L2/Energy/Forward"] = pvyield / 3
                     self._dbusservice["/Ac/L3/Energy/Forward"] = pvyield / 3
                     self._dbusservice["/Ac/Energy/Forward"] = pvyield
-                    
+
             else:
                 pre = "/Ac/" + self.pvinverterphase
                 self._dbusservice[pre + "/Voltage"] = voltage
