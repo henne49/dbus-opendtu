@@ -408,7 +408,7 @@ class DbusService:
         if not "ch0_fld_names" in meter_data:
             raise ValueError("Response from ahoy does not contain ch0_fld_names data")
         # not needed: meter_data["record"] = self.fetch_ahoy_record_data()
-        
+
         # add the field "inverter" to meter_data:
         # This will contain an array of the "iv" data from all inverters.
         meter_data["inverter"] = []
