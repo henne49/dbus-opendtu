@@ -403,11 +403,10 @@ class DbusService:
          # Check for Attribute (inverter)
         if (self._servicename == "com.victronenergy.inverter" and
                 not "fld_names" in meter_data):
-            raise ValueError("Response from OpenDTU does not contain fld_names in data")
+            raise ValueError("Response from ahoy does not contain fld_names in data")
         # Check for an additonal Attribute
         if not "ch0_fld_names" in meter_data:
-            raise ValueError("Response from OpenDTU does not contain ch0_fld_names data")
-        # not needed: meter_data["record"] = self.fetch_ahoy_record_data()
+            raise ValueError("Response from ahoy does not contain ch0_fld_names data")
 
         # add the field "inverter" to meter_data:
         # This will contain an array of the "iv" data from all inverters.
@@ -423,25 +422,19 @@ class DbusService:
     def check_opendtu_data(self, meter_data):
         ''' Check if OpenDTU data has the right format'''
         # Check for OpenDTU Version
-        if not "AC" in meter_data["inverters"][self.pvinverternumber]:
+        if not "serial" in meter_data["inverters"][self.pvinverternumber]:
             raise ValueError("You do not have the latest OpenDTU Version to run this script,"
                              "please upgrade your OpenDTU to at least version 4.4.3")
-        # Check for Attribute (inverter)
-        if (self._servicename == "com.victronenergy.inverter" and
-                not "DC" in meter_data["inverters"][self.pvinverternumber]):
-            raise ValueError("Response from OpenDTU does not contain DC data")
-        # Check for another Attribute
-        if not "Voltage" in meter_data["inverters"][self.pvinverternumber]["AC"]["0"]:
-            raise ValueError("Response from OpenDTU does not contain Voltage data")
     
     def fetch_opendtu_inverter_data(self, inverter_serial):
         '''Fetch inverter date from OpenDTU device for one interter'''
-        iv_url = self.get_opendtu_base_url() + "?inv=" + inverter_serial
+        iv_url = self._get_status_url() + "?inv=" + inverter_serial
         return self.fetch_url(iv_url)
 
     def fetch_ahoy_iv_data(self, inverter_number):
         '''Fetch inverter date from Ahoy device for one interter'''
         iv_url = self.get_ahoy_base_url() + "/inverter/id/" + str(inverter_number)
+        logging.debug(f"Inverter URL: {iv_url}")
         return self.fetch_url(iv_url)
 
     def fetch_ahoy_record_data(self):
@@ -608,21 +601,38 @@ class DbusService:
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
             if "AC" in meter_data["inverters"][self.pvinverternumber]:
                 root_meter_data = meter_data["inverters"][self.pvinverternumber]
+                old_firmware=True
             else:
-                root_meter_data = self.fetch_opendtu_inverter_data(self.pvinverternumber,meter_data["inverters"][self.pvinverternumber]["serial"])
+                inverter_serial = meter_data["inverters"][self.pvinverternumber]["serial"]
+                logging.info(f"Inverter #{self.pvinverternumber} Serial: {inverter_serial}")
+                root_meter_data = self.fetch_opendtu_inverter_data(inverter_serial)["inverters"][0]
+                logging.debug(f"{root_meter_data}")
+                old_firmware=False
+
             producing = is_true(root_meter_data["producing"])
             power = (root_meter_data["AC"]["0"]["Power"]["v"]
                      if producing
                      else 0)
+            logging.debug(f"power: {power}")
             if self.useyieldday:
-                pvyield = root_meter_data["AC"]["0"]["YieldDay"]["v"] / 1000
+                if old_firmware:
+                    pvyield = root_meter_data["AC"]["0"]["YieldDay"]["v"] / 1000
+                else:
+                    pvyield = root_meter_data["INV"]["0"]["YieldDay"]["v"] / 1000
             else:
-                pvyield = root_meter_data["AC"]["0"]["YieldTotal"]["v"]
+                if old_firmware:
+                    pvyield = root_meter_data["AC"]["0"]["YieldTotal"]["v"]
+                else:
+                    pvyield = root_meter_data["INV"]["0"]["YieldTotal"]["v"]
+            logging.debug(f"pvyield: {pvyield}")
             voltage = root_meter_data["AC"]["0"]["Voltage"]["v"]
+            logging.debug(f"voltage: {voltage}")
             dc_voltage = root_meter_data["DC"]["0"]["Voltage"]["v"]
+            logging.debug(f"dc_voltage: {dc_voltage}")
             current = (root_meter_data["AC"]["0"]["Current"]["v"]
                        if producing
                        else 0)
+            logging.debug(f"current: {current}")
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             power = self.get_processed_meter_value(
