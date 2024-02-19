@@ -407,7 +407,8 @@ class DbusService:
         # Check for an additonal Attribute
         if not "ch0_fld_names" in meter_data:
             raise ValueError("Response from ahoy does not contain ch0_fld_names data")
-
+        # not needed: meter_data["record"] = self.fetch_ahoy_record_data()
+        
         # add the field "inverter" to meter_data:
         # This will contain an array of the "iv" data from all inverters.
         meter_data["inverter"] = []
@@ -599,40 +600,31 @@ class DbusService:
             current = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "I_AC")
 
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
+            # OpenDTU v24.2.12 breaking API changes 2024-02-19
             if "AC" in meter_data["inverters"][self.pvinverternumber]:
                 root_meter_data = meter_data["inverters"][self.pvinverternumber]
-                old_firmware=True
+                firmware_v24_2_12_or_newer=True
             else:
                 inverter_serial = meter_data["inverters"][self.pvinverternumber]["serial"]
                 logging.info(f"Inverter #{self.pvinverternumber} Serial: {inverter_serial}")
                 root_meter_data = self.fetch_opendtu_inverter_data(inverter_serial)["inverters"][0]
                 logging.debug(f"{root_meter_data}")
-                old_firmware=False
+                firmware_v24_2_12_or_newer=False
 
             producing = is_true(root_meter_data["producing"])
             power = (root_meter_data["AC"]["0"]["Power"]["v"]
                      if producing
                      else 0)
-            logging.debug(f"power: {power}")
+            field_inv = "AC" if firmware_v24_2_12_or_newer else "INV"
             if self.useyieldday:
-                if old_firmware:
-                    pvyield = root_meter_data["AC"]["0"]["YieldDay"]["v"] / 1000
-                else:
-                    pvyield = root_meter_data["INV"]["0"]["YieldDay"]["v"] / 1000
+                pvyield = root_meter_data[field_inv]["0"]["YieldDay"]["v"] / 1000
             else:
-                if old_firmware:
-                    pvyield = root_meter_data["AC"]["0"]["YieldTotal"]["v"]
-                else:
-                    pvyield = root_meter_data["INV"]["0"]["YieldTotal"]["v"]
-            logging.debug(f"pvyield: {pvyield}")
+                pvyield = root_meter_data[field_inv]["0"]["YieldTotal"]["v"]
             voltage = root_meter_data["AC"]["0"]["Voltage"]["v"]
-            logging.debug(f"voltage: {voltage}")
             dc_voltage = root_meter_data["DC"]["0"]["Voltage"]["v"]
-            logging.debug(f"dc_voltage: {dc_voltage}")
             current = (root_meter_data["AC"]["0"]["Current"]["v"]
                        if producing
                        else 0)
-            logging.debug(f"current: {current}")
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             power = self.get_processed_meter_value(
