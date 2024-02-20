@@ -403,10 +403,10 @@ class DbusService:
          # Check for Attribute (inverter)
         if (self._servicename == "com.victronenergy.inverter" and
                 not "fld_names" in meter_data):
-            raise ValueError("Response from OpenDTU does not contain fld_names in data")
+            raise ValueError("Response from ahoy does not contain fld_names in data")
         # Check for an additonal Attribute
         if not "ch0_fld_names" in meter_data:
-            raise ValueError("Response from OpenDTU does not contain ch0_fld_names data")
+            raise ValueError("Response from ahoy does not contain ch0_fld_names data")
         # not needed: meter_data["record"] = self.fetch_ahoy_record_data()
 
         # add the field "inverter" to meter_data:
@@ -423,20 +423,19 @@ class DbusService:
     def check_opendtu_data(self, meter_data):
         ''' Check if OpenDTU data has the right format'''
         # Check for OpenDTU Version
-        if not "AC" in meter_data["inverters"][self.pvinverternumber]:
+        if not "serial" in meter_data["inverters"][self.pvinverternumber]:
             raise ValueError("You do not have the latest OpenDTU Version to run this script,"
                              "please upgrade your OpenDTU to at least version 4.4.3")
-        # Check for Attribute (inverter)
-        if (self._servicename == "com.victronenergy.inverter" and
-                not "DC" in meter_data["inverters"][self.pvinverternumber]):
-            raise ValueError("Response from OpenDTU does not contain DC data")
-        # Check for another Attribute
-        if not "Voltage" in meter_data["inverters"][self.pvinverternumber]["AC"]["0"]:
-            raise ValueError("Response from OpenDTU does not contain Voltage data")
+
+    def fetch_opendtu_inverter_data(self, inverter_serial):
+        '''Fetch inverter date from OpenDTU device for one interter'''
+        iv_url = self._get_status_url() + "?inv=" + inverter_serial
+        return self.fetch_url(iv_url)
 
     def fetch_ahoy_iv_data(self, inverter_number):
         '''Fetch inverter date from Ahoy device for one interter'''
         iv_url = self.get_ahoy_base_url() + "/inverter/id/" + str(inverter_number)
+        logging.debug(f"Inverter URL: {iv_url}")
         return self.fetch_url(iv_url)
 
     def fetch_ahoy_record_data(self):
@@ -601,15 +600,26 @@ class DbusService:
             current = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "I_AC")
 
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
-            root_meter_data = meter_data["inverters"][self.pvinverternumber]
+            # OpenDTU v24.2.12 breaking API changes 2024-02-19
+            if "AC" in meter_data["inverters"][self.pvinverternumber]:
+                root_meter_data = meter_data["inverters"][self.pvinverternumber]
+                firmware_v24_2_12_or_newer=True
+            else:
+                inverter_serial = meter_data["inverters"][self.pvinverternumber]["serial"]
+                logging.info(f"Inverter #{self.pvinverternumber} Serial: {inverter_serial}")
+                root_meter_data = self.fetch_opendtu_inverter_data(inverter_serial)["inverters"][0]
+                logging.debug(f"{root_meter_data}")
+                firmware_v24_2_12_or_newer=False
+
             producing = is_true(root_meter_data["producing"])
             power = (root_meter_data["AC"]["0"]["Power"]["v"]
                      if producing
                      else 0)
+            field_inv = "AC" if firmware_v24_2_12_or_newer else "INV"
             if self.useyieldday:
-                pvyield = root_meter_data["AC"]["0"]["YieldDay"]["v"] / 1000
+                pvyield = root_meter_data[field_inv]["0"]["YieldDay"]["v"] / 1000
             else:
-                pvyield = root_meter_data["AC"]["0"]["YieldTotal"]["v"]
+                pvyield = root_meter_data[field_inv]["0"]["YieldTotal"]["v"]
             voltage = root_meter_data["AC"]["0"]["Voltage"]["v"]
             dc_voltage = root_meter_data["DC"]["0"]["Voltage"]["v"]
             current = (root_meter_data["AC"]["0"]["Current"]["v"]
@@ -646,7 +656,7 @@ class DbusService:
                 powerthird = power/3
 
                 #Single Phase Voltage = (3-Phase Voltage) / (sqrt(3))
-                # This formula assumes that the three-phase voltage is balanced and that 
+                # This formula assumes that the three-phase voltage is balanced and that
                 # the phase angles are 120 degrees apart
                 # sqrt(3) = 1.73205080757 <-- So we do not need to include Math Library
                 singlePhaseVoltage = voltage / 1.73205080757
@@ -655,14 +665,14 @@ class DbusService:
                     self._dbusservice["/Ac/Power"] = power
 
                 realCurrent = power / 3 / singlePhaseVoltage
-                
-                self._dbusservice["/Ac/L1/Voltage"] = singlePhaseVoltage 
+
+                self._dbusservice["/Ac/L1/Voltage"] = singlePhaseVoltage
                 self._dbusservice["/Ac/L1/Current"] = realCurrent
                 self._dbusservice["/Ac/L1/Power"] = powerthird
-                self._dbusservice["/Ac/L2/Voltage"] = singlePhaseVoltage 
+                self._dbusservice["/Ac/L2/Voltage"] = singlePhaseVoltage
                 self._dbusservice["/Ac/L2/Current"] = realCurrent
                 self._dbusservice["/Ac/L2/Power"] = powerthird
-                self._dbusservice["/Ac/L3/Voltage"] = singlePhaseVoltage 
+                self._dbusservice["/Ac/L3/Voltage"] = singlePhaseVoltage
                 self._dbusservice["/Ac/L3/Current"] = realCurrent
                 self._dbusservice["/Ac/L3/Power"] = powerthird
                 self._dbusservice["/Ac/Power"] = power
@@ -672,7 +682,7 @@ class DbusService:
                     self._dbusservice["/Ac/L2/Energy/Forward"] = pvyield / 3
                     self._dbusservice["/Ac/L3/Energy/Forward"] = pvyield / 3
                     self._dbusservice["/Ac/Energy/Forward"] = pvyield
-                    
+
             else:
                 pre = "/Ac/" + self.pvinverterphase
                 self._dbusservice[pre + "/Voltage"] = voltage
