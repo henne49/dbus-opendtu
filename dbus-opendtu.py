@@ -33,6 +33,7 @@ def main():
     config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
     logging_level = config["DEFAULT"]["Logging"].upper()
     dtuvariant = config["DEFAULT"]["DTU"]
+    number_of_inverters = int(config["DEFAULT"]["NumberOfInverters"])
 
     try:
         number_of_templates = int(config["DEFAULT"]["NumberOfTemplates"])
@@ -112,7 +113,8 @@ def main():
                 actual_inverter=0,
             )
 
-            number_of_inverters = service.get_number_of_inverters()
+            if number_of_inverters == 0: 
+                number_of_inverters = service.get_number_of_inverters()
 
             if number_of_inverters > 1:
                 # start our main-service if there are more than 1 inverter
