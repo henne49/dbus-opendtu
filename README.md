@@ -89,7 +89,8 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 |-------------------- | ------------- |
 | SignOfLifeLog  | Time in minutes how often a status is added to the log-file `current.log` with log-level INFO |
 | NumberOfTemplates | Number ob Template Inverter to query |
-| DTU |  Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template |
+| DTU | Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template |
+| QueryOnlyFirstOfDTUInverter | Amount of Inverters you to query. Set a value larger than "0" when not all inverters should be considered. Please assure that the order is correct in the DTU, we can only extract the first one in a row. |
 | useYieldDay | send YieldDay instead of YieldTotal. Set this to 1 to prevent VRM from adding the total value to the history on one day. E.g. if you don't start using the inverter at 0. |
 | ESP8266PollingIntervall |  For ESP8266 reduce polling intervall to reduce load, default 10000ms|
 | Logging | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL |

@@ -33,7 +33,7 @@ def main():
     config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
     logging_level = config["DEFAULT"]["Logging"].upper()
     dtuvariant = config["DEFAULT"]["DTU"]
-    number_of_inverters = int(config["DEFAULT"]["NumberOfInverters"])
+    number_of_inverters = int(config["DEFAULT"]["QueryOnlyFirstOfDTUInverter"])
 
     try:
         number_of_templates = int(config["DEFAULT"]["NumberOfTemplates"])
