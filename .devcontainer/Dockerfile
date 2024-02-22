@@ -1,14 +1,18 @@
 FROM mcr.microsoft.com/vscode/devcontainers/python:3
 RUN pip install requests
 
-# Install latest dotnet for vscode user
-RUN apt update 
+# Switch to the vscode user
+USER vscode
+
 WORKDIR /home/vscode
-RUN sudo -S -u vscode wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
-RUN sudo -S -u vscode chmod +x ./dotnet-install.sh
-RUN sudo -S -u vscode ./dotnet-install.sh --version latest
+
+# Update and install dependencies in a single RUN command to reduce image layers
+RUN wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh && \
+    chmod +x ./dotnet-install.sh && \
+    ./dotnet-install.sh --version latest && \
+    rm dotnet-install.sh 
 
 # Install GitVersion
-RUN sudo -S -u vscode /home/vscode/.dotnet/dotnet tool install --global GitVersion.Tool --version 5.*
-RUN sudo -S -u vscode echo 'export DOTNET_ROOT=$HOME/.dotnet' >> /home/vscode/.bashrc
-RUN sudo -S -u vscode echo 'export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools' >> /home/vscode/.bashrc
+RUN /home/vscode/.dotnet/dotnet tool install --global GitVersion.Tool --version 5.* && \
+    echo 'export DOTNET_ROOT=$HOME/.dotnet' >> ~/.bashrc && \
+    echo 'export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools' >> ~/.bashrc
