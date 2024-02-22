@@ -101,7 +101,7 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 | Username | use if authentication required, leave empty if no authentication needed |
 | Password | use if authentication required, leave empty if no authentication needed |
 
-*1 Please assure that the order is correct in the DTU, we can only extract the first one in a row.
+*1: Please assure that the order is correct in the DTU, we can only extract the first one in a row.
 
 #### Inverter options
 
