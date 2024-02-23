@@ -1,4 +1,4 @@
-mode: ContinuousDelivery
+mode: Mainline
 next-version: 1.1.1
 branches: {}
 ignore:
