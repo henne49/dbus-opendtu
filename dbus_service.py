@@ -55,6 +55,7 @@ class DbusService:
         paths,
         actual_inverter,
         istemplate=False,
+        config=None
     ):
 
         # This is (for now) not used elsewhere and is more of a constant
@@ -78,6 +79,9 @@ class DbusService:
         self.esptype = None
         self.meter_data = None
         self.dtuvariant = None
+
+        # set config 
+        self._config = config
 
         if not istemplate:
             self._read_config_dtu(actual_inverter)
@@ -164,11 +168,12 @@ class DbusService:
         logging.debug("someone else updated %s to %s", path, value)
         return True  # accept the change
 
-    @staticmethod
-    def _get_config():
-        config = configparser.ConfigParser()
-        config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
-        return config
+    def _get_config(self):
+        '''return the cached configuration object, read it before if not already done'''
+        if self._config is None:
+            self._config = configparser.ConfigParser()
+            self._config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
+        return self._config
 
     @staticmethod
     def get_processed_meter_value(meter_data: dict, value: str, default_value: any, factor: int = 1) -> any:
