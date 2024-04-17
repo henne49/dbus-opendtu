@@ -1,5 +1,3 @@
-
-
 # dbus-opendtu
 
 > **Attention:**
