@@ -40,6 +40,7 @@ Username =
 Password =
 
 ### Only needed for OpenDTU and ahoy
+# Phase: Either L1, L2, L3 or 3P for 3 phase HMT series, if unsure use L1 
 # AcPosition 0=AC input 1; 1=AC output; 2=AC input 2
 # 1st inverter
 [INVERTER0]
