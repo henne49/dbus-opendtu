@@ -48,4 +48,4 @@ jobs:
           git config --local user.name "GitHub Action"
           git add version.txt
           git commit -m "Update version"
-          git push
+          git push --set-upstream origin ${{ github.head_ref }}
