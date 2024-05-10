@@ -1,0 +1,39 @@
+{
+    "StatusSNS": {
+        "Time": "2023-09-24T12:13:12+02:00",
+        "Switch1": "OFF",
+        "Switch2": "ON",
+        "ANALOG": {
+            "Temperature": 54.1
+        },
+        "ENERGY": {
+            "TotalStartTime": "2023-06-06T13:21:33",
+            "Total": 78.85,
+            "Yesterday": 0.002,
+            "Today": 0.315,
+            "Power": [
+                160,
+                0
+            ],
+            "ApparentPower": [
+                169,
+                0
+            ],
+            "ReactivePower": [
+                33,
+                0
+            ],
+            "Factor": [
+                0.95,
+                0
+            ],
+            "Frequency": 50,
+            "Voltage": 235,
+            "Current": [
+                0.734,
+                0
+            ]
+        },
+        "TempUnit": "C"
+    }
+}
