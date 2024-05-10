@@ -143,8 +143,8 @@ class DbusService:
                 onchangecallback=self._handlechangedvalue,
             )
 
-        # add _sign_of_life 'timer' to get feedback in log every 5minutes
         gobject.timeout_add(self._get_sign_of_life_interval() * 60 * 1000, self._sign_of_life)
+        gobject.timeout_add(self._get_polling_interval(), self._update)
 
     @staticmethod
     def get_ac_inverter_state(current):
@@ -286,8 +286,6 @@ class DbusService:
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             serial = self.serial
-
-        gobject.timeout_add(self._get_polling_interval(), self._update)
 
         return serial
 
@@ -534,6 +532,7 @@ class DbusService:
         return True
 
     def _update(self):
+        logging.debug("_update")
         successful = False
         try:
             # update data from DTU once per _update call:
@@ -603,13 +602,13 @@ class DbusService:
             # OpenDTU v24.2.12 breaking API changes 2024-02-19
             if "AC" in meter_data["inverters"][self.pvinverternumber]:
                 root_meter_data = meter_data["inverters"][self.pvinverternumber]
-                firmware_v24_2_12_or_newer=True
+                firmware_v24_2_12_or_newer = True
             else:
                 inverter_serial = meter_data["inverters"][self.pvinverternumber]["serial"]
                 logging.info(f"Inverter #{self.pvinverternumber} Serial: {inverter_serial}")
                 root_meter_data = self.fetch_opendtu_inverter_data(inverter_serial)["inverters"][0]
                 logging.debug(f"{root_meter_data}")
-                firmware_v24_2_12_or_newer=False
+                firmware_v24_2_12_or_newer = False
 
             producing = is_true(root_meter_data["producing"])
             power = (root_meter_data["AC"]["0"]["Power"]["v"]
@@ -639,23 +638,40 @@ class DbusService:
     def set_dbus_values(self):
         '''read data and set dbus values'''
         (power, pvyield, current, voltage, dc_voltage) = self.get_values_for_inverter()
+        state = self.get_ac_inverter_state(current)
 
         # This will be refactored later in classes
         if self._servicename == "com.victronenergy.inverter":
+            # see https://github.com/victronenergy/venus/wiki/dbus#inverter
             self._dbusservice["/Ac/Out/L1/V"] = voltage
             self._dbusservice["/Ac/Out/L1/I"] = current
+            self._dbusservice["/Ac/Out/L1/P"] = power
             self._dbusservice["/Dc/0/Voltage"] = dc_voltage
-            self._dbusservice["/State"] = self.get_ac_inverter_state(current)
+            self._dbusservice["/Ac/Power"] = power
+
+            self._dbusservice["/Ac/Energy/Forward"] = pvyield
+            self._dbusservice["/State"] = state
+            self._dbusservice["/Mode"] = 2  # Switch position: 2=Inverter on; 4=Off; 5=Low Power/ECO
+
+            self._dbusservice["/Ac/L1/Current"] = current
+            self._dbusservice["/Ac/L1/Energy/Forward"] = pvyield
+            self._dbusservice["/Ac/L1/Power"] = power
+            self._dbusservice["/Ac/L1/Voltage"] = voltage
 
             logging.debug(f"Inverter #{self.pvinverternumber} Voltage (/Ac/Out/L1/V): {voltage}")
             logging.debug(f"Inverter #{self.pvinverternumber} Current (/Ac/Out/L1/I): {current}")
+
+            logging.debug(f"Inverter #{self.pvinverternumber} Current (/Dc/0/Voltage): {dc_voltage}")
+            logging.debug(f"Inverter #{self.pvinverternumber} Voltage (/Ac/Power): {power}")
+            logging.debug(f"Inverter #{self.pvinverternumber} Current (/Ac/Energy/Forward): {pvyield}")
+            logging.debug(f"Inverter #{self.pvinverternumber} Current (/State): {state}")
             logging.debug("---")
         else:
             # three-phase inverter: split total power equally over all three phases
             if ("3P" == self.pvinverterphase):
                 powerthird = power/3
 
-                #Single Phase Voltage = (3-Phase Voltage) / (sqrt(3))
+                # Single Phase Voltage = (3-Phase Voltage) / (sqrt(3))
                 # This formula assumes that the three-phase voltage is balanced and that
                 # the phase angles are 120 degrees apart
                 # sqrt(3) = 1.73205080757 <-- So we do not need to include Math Library
