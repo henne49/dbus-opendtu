@@ -5,10 +5,10 @@ on:
     # tags:
     #   - v*
     #branches: ["main"]
-  #pull_request:
+  pull_request:
     # The branches below must be a subset of the branches above
-    #branches: ["main"]
-  #workflow_dispatch:
+    branches: ["main"]
+  workflow_dispatch:
 jobs:
   versioning:
     name: Versioning
@@ -42,10 +42,10 @@ jobs:
         run: |
           echo "Version: ${{ steps.gitversion.outputs.majorMinorPatch }}" > version.txt
 
-      - name: Commit and push
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add version.txt
-          git commit -m "Update version"
-          git push
+      #- name: Commit and push
+      #  run: |
+      #    git config --local user.email "action@github.com"
+      #    git config --local user.name "GitHub Action"
+      #    git add version.txt
+      #    git commit -m "Update version"
+      #    git push
