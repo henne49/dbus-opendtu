@@ -174,15 +174,12 @@ class DbusService:
     def get_processed_meter_value(meter_data: dict, path_to_value, default_value: any, factor: int = 1) -> any:
         '''return the processed meter value by applying the factor and return a default value due an Exception'''
         raw_value = get_value_by_path(meter_data, path_to_value)
-        logging.debug(f"get_processed_meter_value: path_to_value={path_to_value}, raw_value={raw_value}")
         raw_value = convert_to_expected_type(raw_value, float, default_value)
         if isinstance(raw_value, (float, int)):
             value = float(raw_value * float(factor))
         else:
             value = default_value
 
-        logging.debug(f"get_processed_meter_value(..., path_to_value={path_to_value}, default_value={default_value}, factor={factor})"
-                      f" returns {value}")
         return value
 
     # read config file
@@ -633,7 +630,7 @@ class DbusService:
                 meter_data, self.custpower, self.custpower_default, self.custpower_factor)
             pvyield = self.get_processed_meter_value(
                 meter_data, self.custtotal, self.custtotal_default, self.custtotal_factor)
-            voltage = self.get_processed_meter_value(meter_data, self.custvoltage, self.custdcvoltage_default)
+            voltage = self.get_processed_meter_value(meter_data, self.custvoltage, self.custvoltage_default)
             current = self.get_processed_meter_value(meter_data, self.custcurrent, self.custcurrent_default)
 
         return (power, pvyield, current, voltage, dc_voltage)

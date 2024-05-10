@@ -88,8 +88,6 @@ def get_ahoy_field_by_name(meter_data, actual_inverter, fieldname, use_ch0_fld_n
         dc_channel_index = 1  # 1 = DC1, 2 = DC2 etc.
         data = meter_data["inverter"][actual_inverter]["ch"][dc_channel_index][data_index]
 
-    logging.debug(f"get_ahoy_field_by_name(..., actual_inverter={actual_inverter}, fieldname={fieldname}, {use_ch0_fld_names})"
-                  f" returns '{data}'")
     return data
 
 
