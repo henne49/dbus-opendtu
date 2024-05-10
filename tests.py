@@ -143,7 +143,7 @@ def test_template_values(test_service):
     test_service.custtotal_default = 99
     test_service.custtotal_factor = 1
     test_service.custvoltage = "StatusSNS/ENERGY/Voltage".split("/")
-    test_service.custdcvoltage_default = 99.9
+    test_service.custvoltage_default = 99.9
     test_service.custtotal = "StatusSNS/ENERGY/Today".split("/")
 
     test_data = load_template_tasmota_test_data()
