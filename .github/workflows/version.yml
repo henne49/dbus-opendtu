@@ -1,14 +1,14 @@
 name: "Update Version"
 
 on:
-  push:
+  #push:
     # tags:
     #   - v*
-    branches: ["main"]
-  pull_request:
+    #branches: ["main"]
+  #pull_request:
     # The branches below must be a subset of the branches above
-    branches: ["main"]
-  workflow_dispatch:
+    #branches: ["main"]
+  #workflow_dispatch:
 jobs:
   versioning:
     name: Versioning
