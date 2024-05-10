@@ -101,6 +101,7 @@ def main():
             "/Ac/L3/Energy/Forward": {"initial": None, "textformat": _kwh},
             "/Ac/Out/L1/I": {"initial": None, "textformat": _a},
             "/Ac/Out/L1/V": {"initial": None, "textformat": _v},
+            "/Ac/Out/L1/P": {"initial": None, "textformat": _w},
             "/Dc/0/Voltage": {"initial": None, "textformat": _v},
         }
 
@@ -113,7 +114,7 @@ def main():
                 actual_inverter=0,
             )
 
-            if number_of_inverters == 0: 
+            if number_of_inverters == 0:
                 number_of_inverters = service.get_number_of_inverters()
 
             if number_of_inverters > 1:
