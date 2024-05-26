@@ -63,6 +63,8 @@ rm /data/dbus-opendtu/current.log
 chmod a+x /data/dbus-opendtu/install.sh
 ```
 
+The following commands should do everything for you:
+
 ⚠️**Edit the following configuration file according to your needs before proceeding**⚠️ see [Configuration](#configuration) for details.
 
 ```bash
@@ -77,6 +79,27 @@ rm main.zip
 ```
 
 Check configuration after that - because the service is already installed and running. In case of wrong connection data (host, username, pwd) you will spam the log-file! Also, check to **set a** proper (minimal) **log level**
+
+### Update the code
+Just grap a copy of the main branch and copy the content to `/data/` e.g. `/data/dbus-opendtu`.
+After that call the `install.sh script.
+
+```bash
+wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
+unzip main.zip "dbus-opendtu-main/*" -d /data
+rm /data/dbus-opendtu-main/config.ini
+rm /data/dbus-opendtu/current.log
+cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
+chmod a+x /data/dbus-opendtu/install.sh
+```
+
+Tha last step is to install the service and remove the downloaded files:
+
+```bash
+/data/dbus-opendtu/install.sh
+/data/dbus-opendtu/restart.sh
+rm main.zip
+```
 
 ### Configuration
 
