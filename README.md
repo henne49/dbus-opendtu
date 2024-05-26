@@ -87,9 +87,9 @@ After that call the `install.sh script.
 ```bash
 wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
-mv /data/dbus-opendtu-main/config.ini /data/dbus-opendtu-main/config.template
 rm /data/dbus-opendtu/current.log*
-cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
+mv /data/dbus-opendtu-main/config.ini /data/dbus-opendtu-main/config.template
+mv /data/dbus-opendtu-main /data/dbus-opendtu
 cp /data/dbus-opendtu/config.ini /data/dbus-opendtu/config.backup
 chmod a+x /data/dbus-opendtu/install.sh
 ```
