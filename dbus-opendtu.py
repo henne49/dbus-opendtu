@@ -37,7 +37,7 @@ def main():
         number_of_inverters = int(config["DEFAULT"]["NumberOfInvertersToQuery"])
     except Exception:
         number_of_inverters = 0
-    
+
     try:
         max_file_size = int(config["DEFAULT"]["MaxFileSize"]) *1024
     except Exception:
