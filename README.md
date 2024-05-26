@@ -63,8 +63,6 @@ rm /data/dbus-opendtu/current.log*
 chmod a+x /data/dbus-opendtu/install.sh
 ```
 
-The following commands should do everything for you:
-
 ⚠️**Edit the following configuration file according to your needs before proceeding**⚠️ see [Configuration](#configuration) for details.
 
 ```bash
@@ -102,7 +100,7 @@ Tha last step is to install the service and remove the downloaded files:
 rm main.zip
 ```
 
-If the script does not work or start, please check the config.template file and update your config.ini. Or Re-update the config.template with your configuration and save as config.ini. The process also creates a copy of your old config.ini called config.backup.
+If the script does not work or start, please check the config.template file and update your config.ini. Or reconfigure the config.template with your configuration and save as config.ini. The process also creates a copy of your old config.ini called config.backup.
 
 ### Configuration
 
