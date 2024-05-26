@@ -81,15 +81,16 @@ rm main.zip
 Check configuration after that - because the service is already installed and running. In case of wrong connection data (host, username, pwd) you will spam the log-file! Also, check to **set a** proper (minimal) **log level**
 
 ### Update the code
-Just grap a copy of the main branch and copy the content to `/data/` e.g. `/data/dbus-opendtu`.
+Just grap a copy of the main branch and copy the content to `/data/` e.g. `/data/dbus-opendtu`. The process will preserve your existing config ini. 
 After that call the `install.sh script.
 
 ```bash
 wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
-rm /data/dbus-opendtu-main/config.ini
+mv /data/dbus-opendtu-main/config.ini /data/dbus-opendtu-main/config.template
 rm /data/dbus-opendtu/current.log*
 cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
+cp /data/dbus-opendtu/config.ini /data/dbus-opendtu/config.backup
 chmod a+x /data/dbus-opendtu/install.sh
 ```
 
@@ -100,6 +101,8 @@ Tha last step is to install the service and remove the downloaded files:
 /data/dbus-opendtu/restart.sh
 rm main.zip
 ```
+
+If the script does not work or start, please check the config.template file and update your config.ini. Or Re-update the config.template with your configuration and save as config.ini. The process also creates a copy of your old config.ini called config.backup.
 
 ### Configuration
 
