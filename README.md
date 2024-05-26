@@ -73,6 +73,7 @@ Tha last step is to install the service and remove the downloaded files:
 
 ```bash
 /data/dbus-opendtu/install.sh
+/data/dbus-opendtu/restart.sh
 rm main.zip
 ```
 
@@ -356,7 +357,7 @@ All [configuration](#configuration) is done via config.ini. Examples are comment
 
 Please open a new issue on github, only here we can work on your problem in a structured way: <https://github.com/henne49/dbus-opendtu/issues/new/choose>
 
-⚠️ **Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert back to ERROR or CRITICAL, once debugging and troubleshooting is complete. Rerun the script and share the current log file**.
+⚠️ **Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert back to ERROR or CRITICAL, once debugging and troubleshooting is complete. Rerun the script and share the current log file in /var/log/dbus-opendtu/current**.
 
 Please provide the config.ini and JSON file and upload to the github issues, you can download the JSON file using your browser or using a commandline like tool like curl
 
