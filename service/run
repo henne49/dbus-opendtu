@@ -2,5 +2,4 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 exec 2>&1
-rm $SCRIPT_DIR/current.log*
 python $(realpath $SCRIPT_DIR/../dbus-opendtu.py)

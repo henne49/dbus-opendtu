@@ -216,8 +216,8 @@ A Basic configuration could look like this:
 DTU=ahoy
 
 #Possible Options for Log Level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
-#To keep current.log small use CRITICAL
-Logging=CRITICAL
+#To keep current.log small use ERROR or CRITICAL
+Logging=ERROR
 
 #IP of Device to query <-- THIS IS THE IP OF THE DTU
 Host=192.168.1.74
@@ -253,8 +253,8 @@ A Basic configuration could look like this:
 DTU=ahoy
 
 #Possible Options for Log Level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
-#To keep current.log small use CRITICAL
-Logging=CRITICAL
+#To keep current.log small use ERROR or CRITICAL
+Logging=ERROR
 
 #IP of Device to query <-- THIS IS THE IP OF THE DTU
 Host=192.168.1.74
@@ -356,7 +356,7 @@ All [configuration](#configuration) is done via config.ini. Examples are comment
 
 Please open a new issue on github, only here we can work on your problem in a structured way: <https://github.com/henne49/dbus-opendtu/issues/new/choose>
 
-⚠️ **Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert back to CRITICAL, once debugging and troubleshooting is complete. Rerun the script and share the current.log file**.
+⚠️ **Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert back to ERROR or CRITICAL, once debugging and troubleshooting is complete. Rerun the script and share the current.log file**.
 
 Please provide the config.ini and JSON file and upload to the github issues, you can download the JSON file using your browser or using a commandline like tool like curl
 
