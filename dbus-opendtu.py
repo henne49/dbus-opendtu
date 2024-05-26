@@ -41,7 +41,7 @@ def main():
         number_of_templates = 0
 
     log_rotate_handler = logging.handlers.RotatingFileHandler(
-        maxBytes=5*1024*1024*10,
+        maxBytes=100*1024,
         backupCount=2,
         encoding=None,
         delay=0,
