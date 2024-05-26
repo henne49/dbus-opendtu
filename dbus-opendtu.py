@@ -39,30 +39,14 @@ def main():
         number_of_inverters = 0
 
     try:
-        max_file_size = int(config["DEFAULT"]["MaxFileSize"]) *1024
-    except Exception:
-        max_file_size = 100*1024
-
-    try:
         number_of_templates = int(config["DEFAULT"]["NumberOfTemplates"])
     except Exception:
         number_of_templates = 0
 
-    log_rotate_handler = logging.handlers.RotatingFileHandler(
-        maxBytes=max_file_size,
-        backupCount=1,
-        encoding=None,
-        delay=0,
-        filename="%s/current.log" % (os.path.dirname(os.path.realpath(__file__)))
-    )
     logging.basicConfig(
         format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         level=logging_level,
-        handlers=[
-            logging.StreamHandler(),
-            log_rotate_handler
-        ],
     )
 
     tests.run_tests()
