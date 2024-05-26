@@ -6,7 +6,7 @@ rm /service/$SERVICE_NAME
 kill $(pgrep -f 'supervise dbus-opendtu')
 chmod a-x $SCRIPT_DIR/service/run
 $SCRIPT_DIR/restart.sh
-rm $SCRIPT_DIR/current.log
+rm $SCRIPT_DIR/current.log*
 STARTUP=$SCRIPT_DIR/install.sh
 #sed -i "\~/data/dbus-opendtu/install.sh~d" $filename
 sed -i "\~$STARTUP~d" $filename

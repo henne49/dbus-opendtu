@@ -38,6 +38,10 @@ def main():
     except Exception:
         number_of_inverters = 0
     
+    try:
+        maxBytes = int(config["DEFAULT"]["MaxFileSize"]) *1024
+    except Exception:
+        maxBytes = 100*1024
 
     try:
         number_of_templates = int(config["DEFAULT"]["NumberOfTemplates"])
@@ -45,8 +49,8 @@ def main():
         number_of_templates = 0
 
     log_rotate_handler = logging.handlers.RotatingFileHandler(
-        maxBytes=100*1024,
-        backupCount=2,
+        maxBytes,
+        backupCount=1,
         encoding=None,
         delay=0,
         filename="%s/current.log" % (os.path.dirname(os.path.realpath(__file__)))

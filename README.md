@@ -59,7 +59,7 @@ The following commands should do everything for you:
 wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
 mv /data/dbus-opendtu-main /data/dbus-opendtu
-rm /data/dbus-opendtu/current.log
+rm /data/dbus-opendtu/current.log*
 chmod a+x /data/dbus-opendtu/install.sh
 ```
 
@@ -88,7 +88,7 @@ After that call the `install.sh script.
 wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
 rm /data/dbus-opendtu-main/config.ini
-rm /data/dbus-opendtu/current.log
+rm /data/dbus-opendtu/current.log*
 cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
 chmod a+x /data/dbus-opendtu/install.sh
 ```
