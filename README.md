@@ -127,17 +127,17 @@ This applies to each `TEMPLATE[X]` section. X is the number of Template starting
 | CUST_SN | Serialnumber to register device in VenusOS|
 | CUST_API_PATH | Location of REST API Path for JSON to be used |
 | CUST_POLLING | Polling interval in ms for Device |
-| CUST_Total | Path in JSON where to find total Energy |
+| CUST_Total | Path in JSON *4 where to find total Energy |
 | CUST_Total_Mult | Multiplier to convert W per minute for example in kWh|
 | CUST_Total_Default | [optional] Default value if no value is found in JSON |
-| CUST_Power | Path in JSON where to find actual Power |
+| CUST_Power | Path in JSON *4 where to find actual Power |
 | CUST_Power_Mult | Multiplier to convert W in negative or positive |
 | CUST_Power_Default | [optional] Default value if no value is found in JSON |
-| CUST_Voltage | Path in JSON where to find actual Voltage |
+| CUST_Voltage | Path in JSON *4 where to find actual Voltage |
 | CUST_Voltage_Default | [optional] Default value if no value is found in JSON |
-| CUST_Current | Path in JSON where to find actual Current |
+| CUST_Current | Path in JSON *4 where to find actual Current |
 | CUST_Current_Default | [optional] Default value if no value is found in JSON |
-| CUST_DCVoltage | Path in JSON where to find actual DC Voltage (e.g. Batterie voltage) *2|
+| CUST_DCVoltage | Path in JSON *4 where to find actual DC Voltage (e.g. Batterie voltage) *2|
 | CUST_DCVoltage_Default | [optional] Default value if no value is found in JSON |
 | Phase | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters *3 |
 | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
@@ -145,10 +145,11 @@ This applies to each `TEMPLATE[X]` section. X is the number of Template starting
 | Name | Name to be shown in VenusOS, use a descriptive name |
 | Servicename | e.g. com.victronenergy.pvinverter see [Service names](#service-names) |
 
-Example for JSON PATH: use keywords separated by /
-
 *2: is only used if Servicename is com.victronenergy.inverter
+
 *3: Use 3P to split power equally over three phases (use this for Hoymiles three-phase micro-inverters as they report total power only, not seperated by phase).
+
+*4: Path in JSON: use keywords and array index numbers separated by `/`. Example (compare [tasmota_shelly_2pm.json](docs/tasmota_shelly_2pm.json)): `StatusSNS/ENERGY/Current/0` fetches dictionary (map) entry `StatusSNS` containting an entry `ENERGY` containing an entry `Current` containing an array where the first element (index 0) is taken.
 
 ### Service names
 
