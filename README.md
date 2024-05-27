@@ -8,6 +8,7 @@
 * [Introduction](#introduction)
 * [Installation](#installation)
   * [Get the code](#get-the-code)
+  * [Update the code](#update-the-code)
   * [Configuration](#configuration)
     * [Default options](#default-options)
     * [Inverter options](#inverter-options)
