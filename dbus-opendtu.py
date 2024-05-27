@@ -56,7 +56,7 @@ def main():
     tests.run_tests()
 
     try:
-        logging.info("Start")
+        logging.critical("Start")
 
         from dbus.mainloop.glib import DBusGMainLoop  # pylint: disable=E0401,C0415
 
@@ -102,7 +102,7 @@ def main():
         }
 
         if dtuvariant != constants.DTUVARIANT_TEMPLATE:
-            logging.info("Registering dtu devices")
+            logging.critical("Registering dtu devices")
             servicename = get_config_value(config, "Servicename", "INVERTER", 0, "com.victronenergy.pvinverter")
             service = DbusService(
                 servicename=servicename,
@@ -130,7 +130,7 @@ def main():
                     )
 
         for actual_template in range(number_of_templates):
-            logging.info("Registering Templates")
+            logging.critical("Registering Templates")
             servicename = get_config_value(
                 config,
                 "Servicename",

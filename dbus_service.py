@@ -85,7 +85,7 @@ class DbusService:
         else:
             self._read_config_template(actual_inverter)
 
-        logging.debug("%s /DeviceInstance = %d", servicename, self.deviceinstance)
+        logging.critical("%s /DeviceInstance = %d", servicename, self.deviceinstance)
 
         # Allow for multiple Instance per process in DBUS
         dbus_conn = (
