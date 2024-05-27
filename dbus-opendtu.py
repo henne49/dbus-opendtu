@@ -35,12 +35,16 @@ def main():
     dtuvariant = config["DEFAULT"]["DTU"]
     try:
         number_of_inverters = int(config["DEFAULT"]["NumberOfInvertersToQuery"])
-    except Exception:
+    except (KeyError, ValueError) as ex:
+        logging.warning("NumberOfInvertersToQuery: %s", ex)
+        logging.warning("NumberOfInvertersToQuery not set, using default")
         number_of_inverters = 0
 
     try:
         number_of_templates = int(config["DEFAULT"]["NumberOfTemplates"])
-    except Exception:
+    except (KeyError, ValueError) as ex:
+        logging.warning("NumberOfTemplates: %s", ex)
+        logging.warning("NumberOfTemplates not set, using default")
         number_of_templates = 0
 
     logging.basicConfig(

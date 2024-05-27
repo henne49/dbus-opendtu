@@ -205,8 +205,8 @@ class DbusService:
         try:
             self.max_age_ts = int(config["DEFAULT"]["MaxAgeTsLastSuccess"])
         except (KeyError, ValueError) as ex:
-            logging.debug("MaxAgeTsLastSuccess: %s", ex)
-            logging.debug("MaxAgeTsLastSuccess not set, using default")
+            logging.warning("MaxAgeTsLastSuccess: %s", ex)
+            logging.warning("MaxAgeTsLastSuccess not set, using default")
             self.max_age_ts = 600
 
         self.dry_run = is_true(get_default_config(config, "DryRun", False))
@@ -260,8 +260,8 @@ class DbusService:
         try:
             self.max_age_ts = int(config["DEFAULT"]["MaxAgeTsLastSuccess"])
         except (KeyError, ValueError) as ex:
-            logging.debug("MaxAgeTsLastSuccess: %s", ex)
-            logging.debug("MaxAgeTsLastSuccess not set, using default")
+            logging.warning("MaxAgeTsLastSuccess: %s", ex)
+            logging.warning("MaxAgeTsLastSuccess not set, using default")
             self.max_age_ts = 600
 
         self.dry_run = is_true(get_default_config(config, "DryRun", False))

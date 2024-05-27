@@ -2,6 +2,11 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 SERVICE_NAME=$(basename $SCRIPT_DIR)
 
+# delete old logs if they exist  
+if [ -f /data/dbus-opendtu/current.log ]; then  
+    rm /data/dbus-opendtu/current.log*  
+fi 
+
 # set permissions for script files
 chmod a+x $SCRIPT_DIR/restart.sh
 chmod 744 $SCRIPT_DIR/restart.sh

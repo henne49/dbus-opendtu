@@ -59,7 +59,6 @@ The following commands should do everything for you:
 wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
 mv /data/dbus-opendtu-main /data/dbus-opendtu
-rm /data/dbus-opendtu/current.log*
 chmod a+x /data/dbus-opendtu/install.sh
 ```
 
@@ -84,24 +83,19 @@ Just grap a copy of the main branch and copy the content to `/data/` e.g. `/data
 After that call the `install.sh script.
 
 ```bash
+cp /data/dbus-opendtu/config.ini /data/dbus-opendtu/config.backup
 wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
-rm /data/dbus-opendtu/current.log*
 mv /data/dbus-opendtu-main/config.ini /data/dbus-opendtu-main/config.template
 cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
 rm -rf /data/dbus-opendtu-main/
-cp /data/dbus-opendtu/config.ini /data/dbus-opendtu/config.backup
 chmod a+x /data/dbus-opendtu/install.sh
-```
-
-Tha last step is to install the service and remove the downloaded files:
-
-```bash
 /data/dbus-opendtu/uninstall.sh
 /data/dbus-opendtu/install.sh
 /data/dbus-opendtu/restart.sh
 rm main.zip
 ```
+The last 4 step is to install the service and remove the downloaded files:
 
 If the script does not work or start, please check the config.template file and update your config.ini. Or reconfigure the config.template with your configuration and save as config.ini. The process also creates a copy of your old config.ini called config.backup.
 
