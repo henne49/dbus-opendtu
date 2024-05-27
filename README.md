@@ -59,7 +59,7 @@ The following commands should do everything for you:
 wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
 mv /data/dbus-opendtu-main /data/dbus-opendtu
-chmod a+x /data/dbus-opendtu/install.sh
+chmod a+x /data/dbus-opendtu/*.sh
 ```
 
 ⚠️**Edit the following configuration file according to your needs before proceeding**⚠️ see [Configuration](#configuration) for details.
@@ -89,7 +89,7 @@ unzip main.zip "dbus-opendtu-main/*" -d /data
 mv /data/dbus-opendtu-main/config.ini /data/dbus-opendtu-main/config.template
 cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
 rm -rf /data/dbus-opendtu-main/
-chmod a+x /data/dbus-opendtu/install.sh
+chmod a+x /data/dbus-opendtu/*.sh
 /data/dbus-opendtu/uninstall.sh
 /data/dbus-opendtu/install.sh
 /data/dbus-opendtu/restart.sh
