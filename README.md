@@ -67,7 +67,7 @@ chmod a+x /data/dbus-opendtu/*.sh
 ⚠️**Edit the following configuration file according to your needs before proceeding**⚠️ see [Configuration](#configuration) for details.
 
 ```bash
-mv /data/dbus-opendtu/config.example /data/ddbus-opendtu/config.ini
+cp /data/dbus-opendtu/config.example /data/ddbus-opendtu/config.ini
 nano /data/dbus-opendtu/config.ini
 ```
 
