@@ -33,34 +33,32 @@ def main():
     config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
     logging_level = config["DEFAULT"]["Logging"].upper()
     dtuvariant = config["DEFAULT"]["DTU"]
-    number_of_inverters = int(config["DEFAULT"]["NumberOfInvertersToQuery"])
 
-    try:
-        number_of_templates = int(config["DEFAULT"]["NumberOfTemplates"])
-    except Exception:
-        number_of_templates = 0
-
-    log_rotate_handler = logging.handlers.RotatingFileHandler(
-        maxBytes=5*1024*1024*10,
-        backupCount=2,
-        encoding=None,
-        delay=0,
-        filename="%s/current.log" % (os.path.dirname(os.path.realpath(__file__)))
-    )
     logging.basicConfig(
         format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         level=logging_level,
-        handlers=[
-            logging.StreamHandler(),
-            log_rotate_handler
-        ],
     )
+
+    try:
+        number_of_inverters = int(config["DEFAULT"]["NumberOfInvertersToQuery"])
+    except (KeyError, ValueError) as ex:
+        logging.warning("NumberOfInvertersToQuery: %s", ex)
+        logging.warning("NumberOfInvertersToQuery not set, using default")
+        number_of_inverters = 0
+
+    try:
+        number_of_templates = int(config["DEFAULT"]["NumberOfTemplates"])
+    except (KeyError, ValueError) as ex:
+        logging.warning("NumberOfTemplates: %s", ex)
+        logging.warning("NumberOfTemplates not set, using default")
+        number_of_templates = 0
+
 
     tests.run_tests()
 
     try:
-        logging.info("Start")
+        logging.critical("Start")
 
         from dbus.mainloop.glib import DBusGMainLoop  # pylint: disable=E0401,C0415
 
@@ -106,7 +104,7 @@ def main():
         }
 
         if dtuvariant != constants.DTUVARIANT_TEMPLATE:
-            logging.info("Registering dtu devices")
+            logging.critical("Registering dtu devices")
             servicename = get_config_value(config, "Servicename", "INVERTER", 0, "com.victronenergy.pvinverter")
             service = DbusService(
                 servicename=servicename,
@@ -134,7 +132,7 @@ def main():
                     )
 
         for actual_template in range(number_of_templates):
-            logging.info("Registering Templates")
+            logging.critical("Registering Templates")
             servicename = get_config_value(
                 config,
                 "Servicename",

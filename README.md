@@ -59,7 +59,7 @@ The following commands should do everything for you:
 wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
 mv /data/dbus-opendtu-main /data/dbus-opendtu
-chmod a+x /data/dbus-opendtu/install.sh
+chmod a+x /data/dbus-opendtu/*.sh
 ```
 
 ⚠️**Edit the following configuration file according to your needs before proceeding**⚠️ see [Configuration](#configuration) for details.
@@ -72,10 +72,32 @@ Tha last step is to install the service and remove the downloaded files:
 
 ```bash
 /data/dbus-opendtu/install.sh
+/data/dbus-opendtu/restart.sh
 rm main.zip
 ```
 
 Check configuration after that - because the service is already installed and running. In case of wrong connection data (host, username, pwd) you will spam the log-file! Also, check to **set a** proper (minimal) **log level**
+
+### Update the code
+Just grap a copy of the main branch and copy the content to `/data/` e.g. `/data/dbus-opendtu`. The process will preserve your existing config ini. 
+After that call the `install.sh script.
+
+```bash
+cp /data/dbus-opendtu/config.ini /data/dbus-opendtu/config.backup
+wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
+unzip main.zip "dbus-opendtu-main/*" -d /data
+mv /data/dbus-opendtu-main/config.ini /data/dbus-opendtu-main/config.template
+cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
+rm -rf /data/dbus-opendtu-main/
+chmod a+x /data/dbus-opendtu/*.sh
+/data/dbus-opendtu/uninstall.sh
+/data/dbus-opendtu/install.sh
+/data/dbus-opendtu/restart.sh
+rm main.zip
+```
+The last 4 step is to install the service and remove the downloaded files:
+
+If the script does not work or start, please check the config.template file and update your config.ini. Or reconfigure the config.template with your configuration and save as config.ini. The process also creates a copy of your old config.ini called config.backup.
 
 ### Configuration
 
@@ -85,7 +107,7 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 
 | Config value        | Explanation   |
 |-------------------- | ------------- |
-| SignOfLifeLog  | Time in minutes how often a status is added to the log-file `current.log` with log-level INFO |
+| SignOfLifeLog  | Time in minutes how often a status is added to the log-file `current` with log-level INFO |
 | NumberOfTemplates | Number ob Template Inverter to query |
 | DTU | Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template |
 | NumberOfInvertersToQuery | Number of Inverters to query. Set a value larger than "0" when not all inverters should be considered. *1 |
@@ -192,7 +214,7 @@ A Basic configuration could look like this:
 DTU=ahoy
 
 #Possible Options for Log Level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
-#To keep current.log small use ERROR
+#To keep current log small use ERROR or CRITICAL
 Logging=ERROR
 
 #IP of Device to query <-- THIS IS THE IP OF THE DTU
@@ -229,7 +251,7 @@ A Basic configuration could look like this:
 DTU=ahoy
 
 #Possible Options for Log Level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
-#To keep current.log small use ERROR
+#To keep current log small use ERROR or CRITICAL
 Logging=ERROR
 
 #IP of Device to query <-- THIS IS THE IP OF THE DTU
@@ -257,7 +279,7 @@ These are some useful commands which help to use the script or to debug.
 
 ### Check if the script is running
 
-`svstat /service/dbus-opendtu` show if the service (our script) is running. If the number of seconds shown is low, it is probably restarting and you should look into `/data/dbus-opendtu/current.log`.
+`svstat /service/dbus-opendtu` show if the service (our script) is running. If the number of seconds shown is low, it is probably restarting and you should look into `/var/log/dbus-opendtu/current`.
 
 ### How to debug
 
@@ -274,8 +296,6 @@ This also activates the service, so you don't need to run `svcadm enable /servic
 ### How to restart
 
 `/data/dbus-opendtu/restart.sh` restarts the service - e.g. after a config.ini change.
-
-This also clears the logfile, so you can see the latest output in `/data/dbus-opendtu/current.log`.
 
 ### How to uninstall
 
@@ -332,7 +352,7 @@ All [configuration](#configuration) is done via config.ini. Examples are comment
 
 Please open a new issue on github, only here we can work on your problem in a structured way: <https://github.com/henne49/dbus-opendtu/issues/new/choose>
 
-⚠️ **Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert, once debugging and troubleshooting is complete. Rerun the script and share the current.log file**.
+⚠️ **Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert back to ERROR or CRITICAL, once debugging and troubleshooting is complete. Rerun the script and share the current log file in /var/log/dbus-opendtu/current**.
 
 Please provide the config.ini and JSON file and upload to the github issues, you can download the JSON file using your browser or using a commandline like tool like curl
 
