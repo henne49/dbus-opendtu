@@ -2,11 +2,18 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 SERVICE_NAME=$(basename $SCRIPT_DIR)
 
+
 # check if config.ini file exists
 if [ ! -f $SCRIPT_DIR/config.ini ]; then
     echo "config.ini file not found. Please make sure it exists. If not created yet, please copy it from config.example."
     exit 1
 fi
+
+# delete old logs if they exist  
+if [ -f /data/dbus-opendtu/current.log ]; then  
+    rm /data/dbus-opendtu/current.log*  
+fi 
+
 
 # set permissions for script files
 chmod a+x $SCRIPT_DIR/restart.sh
@@ -17,6 +24,9 @@ chmod 744 $SCRIPT_DIR/uninstall.sh
 
 chmod a+x $SCRIPT_DIR/service/run
 chmod 755 $SCRIPT_DIR/service/run
+
+chmod a+x $SCRIPT_DIR/service/log/run
+chmod 755 $SCRIPT_DIR/service/log/run
 
 # create sym-link to run script in deamon
 ln -s $SCRIPT_DIR/service /service/$SERVICE_NAME

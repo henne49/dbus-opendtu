@@ -31,7 +31,7 @@ def get_default_config(config, name, defaultvalue):
     return defaultvalue
 
 
-def get_value_by_path(meter_data, path):
+def get_value_by_path(meter_data: dict, path):
     '''Try to extract 'path' from nested array 'meter_data' (derived from json document) and return the found value'''
     value = meter_data
     for path_entry in path:

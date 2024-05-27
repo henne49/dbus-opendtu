@@ -11,12 +11,14 @@ import constants
 
 # Victron imports:
 from dbus_service import DbusService
+from helpers import get_value_by_path
 
 
 OPENDTU_TEST_DATA_FILE = "docs/opendtu_status.json"
 AHOY_TEST_DATA_FILE_LIVE = "docs/ahoy_0.5.93_live.json"
 AHOY_TEST_DATA_FILE_RECORD = "docs/ahoy_0.5.93_record-live.json"
 AHOY_TEST_DATA_FILE_IV_0 = "docs/ahoy_0.5.93_inverter-id-0.json"
+TEMPLATE_TASMOTA_TEST_DATA_FILE = "docs/tasmota_shelly_2pm.json"
 
 
 def test_opendtu_reachable(test_service):
@@ -78,6 +80,12 @@ def load_ahoy_test_data():
     return test_data
 
 
+def load_template_tasmota_test_data():
+    '''Load Test data for Template for tasmota case'''
+    test_data = load_json_file(TEMPLATE_TASMOTA_TEST_DATA_FILE)
+    return test_data
+
+
 def test_ahoy_values(test_service):
     '''test with ahoy data'''
     test_service.set_dtu_variant(constants.DTUVARIANT_AHOY)
@@ -111,11 +119,49 @@ def test_ahoy_get_number_of_inverters(test_service):
     assert test_service.get_number_of_inverters() == 3
 
 
+def test_get_value_by_path():
+    test_meter_data = {
+        "a": 1,
+        "b": {
+            "c": 3,
+            "arr": ["x", "y"],
+        }
+    }
+    assert 1 == get_value_by_path(test_meter_data, ["a"])
+    assert 3 == get_value_by_path(test_meter_data, ["b", "c"])
+    assert "y" == get_value_by_path(test_meter_data, ["b", "arr", 1])  # not: ["b", "arr[1]"]
+
+
+def test_template_values(test_service):
+    '''test with template test data for tasmota'''
+    test_service.set_dtu_variant(constants.DTUVARIANT_TEMPLATE)
+    test_service.custpower = "StatusSNS/ENERGY/Power/0".split("/")
+    test_service.custcurrent = "StatusSNS/ENERGY/Current/0".split("/")
+    test_service.custpower_default = 999
+    test_service.custcurrent_default = 999
+    test_service.custpower_factor = 2
+    test_service.custtotal_default = 99
+    test_service.custtotal_factor = 1
+    test_service.custvoltage = "StatusSNS/ENERGY/Voltage".split("/")
+    test_service.custvoltage_default = 99.9
+    test_service.custtotal = "StatusSNS/ENERGY/Today".split("/")
+
+    test_data = load_template_tasmota_test_data()
+
+    test_service.set_test_data(test_data)
+    logging.debug("starting test for test_template_values")
+    (power, pvyield, current, voltage, dc_voltage) = test_service.get_values_for_inverter()
+    print(power, pvyield, current, voltage, dc_voltage)
+    assert (power, pvyield, current, voltage, dc_voltage) == (320.0, 0.315, 0.734, 235, None)
+
+
 def run_tests():
     '''function to run tests'''
+    test_get_value_by_path()
     test_service = DbusService(servicename="testing", paths="dummy", actual_inverter=0)
     test_opendtu_reachable(test_service)
     test_opendtu_producing(test_service)
     test_ahoy_values(test_service)
     test_ahoy_timestamp(test_service)
+    test_template_values(test_service)
     logging.debug("tests have passed")
