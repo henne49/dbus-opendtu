@@ -79,6 +79,7 @@ rm main.zip
 Check configuration after that - because the service is already installed and running. In case of wrong connection data (host, username, pwd) you will spam the log-file! Also, check to **set a** proper (minimal) **log level**
 
 ### Update the code
+
 Just grap a copy of the main branch and copy the content to `/data/` e.g. `/data/dbus-opendtu`. The process will preserve your existing config ini. 
 After that call the `install.sh script.
 
