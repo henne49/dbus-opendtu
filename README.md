@@ -10,6 +10,7 @@
   - [Introduction](#introduction)
   - [Installation](#installation)
     - [Get the code](#get-the-code)
+    - [Update the code](#update-the-code)
     - [Configuration](#configuration)
       - [Default options](#default-options)
       - [Inverter options](#inverter-options)
@@ -98,6 +99,7 @@ chmod a+x /data/dbus-opendtu/*.sh
 /data/dbus-opendtu/restart.sh
 rm main.zip
 ```
+
 The last 4 step is to install the service and remove the downloaded files:
 
 If the script does not work or start, please check the config.template file and update your config.ini. Or reconfigure the config.template with your configuration and save as config.ini. The process also creates a copy of your old config.ini called config.backup.
