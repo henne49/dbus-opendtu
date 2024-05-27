@@ -33,6 +33,13 @@ def main():
     config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
     logging_level = config["DEFAULT"]["Logging"].upper()
     dtuvariant = config["DEFAULT"]["DTU"]
+
+    logging.basicConfig(
+        format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        level=logging_level,
+    )
+
     try:
         number_of_inverters = int(config["DEFAULT"]["NumberOfInvertersToQuery"])
     except (KeyError, ValueError) as ex:
@@ -47,11 +54,6 @@ def main():
         logging.warning("NumberOfTemplates not set, using default")
         number_of_templates = 0
 
-    logging.basicConfig(
-        format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        level=logging_level,
-    )
 
     tests.run_tests()
 
