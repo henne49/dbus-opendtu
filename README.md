@@ -5,33 +5,36 @@
 
 ## Table of contents
 
-* [Introduction](#introduction)
-* [Installation](#installation)
-  * [Get the code](#get-the-code)
-  * [Configuration](#configuration)
-    * [Default options](#default-options)
-    * [Inverter options](#inverter-options)
-    * [Template options](#template-options)
-  * [Service names](#service-names)
-  * [Videos how to install](#videos-how-to-install)
-  * [Use Cases](#use-cases)
-    * [Use Case 1: Using a Pv Inverter](#use-case-1-use-a-pv-inverter)
-    * [Use Case 2: Using a (Battery) Inverter](#use-case-2-use-a-battery-inverter)
-* [Usage](#usage)
-  * [Check if script is running](#check-if-script-is-running)
-  * [How to debug](#how-to-debug)
-  * [How to install](#how-to-install)
-  * [How to restart](#how-to-restart)
-  * [How to uninstall](#how-to-uninstall)
-* [How does it work](#how-does-it-work)
-  * [Pictures](#pictures)
-* [Tested Devices](#tested-devices)
-* [Troubleshooting](#troubleshooting)
-  * [Security settings in OpenDTU](#security-settings-in-opendtu)
-* [Inspiration](#inspiration)
-* [Furher reading](#further-reading)
-  * [used documentation](#used-documentation)
-  * [Discussions on the web](#discussions-on-the-web)
+- [dbus-opendtu](#dbus-opendtu)
+  - [Table of contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Installation](#installation)
+    - [Get the code](#get-the-code)
+    - [Update the code](#update-the-code)
+    - [Configuration](#configuration)
+      - [Default options](#default-options)
+      - [Inverter options](#inverter-options)
+      - [Template options](#template-options)
+    - [Service names](#service-names)
+    - [Videos how to install](#videos-how-to-install)
+    - [Use Cases](#use-cases)
+      - [**Use case 1: Use a PV inverter**](#use-case-1-use-a-pv-inverter)
+      - [**Use case 2: Use a battery inverter**](#use-case-2-use-a-battery-inverter)
+  - [Usage](#usage)
+    - [Check if the script is running](#check-if-the-script-is-running)
+    - [How to debug](#how-to-debug)
+    - [How to install](#how-to-install)
+    - [How to restart](#how-to-restart)
+    - [How to uninstall](#how-to-uninstall)
+  - [How does it work](#how-does-it-work)
+    - [Pictures](#pictures)
+  - [Tested Devices](#tested-devices)
+  - [Troubleshooting](#troubleshooting)
+    - [Security settings in OpenDTU](#security-settings-in-opendtu)
+  - [Inspiration](#inspiration)
+  - [Further reading](#further-reading)
+    - [used Documentation](#used-documentation)
+    - [Discussions on the web](#discussions-on-the-web)
 
 ---
 
@@ -65,6 +68,7 @@ chmod a+x /data/dbus-opendtu/*.sh
 ⚠️**Edit the following configuration file according to your needs before proceeding**⚠️ see [Configuration](#configuration) for details.
 
 ```bash
+cp /data/dbus-opendtu/config.example /data/ddbus-opendtu/config.ini
 nano /data/dbus-opendtu/config.ini
 ```
 
@@ -95,6 +99,7 @@ chmod a+x /data/dbus-opendtu/*.sh
 /data/dbus-opendtu/restart.sh
 rm main.zip
 ```
+
 The last 4 step is to install the service and remove the downloaded files:
 
 If the script does not work or start, please check the config.template file and update your config.ini. Or reconfigure the config.template with your configuration and save as config.ini. The process also creates a copy of your old config.ini called config.backup.
@@ -131,10 +136,11 @@ This applies to each `INVERTER[X]` section. X is the number of Inverter starting
 |-------------------- | ------------- |
 | Phase | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters *1 |
 | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
-| AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
+| AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) *2 |
 | Servicename | e.g. com.victronenergy.pvinverter see [Service names](#service-names) |
 
 *1: Use 3P to split power equally over three phases (use this for Hoymiles three-phase micro-inverters as they report total power only, not seperated by phase).
+*2 Important for proper visualization in Venus OS / VRM
 
 #### Template options
 
