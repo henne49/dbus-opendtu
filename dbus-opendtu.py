@@ -35,8 +35,7 @@ def main():
     dtuvariant = config["DEFAULT"]["DTU"]
 
     logging.basicConfig(
-        format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
+        format="%(levelname)s %(message)s",
         level=logging_level,
     )
 
