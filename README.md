@@ -90,7 +90,6 @@ After that call the `install.sh script.
 cp /data/dbus-opendtu/config.ini /data/dbus-opendtu/config.backup
 wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
-mv /data/dbus-opendtu-main/config.ini /data/dbus-opendtu-main/config.template
 cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
 rm -rf /data/dbus-opendtu-main/
 chmod a+x /data/dbus-opendtu/*.sh
@@ -358,8 +357,13 @@ All [configuration](#configuration) is done via config.ini. Examples are comment
 
 Please open a new issue on github, only here we can work on your problem in a structured way: <https://github.com/henne49/dbus-opendtu/issues/new/choose>
 
-⚠️ **Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert back to ERROR or CRITICAL, once debugging and troubleshooting is complete. Rerun the script and share the current log file in /var/log/dbus-opendtu/current**.
+⚠️ **Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert back to ERROR or CRITICAL, once debugging and troubleshooting is complete.**
 
+Rerun the script and share the log file current.log use the following command to generate human readable timestamps. We require this to start any troubleshooting.
+
+```
+cat /var/log/dbus-opendtu/current | tai64nlocal > current.log
+```
 Please provide the config.ini and JSON file and upload to the github issues, you can download the JSON file using your browser or using a commandline like tool like curl
 
 | Type of DTU | URL |
