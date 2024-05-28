@@ -90,7 +90,6 @@ After that call the `install.sh script.
 cp /data/dbus-opendtu/config.ini /data/dbus-opendtu/config.backup
 wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
-mv /data/dbus-opendtu-main/config.ini /data/dbus-opendtu-main/config.template
 cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
 rm -rf /data/dbus-opendtu-main/
 chmod a+x /data/dbus-opendtu/*.sh
