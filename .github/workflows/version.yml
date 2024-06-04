@@ -1,13 +1,8 @@
 name: "Update Version"
 
 on:
-  #push:
-    # tags:
-    #   - v*
-    #branches: ["main"]
-  #pull_request:
-    # The branches below must be a subset of the branches above
-    #branches: ["main"]
+  push:
+    branches: ["main"]
   workflow_dispatch:
     # manual workflow 
 env:
@@ -53,7 +48,6 @@ jobs:
       - name: Create version file
         run: |
           echo "Version: ${{ steps.gitversion.outputs.majorMinorPatch }}" > version.txt
-
       - name: Commit and push
         run: |
           git config --local user.email "action@github.com"
