@@ -28,14 +28,12 @@ jobs:
         with:
           app-id: ${{ vars.VERSION_BUMPER_APPID }}
           private-key: ${{ secrets.VERSION_BUMPER_SECRET }}
-          owner: ${{ github.repository_owner }}
 
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
-          issue-number: ${{ github.event.issue.number }}
 
       - name: setup .net core
         uses: actions/setup-dotnet@v1
