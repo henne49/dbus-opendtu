@@ -49,9 +49,13 @@ jobs:
         run: |
           echo "Version: ${{ steps.gitversion.outputs.majorMinorPatch }}" > version.txt
       - name: Commit and push
+        env:
+          PAT: ${{ secrets.GH_TOKEN }}
         run: |
+          git remote set-url origin https://github-actions[bot]:${PAT}@github.com/henne49/dbus-opendtu.git
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add version.txt
           git commit -m "Update version"
-          git push
+          git push origin main
+          
