@@ -10,7 +10,8 @@ on:
     branches: ["main"]
   workflow_dispatch:
     # manual workflow 
-
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   versioning:
     environment: versioning
