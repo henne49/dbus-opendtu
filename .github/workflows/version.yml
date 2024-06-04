@@ -56,5 +56,3 @@ jobs:
           git add version.txt
           git commit -m "Update version"
           git push
-        with:
-          token: ${{ steps.app-token.outputs.token }}
