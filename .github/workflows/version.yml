@@ -14,7 +14,6 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   versioning:
-    environment: versioning
     name: Versioning
     runs-on: ubuntu-latest
     permissions:
