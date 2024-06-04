@@ -1,16 +1,20 @@
 name: "Update Version"
 
 on:
-  #push:
+  push:
     # tags:
     #   - v*
-    #branches: ["main"]
+    branches: ["main"]
   #pull_request:
     # The branches below must be a subset of the branches above
     #branches: ["main"]
-  #workflow_dispatch:
+  workflow_dispatch:
+    # manual workflow 
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   versioning:
+    environment: versioning
     name: Versioning
     runs-on: ubuntu-latest
     permissions:
@@ -19,10 +23,19 @@ jobs:
       security-events: write
 
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.VERSION_BUMPER_APPID }}
+          private-key: ${{ secrets.VERSION_BUMPER_SECRET }}
+          owner: ${{ github.repository_owner }}
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+          issue-number: ${{ github.event.issue.number }}
 
       - name: setup .net core
         uses: actions/setup-dotnet@v1

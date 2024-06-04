@@ -10,8 +10,8 @@ if [ ! -f $SCRIPT_DIR/config.ini ]; then
 fi
 
 # delete old logs if they exist  
-if [ -f /data/dbus-opendtu/current.log ]; then  
-    rm /data/dbus-opendtu/current.log*  
+if [ -f $SCRIPT_DIR/current.log ]; then  
+    rm $SCRIPT_DIR/current.log*  
 fi 
 
 

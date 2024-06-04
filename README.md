@@ -68,7 +68,7 @@ chmod a+x /data/dbus-opendtu/*.sh
 ⚠️**Edit the following configuration file according to your needs before proceeding**⚠️ see [Configuration](#configuration) for details.
 
 ```bash
-cp /data/dbus-opendtu/config.example /data/ddbus-opendtu/config.ini
+cp /data/dbus-opendtu/config.example /data/dbus-opendtu/config.ini
 nano /data/dbus-opendtu/config.ini
 ```
 
@@ -101,7 +101,7 @@ rm main.zip
 
 The last 4 step is to install the service and remove the downloaded files:
 
-If the script does not work or start, please check the config.template file and update your config.ini. Or reconfigure the config.template with your configuration and save as config.ini. The process also creates a copy of your old config.ini called config.backup.
+If the script does not work or start, please check the config.example file and update your config.ini. Or reconfigure the config.example with your configuration and save as config.ini. The process also creates a copy of your old config.ini called config.backup.
 
 ### Configuration
 
