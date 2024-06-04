@@ -28,6 +28,7 @@ jobs:
         with:
           app-id: ${{ vars.VERSION_BUMPER_APPID }}
           private-key: ${{ secrets.VERSION_BUMPER_SECRET }}
+          owner: ${{ github.repository_owner }}
 
       - name: Checkout repository
         uses: actions/checkout@v4
