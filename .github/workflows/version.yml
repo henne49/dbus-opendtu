@@ -1,14 +1,14 @@
 name: "Update Version"
 
 on:
-  #push:
+  push:
     # tags:
     #   - v*
     #branches: ["main"]
-  #pull_request:
+  pull_request:
     # The branches below must be a subset of the branches above
-    #branches: ["main"]
-  #workflow_dispatch:
+    branches: ["main"]
+  workflow_dispatch:
 jobs:
   versioning:
     name: Versioning
@@ -19,10 +19,17 @@ jobs:
       security-events: write
 
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.VERSION_BUMPER_APPID }}
+          private-key: ${{ secrets.VERSION_BUMPER_SECRET }}
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: setup .net core
         uses: actions/setup-dotnet@v1
@@ -49,3 +56,5 @@ jobs:
           git add version.txt
           git commit -m "Update version"
           git push
+        with:
+          token: ${{ steps.app-token.outputs.token }}
