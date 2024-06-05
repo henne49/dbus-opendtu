@@ -10,6 +10,7 @@ env:
 jobs:
   versioning:
     name: Versioning
+    environment: versioning
     runs-on: ubuntu-latest
     permissions:
       actions: read
