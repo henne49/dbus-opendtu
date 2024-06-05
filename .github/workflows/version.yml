@@ -10,6 +10,7 @@ env:
 jobs:
   versioning:
     name: Versioning
+    env
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -17,18 +18,11 @@ jobs:
       security-events: write
 
     steps:
-      - uses: actions/create-github-app-token@v1
-        id: app-token
+      - uses: actions/checkout@v4
         with:
-          app-id: ${{ vars.VERSION_BUMPER_APPID }}
-          private-key: ${{ secrets.VERSION_BUMPER_SECRET }}
-          owner: ${{ github.repository_owner }}
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
-          token: ${{ steps.app-token.outputs.token }}
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: setup .net core
         uses: actions/setup-dotnet@v1
@@ -57,6 +51,6 @@ jobs:
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.GH_TOKEN }}
+          github_token: ${{ secrets.PAT_TOKEN }}
           repository: henne49/dbus-opendtu
           force_with_lease: true
