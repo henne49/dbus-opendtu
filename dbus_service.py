@@ -426,13 +426,13 @@ class DbusService:
                              "please upgrade your OpenDTU to at least version 4.4.3")
 
     def fetch_opendtu_iv_data(self, inverter_serial):
-        '''Fetch inverter date from OpenDTU device for one inverter'''
+        '''Fetch inverter data from OpenDTU device for one inverter'''
         iv_url = self._get_status_url() + "?inv=" + inverter_serial
         logging.debug(f"Inverter URL: {iv_url}")
         return self.fetch_url(iv_url)
 
     def fetch_ahoy_iv_data(self, inverter_number):
-        '''Fetch inverter date from Ahoy device for one inverter'''
+        '''Fetch inverter data from Ahoy device for one inverter'''
         iv_url = self.get_ahoy_base_url() + "/inverter/id/" + str(inverter_number)
         logging.debug(f"Inverter URL: {iv_url}")
         return self.fetch_url(iv_url)
