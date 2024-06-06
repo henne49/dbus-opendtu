@@ -425,13 +425,14 @@ class DbusService:
             raise ValueError("You do not have the latest OpenDTU Version to run this script,"
                              "please upgrade your OpenDTU to at least version 4.4.3")
 
-    def fetch_opendtu_inverter_data(self, inverter_serial):
-        '''Fetch inverter date from OpenDTU device for one interter'''
+    def fetch_opendtu_iv_data(self, inverter_serial):
+        '''Fetch inverter data from OpenDTU device for one inverter'''
         iv_url = self._get_status_url() + "?inv=" + inverter_serial
+        logging.debug(f"Inverter URL: {iv_url}")
         return self.fetch_url(iv_url)
 
     def fetch_ahoy_iv_data(self, inverter_number):
-        '''Fetch inverter date from Ahoy device for one interter'''
+        '''Fetch inverter data from Ahoy device for one inverter'''
         iv_url = self.get_ahoy_base_url() + "/inverter/id/" + str(inverter_number)
         logging.debug(f"Inverter URL: {iv_url}")
         return self.fetch_url(iv_url)
@@ -606,7 +607,7 @@ class DbusService:
             else:
                 inverter_serial = meter_data["inverters"][self.pvinverternumber]["serial"]
                 logging.info(f"Inverter #{self.pvinverternumber} Serial: {inverter_serial}")
-                root_meter_data = self.fetch_opendtu_inverter_data(inverter_serial)["inverters"][0]
+                root_meter_data = self.fetch_opendtu_iv_data(inverter_serial)["inverters"][0]
                 logging.debug(f"{root_meter_data}")
                 firmware_v24_2_12_or_newer = False
 
