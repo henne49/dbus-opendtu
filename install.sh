@@ -33,6 +33,8 @@ ln -s $SCRIPT_DIR/service /service/$SERVICE_NAME
 
 # add install-script to rc.local to be ready for firmware update
 filename=/data/rc.local
+
+#check if rc.local already exists, if not create it
 if [ ! -f $filename ]
 then
     touch $filename
@@ -41,4 +43,5 @@ then
     echo >> $filename
 fi
 
+#check if the service exists? if not add it to rc.local
 grep -qxF "$SCRIPT_DIR/install.sh" $filename || echo "$SCRIPT_DIR/install.sh" >> $filename
