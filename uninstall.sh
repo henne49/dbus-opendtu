@@ -7,7 +7,7 @@ RC_LOCAL_FILE=/data/rc.local
 rm /service/$SERVICE_NAME
 
 # end the dbus-opendtu process
-kill $(pgrep -f 'dbus-opendtu')
+kill $(pgrep -f "python $SCRIPT_DIR/dbus-opendtu.py")
 
 # delete old logs if they exist  
 if [ -f $SCRIPT_DIR/current.log ]; then  
