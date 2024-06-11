@@ -5,6 +5,7 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+  fork:
   schedule:
     - cron: "19 16 * * 2"
 
