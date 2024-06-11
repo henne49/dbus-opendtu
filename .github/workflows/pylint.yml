@@ -1,6 +1,6 @@
 name: Pylint
 
-on: [push]
+on: [push, fork]
 
 jobs:
   build:
