@@ -38,7 +38,6 @@
 
 ---
 
-
 ## Introduction
 
 This project integrates (supported) Hoymiles Inverter into Victron Energy's (Venus OS) ecosystem.
