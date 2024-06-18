@@ -8,7 +8,15 @@ import os
 import unittest
 from unittest.mock import MagicMock
 import json
-from helpers import *
+from helpers import (
+    get_config_value,
+    get_default_config,
+    get_value_by_path,
+    convert_to_expected_type,
+    get_ahoy_field_by_name,
+    is_true,
+    timeit
+)
 sys.modules['vedbus'] = MagicMock()
 sys.modules['dbus'] = MagicMock()
 sys.modules['gi.repository'] = MagicMock()
@@ -72,8 +80,28 @@ class TestHelpersFunctions(unittest.TestCase):
 
     def setUp(self):
         ''' Setup the test environment. '''
-        # TODO: Create a mock config file and use that instead of the real one.
-        self.config = dbus_service.DbusService._get_config()  # pylint: disable=protected-access
+        # Mock the config
+        self.config = MagicMock()
+        self.config.__getitem__.return_value = {
+            "Username": "",
+            "Password": "",
+            "DigistAuth": "False",
+            "CUST_SN": "12345678",
+            "CUST_API_PATH": "cm?cmnd=STATUS+8",
+            "CUST_POLLING": "2000",
+            "CUST_Power": "StatusSNS/ENERGY/Power",
+            "CUST_Power_Mult": "1",
+            "CUST_Total": "StatusSNS/ENERGY/Total",
+            "CUST_Total_Mult": "1",
+            "CUST_Voltage": "StatusSNS/ENERGY/Voltage",
+            "CUST_Current": "StatusSNS/ENERGY/Current",
+            "Phase": "L1",
+            "DeviceInstance": "47",
+            "AcPosition": "1",
+            "Name": "Tasmota",
+            "Servicename": "com.victronenergy.grid",
+            "DTU": "opendtu",
+        }
 
         self.custpower = self.config["TEMPLATE0"]["CUST_Power"].split("/")
         self.custpower_factor = self.config["TEMPLATE0"]["CUST_Power_Mult"]

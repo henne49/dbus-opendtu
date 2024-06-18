@@ -45,8 +45,8 @@ def get_value_by_path(meter_data: dict, path):
     return value
 
 
-def convert_to_expected_type(value: str, expected_type: [str, int, float, bool],
-                             default: [None, str, int, float, bool]) -> [None, str, int, float, bool]:
+def convert_to_expected_type(value: str, expected_type: list[str, int, float, bool],
+                             default: list[None, str, int, float, bool]) -> list[None, str, int, float, bool]:
     ''' Try to convert value to expected_type, otherwise return default'''
     try:
         conversion_functions = {
