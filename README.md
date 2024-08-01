@@ -1,7 +1,7 @@
 # dbus-opendtu
 
 > **Attention:**
-> ⚠️Please Update your Installation to a version greater than 1.2.5 for stable log file handling⚠️
+> ⚠️Please Update your Installation to latest stable log file handling⚠️
 
 ## Table of contents
 
@@ -351,6 +351,13 @@ Tested examples for template devices:
 * Shelly Plus 1 PM unathenticated
 
 All [configuration](#configuration) is done via config.ini. Examples are commented in config.ini
+
+---
+
+## Frequently asked questions
+
+Frequently asked questions:
+* Can I use multiple instances? - yes, but limit the usage minimal and check the stability of your system for free space on your device and load. Also remeber, that templates can be queried together with a single dtu, no need for another instance. 
 
 ---
 
