@@ -27,7 +27,7 @@ if [ -d $LOG_DIR ]; then
         read -p "Do you really wish to delete the log folder $LOG_DIR? [y/n]" yn
         case $yn in
             [Yy]* ) rm -rf $LOG_DIR; echo $LOG_DIR is deleted ; break;;
-            [Nn]* ) exit;;
+            [Nn]* ) break;;
             * ) echo "Please answer y or n.";;
         esac
     done
