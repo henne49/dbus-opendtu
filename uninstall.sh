@@ -6,7 +6,7 @@ RC_LOCAL_FILE=/data/rc.local
 
 #remove the service
 if [ -d /service/$SERVICE_NAME ]; then  
-    rm -rf /service/$SERVICE_NAME
+    rm /service/$SERVICE_NAME
 fi 
 
 # end the dbus-opendtu process
