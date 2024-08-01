@@ -28,7 +28,7 @@ if [ -d $LOG_DIR ]; then
         case $yn in
             [Yy]* ) rm -rf $LOG_DIR; echo $LOG_DIR is deleted ; break;;
             [Nn]* ) exit;;
-            * ) echo "Please answer yes or no.";;
+            * ) echo "Please answer y or n.";;
         esac
     done
 fi 
