@@ -1,7 +1,7 @@
 # dbus-opendtu
 
 > **Attention:**
-> ⚠️Please Update your Installation to latest stable log file handling⚠️
+> ⚠️Please Update your Installation to latest stable version log file handling⚠️
 
 ## Table of contents
 
@@ -29,7 +29,7 @@
   - [How does it work](#how-does-it-work)
     - [Pictures](#pictures)
   - [Tested Devices](#tested-devices)
-  - [Frequently asked Questions](#faq)
+  - [Frequently asked Questions](#frequently-asked-questions)
   - [Troubleshooting](#troubleshooting)
     - [Security settings in OpenDTU](#security-settings-in-opendtu)
   - [Inspiration](#inspiration)
