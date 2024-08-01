@@ -357,7 +357,7 @@ All [configuration](#configuration) is done via config.ini. Examples are comment
 ## Frequently asked questions
 
 Frequently asked questions:
-* Can I use multiple instances? - yes, but limit the usage minimal and check the stability of your system for free space on your device and load. Also remeber, that templates can be queried together with a single dtu, no need for another instance. 
+* **Can I use multiple instances?** - yes, but limit the usage minimal and check the stability of your system for free space on your device and load. Also remeber, that templates can be queried together with a single dtu, no need for another instance. 
 
 ---
 
