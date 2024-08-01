@@ -1,7 +1,7 @@
 # dbus-opendtu
 
 > **Attention:**
-> ⚠️For any problems with OpenDTU prior v4.4.3 version, please update to the latest code where most Issues are fixed. OpenDTU changed the API. The same applies to AhoyDTU.⚠️
+> ⚠️Please Update your Installation to a version greater than 1.2.5 for stable log file handling⚠️
 
 ## Table of contents
 
@@ -29,6 +29,7 @@
   - [How does it work](#how-does-it-work)
     - [Pictures](#pictures)
   - [Tested Devices](#tested-devices)
+  - [Frequently asked Questions](#faq)
   - [Troubleshooting](#troubleshooting)
     - [Security settings in OpenDTU](#security-settings-in-opendtu)
   - [Inspiration](#inspiration)
@@ -113,7 +114,7 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 |-------------------- | ------------- |
 | SignOfLifeLog  | Time in minutes how often a status is added to the log-file `current` with log-level INFO |
 | NumberOfTemplates | Number ob Template Inverter to query |
-| DTU | Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template |
+| DTU | Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template. template is template only, ahoy and opendtu can use a dtu and templates together.|
 | NumberOfInvertersToQuery | Number of Inverters to query. Set a value larger than "0" when not all inverters should be considered. *1 |
 | useYieldDay | send YieldDay instead of YieldTotal. Set this to 1 to prevent VRM from adding the total value to the history on one day. E.g. if you don't start using the inverter at 0. |
 | ESP8266PollingIntervall |  For ESP8266 reduce polling intervall to reduce load, default 10000ms|
