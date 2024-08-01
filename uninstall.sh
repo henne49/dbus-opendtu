@@ -5,8 +5,8 @@ LOG_DIR=/var/log/$SERVICE_NAME
 RC_LOCAL_FILE=/data/rc.local
 
 #remove the service
-if [ -f /service/$SERVICE_NAME ]; then  
-    rm /service/$SERVICE_NAME
+if [ -d /service/$SERVICE_NAME ]; then  
+    rm -rf /service/$SERVICE_NAME
 fi 
 
 # end the dbus-opendtu process
