@@ -1,8 +1,0 @@
-#!/bin/sh
-exec 2>&1
-#Script Directory
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-SCRIPT_DIR=$(realpath $SCRIPT_DIR/../../)
-SERVICE_NAME=$(basename $SCRIPT_DIR)
-# documentation on how to use multilog https://manpages.debian.org/stretch/daemontools/multilog.8.en.html
-exec multilog t s153600 n2 /var/log/${SERVICE_NAME}
