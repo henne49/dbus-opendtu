@@ -5,7 +5,7 @@ SignOfLifeLog= 1
 # Number ob Template Inverter to query
 NumberOfTemplates=0
 
-# Which DTU to be used ahoy, opendtu, template
+# Which DTU to be used ahoy, opendtu, template. template is template only, ahoy and opendtu can use a dtu and templates together.
 DTU=opendtu
 
 # If you want to exclude Inverter, specify how many of the Inverters you want to query.
