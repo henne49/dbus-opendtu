@@ -1,4 +1,6 @@
 img export-ignore
+LICENSE export-ignore
+README.md export-ignore
 .vscode export-ignore
 .pylintrc export-ignore
 .gitignore export-ignore
