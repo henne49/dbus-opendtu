@@ -1,6 +1,71 @@
 # Set the repository name and username
 REPO="henne49/dbus-opendtu"
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+#!/bin/bash
+
+# Check if the file exists
+if [ -f /data/rc.local ]; then
+  # Use grep to find lines containing install.sh and extract the full path
+  FOLDERS=$(grep 'install.sh' /data/rc.local | sed -r 's/^(.*)\/install\.sh/\1/')
+
+  # If no folder is found, ask the user to enter one
+  if [ $(echo "$FOLDERS" | wc -l) -eq 0 ]; then
+    read -p "No entry with install.sh found. Please enter the path to the folder you want to use: " SCRIPT_DIR
+  else
+    echo "Found folders:"
+    i=1
+    for folder in $FOLDERS; do
+      echo "$i. $folder"
+      ((i++))
+    done
+    echo "$i. Enter folder manually"
+    while true; do
+      read -p "Enter the number of the folder you want to use: " choice
+      if [ $choice -ge 1 ] && [ $choice -le $i ]; then
+        if [ $choice -eq $i ]; then
+          read -p "Please enter the path to the folder you want to use: " SCRIPT_DIR
+        else
+          SCRIPT_DIR=$(echo "$FOLDERS" | sed -n "$choice"p)
+        fi
+        break
+      else
+        echo "Invalid selection. Please try again."
+      fi
+    done
+  fi
+else
+  read -p "The file /data/rc.local does not exist. Please enter the path to the folder you want to use: " SCRIPT_DIR
+fi
+
+echo "Using folder: $SCRIPT_DIR"
+
+# Check if SCRIPT_DIR is the current working directory
+if [ "$SCRIPT_DIR" = "$(pwd)" ]; then
+  echo "SCRIPT_DIR is the current working directory."
+else
+  echo "SCRIPT_DIR is not the current working directory."
+fi
+
+if [ ! -d "$SCRIPT_DIR" ]; then
+  read -p "The directory $SCRIPT_DIR does not exist. Do you want to create it? (yes/no) " answer
+  if [ "$answer" = "yes" ]; then
+    mkdir -p "$SCRIPT_DIR"
+    echo "Directory $SCRIPT_DIR created successfully."
+    cd "$SCRIPT_DIR/"
+  else
+    echo "Directory creation cancelled. Exiting..."
+    exit 1
+  fi
+fi
+
+# Check if version.txt exists in the selected directory
+if [ -f "$SCRIPT_DIR/version.txt" ]; then
+  INSTALLED_VERSION=$(cat "$SCRIPT_DIR/version.txt" | sed 's/Version: /v/')
+  echo "Version: $INSTALLED_VERSION"
+else
+  echo "No version.txt file found in the selected directory."
+  INSTALLED_VERSION="none"
+fi
 
 # delete old logs if they exist  
 if [ -f $SCRIPT_DIR/current.log ]; then  
@@ -16,7 +81,7 @@ if [ $FREE_SPACE -lt 5 ]; then
 fi
 
 # Ask the user for the version to download, defaulting to "latest"
-echo "Enter the version to download (e.g. main, v1.2.25, pre-release, or press enter for latest):"
+echo "Enter the version to download (e.g. main, v1.2.25, or press enter for latest):"
 read VERSION
 
 # If no version is specified, default to "latest"
@@ -49,11 +114,35 @@ else
   fi
 fi
 
+# check for main or latest version
+if [ "$VERSION" == "latest" ] || [ "$VERSION" = "main" ]; then
+    # If the installed version is older as the version, print a message
+    read -p "INSTALLED VERSION ($INSTALLED_VERSION) will be updated with VERSION ($VERSION). Do you want to continue? (yes/no) " response
+# Compare the version numbers using sort -V
+# sort -V compares version numbers, ignoring any non-numeric characters
+# head -n1 gets the first line of the sorted output, which is the older version
+elif [ "$(printf '%s\n' "$INSTALLED_VERSION" "$VERSION" | sort -V | head -n1)" != "$INSTALLED_VERSION" ]; then
+    # If the installed version is newer, print a warning
+    read -p "WARNING: INSTALLED VERSION ($INSTALLED_VERSION) is newer than UPDATE VERSION ($VERSION). Do you want to continue? (yes/no) " response
+elif [ "$INSTALLED_VERSION" != "$VERSION" ]; then
+    # If the installed version is older as the version, print a message
+    read -p "INSTALLED VERSION ($INSTALLED_VERSION) is older than UPDATE VERSION ($VERSION). Do you want to continue? (yes/no) " response
+else
+    # If the installed version is the same as the version, print a message
+    read -p "INSTALLED VERSION ($INSTALLED_VERSION) is the same as UPDATE VERSION ($VERSION). Do you want to continue? (yes/no) " response
+fi
+if [ "$response" != "yes" ]; then
+    # If the user doesn't want to continue, exit the script
+    echo "Exiting..."
+    exit 1
+fi
+
 # Download the zip file for the specified tag
-wget -O $TAG.zip https://github.com/$REPO/archive/$TAG.zip || { echo "version does not exist"; exit 1; }
+
+wget -O $SCRIPT_DIR/$TAG.zip https://github.com/$REPO/archive/$TAG.zip || { echo "version does not exist"; exit 1; }
 
 # Unzip the downloaded file
-unzip $TAG.zip
+unzip $SCRIPT_DIR/$TAG.zip -d $SCRIPT_DIR
 
 # Check if the TAG string starts with 'v'
 if [[ $TAG =~ ^v ]]; then
@@ -66,16 +155,16 @@ fi
 echo $EXTRACT_FOLDER
 
 # Copy all files from the extract folder to the main folder
-cp -R $EXTRACT_FOLDER/* .
+cp -R $SCRIPT_DIR/$EXTRACT_FOLDER/* $SCRIPT_DIR/
 
 # Delete zip file
-rm $TAG.zip
+rm $SCRIPT_DIR/$TAG.zip
 
 # Delete Extract Folder
-rm -rf $EXTRACT_FOLDER
+rm -rf $SCRIPT_DIR/$EXTRACT_FOLDER
 
 # Make all shell scripts executable
-chmod a+x $SCRIPT_DIR//*.sh
+chmod a+x $SCRIPT_DIR/*.sh
 
 #restart the service
 $SCRIPT_DIR/restart.sh
