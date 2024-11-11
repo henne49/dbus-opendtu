@@ -20,7 +20,7 @@ class TestRegisterService(unittest.TestCase):
     @patch('dbus_opendtu.get_config_value')
     @patch('dbus_opendtu.constants')
     
-    def test_register_service(self, mock_constants, mock_get_config_value, mock_dbus_service):
+    def test_register_service(self, mock_get_config_value, mock_dbus_service):
         def get_config_value_side_effect(key, *args, **kwargs):
             if isinstance(key, dict):
                 key = key.get('key', 'mock_value')
