@@ -52,7 +52,6 @@ class DbusService:
     def __init__(
         self,
         servicename,
-        paths,
         actual_inverter,
         istemplate=False,
     ):
@@ -95,7 +94,7 @@ class DbusService:
         )
 
         self._dbusservice = VeDbusService(f"{servicename}.http_{self.deviceinstance}", dbus_conn)
-        self._paths = paths
+        self._paths = constants.VICTRON_PATHS 
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path("/Mgmt/ProcessName", __file__)
