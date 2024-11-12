@@ -4,14 +4,14 @@
 from imports import *
 
 config = None
-paths = None
 number_of_inverters = 0
 number_of_templates = 0
+
 
 def initialize():
     """ Initialize the module """
     # pylint: disable=w0603
-    global config, paths, number_of_inverters, number_of_templates
+    global config, number_of_inverters, number_of_templates
 
     # configure logging
     config = configparser.ConfigParser()
@@ -36,7 +36,6 @@ def initialize():
         logging.warning("NumberOfTemplates: %s", ex)
         logging.warning("NumberOfTemplates not set, using default")
         number_of_templates = 0
-
 
 
 def register_service():
@@ -86,6 +85,7 @@ def register_service():
             istemplate=True,
         )
 
+
 def main():
     """ Main function """
     initialize()
@@ -106,6 +106,7 @@ def main():
         mainloop.run()
     except Exception as error:
         logging.critical("Error at %s", "main", exc_info=error)
+
 
 if __name__ == "__main__":
     main()
