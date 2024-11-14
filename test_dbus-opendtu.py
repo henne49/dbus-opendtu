@@ -10,13 +10,12 @@ sys.modules['vedbus'] = MagicMock()
 sys.modules['gi.repository'] = MagicMock()
 sys.modules['dbus.mainloop.glib'] = MagicMock()
 
-from dbus_opendtu import register_service  # pylint: disable=E0401,C0413 # noqa: E402
+from dbus_opendtu import register_services  # pylint: disable=E0401,C0413 # noqa: E402
 
 
 class TestRegisterService(unittest.TestCase):
     """ Test cases for the register_service function """
 
-    @patch('dbus_opendtu.config', {'DEFAULT': {'DTU': 'opendtu'}})
     @patch('dbus_opendtu.DbusService')
     @patch('dbus_opendtu.get_config_value')
     def test_register_service(self, mock_get_config_value, mock_dbus_service):
@@ -34,7 +33,7 @@ class TestRegisterService(unittest.TestCase):
         mock_dbus_service_instance = mock_dbus_service.return_value
         mock_dbus_service_instance.get_number_of_inverters.return_value = 1
 
-        register_service()
+        register_services({'DEFAULT': {'DTU': 'opendtu'}})
 
         # Add assertions to verify the behavior
         mock_dbus_service.assert_called_once()
