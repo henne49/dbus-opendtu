@@ -120,7 +120,7 @@ def main():
     tests.run_tests()
 
     try:
-        logging.critical("Start")
+        logging.info("Start")
 
         from dbus.mainloop.glib import DBusGMainLoop  # pylint: disable=E0401,C0415
 
