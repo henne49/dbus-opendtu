@@ -27,14 +27,20 @@ def getConfig():
     return config
 
 
-def register_services(config):
+def get_DbusServices(config):
     """
-    Registers DTU devices and templates based on the configuration.
+    Retrieves and registers D-Bus services based on the provided configuration.
 
     Args:
-        config (configparser.ConfigParser): The configuration object containing the parsed configuration.
+        config (dict): Configuration dictionary containing the necessary settings.
+
+    Returns:
+        list: A list of registered DbusService instances.
     """
 
+    services = []
+
+    # region Get the configuration values
     try:
         number_of_inverters = int(config["DEFAULT"]["NumberOfInvertersToQuery"])
     except (KeyError, ValueError) as ex:
@@ -54,14 +60,17 @@ def register_services(config):
     except KeyError:
         logging.critical("DTU key not found in configuration")
         return
+    # endregion
 
+    # region Register the inverters
     if dtuvariant != constants.DTUVARIANT_TEMPLATE:
-        logging.critical("Registering dtu devices")
+        logging.info("Registering dtu devices")
         servicename = get_config_value(config, "Servicename", "INVERTER", 0, "com.victronenergy.pvinverter")
         service = DbusService(
             servicename=servicename,
             actual_inverter=0,
         )
+        services.append(service)
 
         if number_of_inverters == 0:
             # pylint: disable=W0621
@@ -77,11 +86,13 @@ def register_services(config):
                     actual_inverter + 1,
                     "com.victronenergy.pvinverter"
                 )
-                DbusService(
+                services.append(DbusService(
                     servicename=servicename,
                     actual_inverter=actual_inverter + 1,
-                )
+                ))
+    # endregion
 
+    # region Register the templates
     for actual_template in range(number_of_templates):
         logging.critical("Registering Templates")
         servicename = get_config_value(
@@ -91,11 +102,14 @@ def register_services(config):
             actual_template,
             "com.victronenergy.pvinverter"
         )
-        service = DbusService(
+        services.append(DbusService(
             servicename=servicename,
             actual_inverter=actual_template,
             istemplate=True,
-        )
+        ))
+    # endregion
+
+    return services
 
 
 def main():
@@ -113,7 +127,9 @@ def main():
         # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
         DBusGMainLoop(set_as_default=True)
 
-        register_services(config)
+        services = get_DbusServices(config)
+
+        logging.info("Registered %d services", len(services))
 
         logging.info("Connected to dbus, and switching over to gobject.MainLoop() (= event based)")
         mainloop = gobject.MainLoop()
