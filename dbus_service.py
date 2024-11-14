@@ -94,7 +94,7 @@ class DbusService:
         )
 
         self._dbusservice = VeDbusService(f"{servicename}.http_{self.deviceinstance}", dbus_conn)
-        self._paths = constants.VICTRON_PATHS 
+        self._paths = constants.VICTRON_PATHS
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path("/Mgmt/ProcessName", __file__)
@@ -143,7 +143,6 @@ class DbusService:
                 onchangecallback=self._handlechangedvalue,
             )
 
-        gobject.timeout_add(self._get_sign_of_life_interval() * 60 * 1000, self._sign_of_life)
         gobject.timeout_add(self._get_polling_interval(), self._update)
 
     @staticmethod
@@ -194,7 +193,6 @@ class DbusService:
                 {constants.DTUVARIANT_TEMPLATE}")
         self.deviceinstance = int(config[f"INVERTER{self.pvinverternumber}"]["DeviceInstance"])
         self.acposition = int(get_config_value(config, "AcPosition", "INVERTER", self.pvinverternumber))
-        self.signofliveinterval = get_config_value(config, "SignOfLifeLog", "DEFAULT", "", 1)
         self.useyieldday = int(get_config_value(config, "useYieldDay", "DEFAULT", "", 0))
         self.pvinverterphase = str(config[f"INVERTER{self.pvinverternumber}"]["Phase"])
         self.host = get_config_value(config, "Host", "INVERTER", self.pvinverternumber)
@@ -235,7 +233,6 @@ class DbusService:
         self.deviceinstance = int(config[f"TEMPLATE{template_number}"]["DeviceInstance"])
         self.customname = config[f"TEMPLATE{template_number}"]["Name"]
         self.acposition = int(config[f"TEMPLATE{template_number}"]["AcPosition"])
-        self.signofliveinterval = get_config_value(config, "SignOfLifeLog", "DEFAULT", "", 1)
         self.useyieldday = int(get_config_value(config, "useYieldDay", "DEFAULT", "", 0))
         self.pvinverterphase = str(config[f"TEMPLATE{template_number}"]["Phase"])
         self.digestauth = is_true(get_config_value(config, "DigestAuth", "TEMPLATE", template_number, False))
@@ -336,13 +333,6 @@ class DbusService:
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             polling_interval = self.pollinginterval
         return polling_interval
-
-    def _get_sign_of_life_interval(self):
-        '''Get intervall in seconds how often sign of life logs should be created.'''
-        value = self.signofliveinterval
-        if not value:
-            value = 0
-        return int(value)
 
     def _get_status_url(self):
         if self.dtuvariant == constants.DTUVARIANT_OPENDTU:
@@ -527,7 +517,7 @@ class DbusService:
         '''return ts_last_success from the meter_data structure - depending on the API version'''
         return meter_data["inverter"][self.pvinverternumber]["ts_last_success"]
 
-    def _sign_of_life(self):
+    def sign_of_life(self):
         logging.debug("Last inverter #%d _update() call: %s", self.pvinverternumber, self._last_update)
         logging.info("Last inverter #%d '/Ac/Power': %s", self.pvinverternumber, self._dbusservice["/Ac/Power"])
         return True

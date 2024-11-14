@@ -112,9 +112,27 @@ def get_DbusServices(config):
     return services
 
 
+def sign_of_life_all_services(services):
+    """
+    Sends a 'sign of life' signal to all services in the provided list.
+
+    Args:
+        services (list): A list of service objects. Each service object must have a 'sign_of_life' method.
+
+    Returns:
+        bool: Always returns True to keep the timeout active.
+    """
+    for service in services:
+        service.sign_of_life()
+    return True
+
+
 def main():
     """ Main function """
     config = getConfig()
+    signofliveinterval = int(get_config_value(config, "SignOfLifeLog", "DEFAULT", "", 1))
+
+    logging.debug("SignOfLifeLog: %d", signofliveinterval)
 
     # TODO: I think it is better to run the tests inside CI/CD pipeline instead of running it here
     tests.run_tests()
@@ -128,8 +146,13 @@ def main():
         DBusGMainLoop(set_as_default=True)
 
         services = get_DbusServices(config)
-
         logging.info("Registered %d services", len(services))
+
+        # Use a single timeout to call sign_of_life for all services
+        gobject.timeout_add(signofliveinterval * 60 * 1000, sign_of_life_all_services, services)
+
+        # Use another timeout to update all services
+       # gobject.timeout_add(1000, update_all_services, services)  # Update every 1000 ms
 
         logging.info("Connected to dbus, and switching over to gobject.MainLoop() (= event based)")
         mainloop = gobject.MainLoop()
