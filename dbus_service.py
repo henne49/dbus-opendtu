@@ -20,11 +20,6 @@ from helpers import *
 # victron imports:
 import dbus
 
-if sys.version_info.major == 2:
-    import gobject
-else:
-    from gi.repository import GLib as gobject
-
 sys.path.insert(
     1,
     os.path.join(
@@ -143,7 +138,8 @@ class DbusService:
                 onchangecallback=self._handlechangedvalue,
             )
 
-        gobject.timeout_add(self._get_polling_interval(), self._update)
+        self.polling_interval = self._get_polling_interval()
+        self.last_polling = 0
 
     @staticmethod
     def get_ac_inverter_state(current):
@@ -519,10 +515,11 @@ class DbusService:
 
     def sign_of_life(self):
         logging.debug("Last inverter #%d _update() call: %s", self.pvinverternumber, self._last_update)
-        logging.info("Last inverter #%d '/Ac/Power': %s", self.pvinverternumber, self._dbusservice["/Ac/Power"])
+        logging.info("[%s] Last inverter #%d '/Ac/Power': %s", self._servicename,
+                     self.pvinverternumber, self._dbusservice["/Ac/Power"])
         return True
 
-    def _update(self):
+    def update(self):
         logging.debug("_update")
         successful = False
         try:
@@ -559,10 +556,6 @@ class DbusService:
                     self.last_update_successful = True
             else:
                 self.last_update_successful = False
-
-        # return true, otherwise add_timeout will be removed from GObject - see docs
-        # http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
-        return True
 
     def _update_index(self):
         if self.dry_run:

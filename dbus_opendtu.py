@@ -127,6 +127,29 @@ def sign_of_life_all_services(services):
     return True
 
 
+def update_all_services(services):
+    """
+    Updates all services in the provided list.
+
+    Args:
+        services (list): A list of service objects. 
+            Each service object must have an 'update' method and 
+            a 'polling_interval' and a 'polling_last_polling' attribute.
+
+    Returns:
+        bool: Always returns True to keep the timeout active.
+    """
+    if sys.version_info.major == 2:
+        current_time = gobject.get_current_time()
+    else:
+        current_time = gobject.get_real_time() // 1000
+    for service in services:
+        if current_time - service.last_polling >= service.polling_interval:
+            service.update()
+            service.last_polling = current_time
+    return True
+
+
 def main():
     """ Main function """
     config = getConfig()
@@ -152,7 +175,7 @@ def main():
         gobject.timeout_add(signofliveinterval * 60 * 1000, sign_of_life_all_services, services)
 
         # Use another timeout to update all services
-       # gobject.timeout_add(1000, update_all_services, services)  # Update every 1000 ms
+        gobject.timeout_add(1000, update_all_services, services)
 
         logging.info("Connected to dbus, and switching over to gobject.MainLoop() (= event based)")
         mainloop = gobject.MainLoop()
