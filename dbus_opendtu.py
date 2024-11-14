@@ -3,16 +3,17 @@
 
 from imports import *
 
-config = None
-number_of_inverters = 0
-number_of_templates = 0
 
+def getConfig():
+    """
+    Reads the configuration from a config.ini file and sets up logging.
 
-def initialize():
-    """ Initialize the module """
-    # pylint: disable=w0603
-    global config, number_of_inverters, number_of_templates
+    The function reads the configuration file located in the same directory as the script.
+    It configures the logging level based on the value specified in the configuration file.
 
+    Returns:
+        configparser.ConfigParser: The configuration object containing the parsed configuration.
+    """
     # configure logging
     config = configparser.ConfigParser()
     config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
@@ -22,6 +23,17 @@ def initialize():
         format="%(levelname)s %(message)s",
         level=logging_level,
     )
+
+    return config
+
+
+def register_services(config):
+    """
+    Registers DTU devices and templates based on the configuration.
+
+    Args:
+        config (configparser.ConfigParser): The configuration object containing the parsed configuration.
+    """
 
     try:
         number_of_inverters = int(config["DEFAULT"]["NumberOfInvertersToQuery"])
@@ -37,12 +49,12 @@ def initialize():
         logging.warning("NumberOfTemplates not set, using default")
         number_of_templates = 0
 
+    try:
+        dtuvariant = config["DEFAULT"]["DTU"]
+    except KeyError:
+        logging.critical("DTU key not found in configuration")
+        return
 
-def register_service():
-    """ Register the service """
-    global number_of_inverters
-
-    dtuvariant = config["DEFAULT"]["DTU"]
     if dtuvariant != constants.DTUVARIANT_TEMPLATE:
         logging.critical("Registering dtu devices")
         servicename = get_config_value(config, "Servicename", "INVERTER", 0, "com.victronenergy.pvinverter")
@@ -88,7 +100,9 @@ def register_service():
 
 def main():
     """ Main function """
-    initialize()
+    config = getConfig()
+
+    # TODO: I think it is better to run the tests inside CI/CD pipeline instead of running it here
     tests.run_tests()
 
     try:
@@ -99,12 +113,12 @@ def main():
         # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
         DBusGMainLoop(set_as_default=True)
 
-        register_service()
+        register_services(config)
 
         logging.info("Connected to dbus, and switching over to gobject.MainLoop() (= event based)")
         mainloop = gobject.MainLoop()
         mainloop.run()
-    except Exception as error:
+    except Exception as error:  # pylint: disable=W0718
         logging.critical("Error at %s", "main", exc_info=error)
 
 
