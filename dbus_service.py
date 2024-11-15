@@ -3,6 +3,8 @@
 # File specific rules
 # pylint: disable=broad-except, import-error, wrong-import-order, wrong-import-position
 
+# region [Imports]
+
 # system imports:
 import configparser
 import os
@@ -29,16 +31,26 @@ sys.path.insert(
 )
 from vedbus import VeDbusService  # noqa - must be placed after the sys.path.insert
 
+# endregion
 
-class PvInverterRegistry(type):
-    '''Run a registry for all PV Inverter'''
+
+class DbusServiceRegistry(type):
+    """
+    Metaclass for registering and iterating over D-Bus services.
+
+    This metaclass maintains a registry of D-Bus services and provides an iterator
+    to iterate over the registered services.
+
+    Methods:
+        __iter__(cls): Returns an iterator over the registered D-Bus services.
+    """
     def __iter__(cls):
         return iter(cls._registry)
 
 
 class DbusService:
     '''Main class to register PV Inverter in DBUS'''
-    __metaclass__ = PvInverterRegistry
+    __metaclass__ = DbusServiceRegistry
     _registry = []
     _meter_data = None
     _test_meter_data = None
@@ -51,11 +63,6 @@ class DbusService:
         istemplate=False,
     ):
 
-        # This is (for now) not used elsewhere and is more of a constant
-        # than a contstuctor attribute
-        productname = "henne49_dbus-opendtu"
-        connection = "TCP/IP (HTTP)"
-
         if servicename == "testing":
             self.max_age_ts = 600
             self.pvinverternumber = actual_inverter
@@ -63,7 +70,6 @@ class DbusService:
             return
 
         self._registry.append(self)
-
         self._last_update = 0
         self._servicename = servicename
         self.last_update_successful = False
@@ -79,7 +85,7 @@ class DbusService:
         else:
             self._read_config_template(actual_inverter)
 
-        logging.critical("%s /DeviceInstance = %d", servicename, self.deviceinstance)
+        logging.info("%s /DeviceInstance = %d", servicename, self.deviceinstance)
 
         # Allow for multiple Instance per process in DBUS
         dbus_conn = (
@@ -95,12 +101,12 @@ class DbusService:
         self._dbusservice.add_path("/Mgmt/ProcessName", __file__)
         self._dbusservice.add_path("/Mgmt/ProcessVersion",
                                    "Unkown version, and running on Python " + platform.python_version())
-        self._dbusservice.add_path("/Mgmt/Connection", connection)
+        self._dbusservice.add_path("/Mgmt/Connection", constants.CONNECTION)
 
         # Create the mandatory objects
         self._dbusservice.add_path("/DeviceInstance", self.deviceinstance)
         self._dbusservice.add_path("/ProductId", 0xFFFF)  # id assigned by Victron Support from SDM630v2.py
-        self._dbusservice.add_path("/ProductName", productname)
+        self._dbusservice.add_path("/ProductName", constants.PRODUCTNAME)
         self._dbusservice.add_path("/CustomName", self._get_name())
         logging.info(f"Name of Inverters found: {self._get_name()}")
         self._dbusservice.add_path("/Connected", 1)
