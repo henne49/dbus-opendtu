@@ -19,7 +19,11 @@ from helpers import (
     convert_to_expected_type,
     get_ahoy_field_by_name,
     is_true,
-    timeit
+    timeit,
+    _kwh,
+    _a,
+    _w,
+    _v,
 )
 sys.modules['vedbus'] = MagicMock()
 sys.modules['dbus'] = MagicMock()
@@ -227,6 +231,42 @@ class TestHelpersFunctions(unittest.TestCase):
         self.assertEqual(pvyield, 13.48712)
         self.assertEqual(voltage, 225.66)
         self.assertEqual(current, None)
+
+    def test_kwh(self):
+        ''' Test the _kwh() function. '''
+        self.assertEqual(_kwh(None, 123.456), "123.46KWh")
+        self.assertEqual(_kwh(None, 1.234), "1.23KWh")
+        self.assertEqual(_kwh(None, -1.234), "-1.23KWh")
+        self.assertEqual(_kwh(None, 0), "0.00KWh")
+        self.assertEqual(_kwh(None, 0.1234), "0.12KWh")
+        self.assertEqual(_kwh(None, 1.5678), "1.57KWh")
+
+    def test_a(self):
+        ''' Test the _a() function. '''
+        self.assertEqual(_a(None, 0), "0.0A")
+        self.assertEqual(_a(None, 0.45), "0.5A")
+        self.assertEqual(_a(None, 0.459), "0.5A")
+        self.assertEqual(_a(None, 1.2345), "1.2A")
+        self.assertEqual(_a(None, 1.5678), "1.6A")
+        self.assertEqual(_a(None, -1.5678), "-1.6A")
+
+    def test_w(self):
+        ''' Test the _w() function. '''
+        self.assertEqual(_w(None, 0), "0.0W")
+        self.assertEqual(_w(None, 0.45), "0.5W")
+        self.assertEqual(_w(None, 0.459), "0.5W")
+        self.assertEqual(_w(None, 1.2345), "1.2W")
+        self.assertEqual(_w(None, 1.5678), "1.6W")
+        self.assertEqual(_w(None, -1.5678), "-1.6W")
+
+    def test_v(self):
+        ''' Test the _v() function. '''
+        self.assertEqual(_v(None, 0), "0.0V")
+        self.assertEqual(_v(None, 0.45), "0.5V")
+        self.assertEqual(_v(None, 0.459), "0.5V")
+        self.assertEqual(_v(None, 1.2345), "1.2V")
+        self.assertEqual(_v(None, 1.5678), "1.6V")
+        self.assertEqual(_v(None, -1.5678), "-1.6V")
 
 
 if __name__ == '__main__':

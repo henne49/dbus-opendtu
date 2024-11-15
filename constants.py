@@ -1,24 +1,6 @@
 '''Global constants'''
 
-# region formatting helping functions (used in constant)
-
-
-def _kwh(_p, value: float) -> str:
-    return f"{round(value, 2)}KWh"
-
-
-def _a(_p, value: float) -> str:
-    return f"{round(value, 1)}A"
-
-
-def _w(_p, value: float) -> str:
-    return f"{round(value, 1)}W"
-
-
-def _v(_p, value: float) -> str:
-    return f"{round(value, 1)}V"
-# endregion
-
+from helpers import _kwh, _a, _w, _v
 
 DTUVARIANT_AHOY = "ahoy"
 DTUVARIANT_OPENDTU = "opendtu"
