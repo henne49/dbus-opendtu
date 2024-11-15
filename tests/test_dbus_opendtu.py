@@ -3,6 +3,10 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import sys
+import os
+
+# Add the parent directory of dbus_opendtu to the system path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Mocking the dbus and other dependencies before importing the module to test
 sys.modules['dbus'] = MagicMock()

@@ -8,6 +8,10 @@ import os
 import unittest
 from unittest.mock import MagicMock
 import json
+
+# Add the parent directory of dbus_opendtu to the system path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  # noqa pylint: disable=wrong-import-position
+
 from helpers import (
     get_config_value,
     get_default_config,
