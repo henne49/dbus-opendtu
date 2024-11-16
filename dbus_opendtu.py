@@ -55,6 +55,11 @@ def get_DbusServices(config):
         logging.warning("NumberOfTemplates not set, using default")
         number_of_templates = 0
 
+    # If there are no inverters or templates, return an empty list
+    if number_of_inverters == 0 and number_of_templates == 0:
+        logging.critical("No inverters or templates to query")
+        return services
+
     try:
         dtuvariant = config["DEFAULT"]["DTU"]
     except KeyError:
@@ -158,7 +163,7 @@ def main():
     logging.debug("SignOfLifeLog: %d", signofliveinterval)
 
     # TODO: I think it is better to run the tests inside CI/CD pipeline instead of running it here
-    tests.run_tests()
+    # tests.run_tests()
 
     try:
         logging.info("Start")
