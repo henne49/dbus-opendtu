@@ -293,6 +293,9 @@ class DbusService:
     def _get_name(self):
         if self.dtuvariant in (constants.DTUVARIANT_OPENDTU, constants.DTUVARIANT_AHOY):
             meter_data = self._get_data()
+        meter_data = None
+        if self.dtuvariant in (constants.DTUVARIANT_OPENDTU, constants.DTUVARIANT_AHOY):
+            meter_data = self._get_data()
         if self.dtuvariant == constants.DTUVARIANT_AHOY:
             name = meter_data["inverter"][self.pvinverternumber]["name"]
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
@@ -339,6 +342,7 @@ class DbusService:
         return polling_interval
 
     def _get_status_url(self):
+        url = None
         if self.dtuvariant == constants.DTUVARIANT_OPENDTU:
             url = self.get_opendtu_base_url() + "/livedata/status"
         elif self.dtuvariant == constants.DTUVARIANT_AHOY:
@@ -522,12 +526,39 @@ class DbusService:
         return meter_data["inverter"][self.pvinverternumber]["ts_last_success"]
 
     def sign_of_life(self):
+        """
+        Logs the last update time and the AC power value of the inverter.
+
+        This method logs a debug message with the last update time of the inverter
+        and an info message with the AC power value of the inverter.
+
+        Returns:
+            bool: Always returns True.
+        """
         logging.debug("Last inverter #%d _update() call: %s", self.pvinverternumber, self._last_update)
         logging.info("[%s] Last inverter #%d '/Ac/Power': %s", self._servicename,
                      self.pvinverternumber, self._dbusservice["/Ac/Power"])
         return True
 
     def update(self):
+        """
+        Updates the data from the DTU (Data Transfer Unit) and sets the DBus values if the data is up-to-date.
+
+        This method performs the following steps:
+        1. Refreshes the data from the DTU.
+        2. Checks if the data is up-to-date.
+        3. If in dry run mode, logs that no data is sent.
+        4. If not in dry run mode, sets the DBus values.
+        5. Updates the index.
+        6. Handles various exceptions that may occur during the update process:
+            - requests.exceptions.RequestException: Logs an HTTP error if the last update was successful.
+            - ValueError: Logs a value error if the last update was successful.
+            - Exception: Logs a general error if the last update was successful.
+        7. Logs a recovery message if the update was successful after a previous failure.
+
+        Attributes:
+            successful (bool): Indicates whether the update was successful.
+        """
         logging.debug("_update")
         successful = False
         try:
@@ -660,7 +691,7 @@ class DbusService:
             logging.debug("---")
         else:
             # three-phase inverter: split total power equally over all three phases
-            if ("3P" == self.pvinverterphase):
+            if "3P" == self.pvinverterphase:
                 powerthird = power/3
 
                 # Single Phase Voltage = (3-Phase Voltage) / (sqrt(3))
