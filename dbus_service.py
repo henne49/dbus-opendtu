@@ -270,18 +270,20 @@ class DbusService:
     # get the Serialnumber
     def _get_serial(self, pvinverternumber):
 
+        meter_data = None
+        serial = None
         if self.dtuvariant in (constants.DTUVARIANT_AHOY, constants.DTUVARIANT_OPENDTU):
             meter_data = self._get_data()
 
-        if self.dtuvariant == constants.DTUVARIANT_AHOY:
-            if not meter_data["inverter"][pvinverternumber]["name"]:
-                raise ValueError("Response does not contain name")
-            serial = meter_data["inverter"][pvinverternumber]["serial"]
+            if self.dtuvariant == constants.DTUVARIANT_AHOY:
+                if not meter_data["inverter"][pvinverternumber]["name"]:
+                    raise ValueError("Response does not contain name")
+                serial = meter_data["inverter"][pvinverternumber]["serial"]
 
-        elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
-            if not meter_data["inverters"][pvinverternumber]["serial"]:
-                raise ValueError("Response does not contain serial attribute try name")
-            serial = meter_data["inverters"][pvinverternumber]["serial"]
+            elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
+                if not meter_data["inverters"][pvinverternumber]["serial"]:
+                    raise ValueError("Response does not contain serial attribute try name")
+                serial = meter_data["inverters"][pvinverternumber]["serial"]
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             serial = self.serial
