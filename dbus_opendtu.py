@@ -55,11 +55,6 @@ def get_DbusServices(config):
         logging.warning("NumberOfTemplates not set, using default")
         number_of_templates = 0
 
-    # If there are no inverters or templates, return an empty list
-    if number_of_inverters == 0 and number_of_templates == 0:
-        logging.critical("No inverters or templates to query")
-        return services
-
     try:
         dtuvariant = config["DEFAULT"]["DTU"]
     except KeyError:
@@ -80,6 +75,11 @@ def get_DbusServices(config):
         if number_of_inverters == 0:
             # pylint: disable=W0621
             number_of_inverters = service.get_number_of_inverters()
+
+        # If there are no inverters or templates, return an empty list
+        if number_of_inverters == 0 and number_of_templates == 0:
+            logging.critical("No inverters or templates to query")
+            return []  # Empty list
 
         if number_of_inverters > 1:
             # start our main-service if there are more than 1 inverter
