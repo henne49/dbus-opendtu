@@ -191,8 +191,7 @@ class DbusService:
         if self.dtuvariant not in (constants.DTUVARIANT_OPENDTU, constants.DTUVARIANT_AHOY):
             raise ValueError(f"Error in config.ini: DTU must be one of \
                 {constants.DTUVARIANT_OPENDTU}, \
-                {constants.DTUVARIANT_AHOY}, \
-                {constants.DTUVARIANT_TEMPLATE}")
+                {constants.DTUVARIANT_AHOY}")
         self.deviceinstance = int(config[f"INVERTER{self.pvinverternumber}"]["DeviceInstance"])
         self.acposition = int(get_config_value(config, "AcPosition", "INVERTER", self.pvinverternumber))
         self.useyieldday = int(get_config_value(config, "useYieldDay", "DEFAULT", "", 0))
@@ -309,10 +308,8 @@ class DbusService:
         meter_data = self._get_data()
         if self.dtuvariant == constants.DTUVARIANT_AHOY:
             numberofinverters = len(meter_data["inverter"])
-        elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
+        else:  # Assuming the only other option is constants.DTUVARIANT_OPENDTU
             numberofinverters = len(meter_data["inverters"])
-        else:
-            numberofinverters = 1
         logging.info("Number of Inverters found: %s", numberofinverters)
         return numberofinverters
 
