@@ -159,7 +159,7 @@ class TestDbusOpendtu(unittest.TestCase):
         services = get_DbusServices(config)
 
         self.assertEqual(len(services), 0)
-        mock_dbus_service.assert_not_called()
+        mock_dbus_service.assert_called_once()  # called once to check if there are inverters
 
     @patch("dbus_opendtu.DbusService")
     def test_get_config_with_invalid_NumberOfInverter_and_Template_values(self, mock_dbus_service):
@@ -182,7 +182,7 @@ class TestDbusOpendtu(unittest.TestCase):
         services = get_DbusServices(config)
 
         self.assertEqual(len(services), 0)
-        mock_dbus_service.assert_not_called()
+        mock_dbus_service.assert_called_once()  # called once to check if there are inverters
 
     @patch('dbus_opendtu.DbusService')
     @patch('dbus_opendtu.get_config_value')
