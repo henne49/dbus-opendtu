@@ -10,7 +10,7 @@ if [ -d /service/$SERVICE_NAME ]; then
 fi 
 
 # end the dbus-opendtu process
-kill $(pgrep -f "python $SCRIPT_DIR/dbus-opendtu.py")
+kill $(pgrep -f "python $SCRIPT_DIR/dbus_opendtu.py")
 
 # delete old logs if they exist  
 if [ -f $SCRIPT_DIR/current.log ]; then  

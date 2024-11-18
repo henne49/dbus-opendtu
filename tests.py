@@ -158,7 +158,7 @@ def test_template_values(test_service):
 def run_tests():
     '''function to run tests'''
     test_get_value_by_path()
-    test_service = DbusService(servicename="testing", paths="dummy", actual_inverter=0)
+    test_service = DbusService(servicename="testing", actual_inverter=0)
     test_opendtu_reachable(test_service)
     test_opendtu_producing(test_service)
     test_ahoy_values(test_service)
