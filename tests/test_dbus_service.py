@@ -138,6 +138,35 @@ class TestDbusService(unittest.TestCase):
         # Assertions to verify the behavior
         self.assertEqual(service.dtuvariant, "ahoy")
 
+    config_for_test_if_number_of_inverters_are_set = {
+        "DEFAULT": {
+            "DTU": "ahoy",
+            "NumberOfInvertersToQuery": 0
+        },
+        "INVERTER0": {
+            "Phase": "L1",
+            "DeviceInstance": "34",
+            "AcPosition": "1",
+            "Host": "localhost",
+        },
+    }
+
+    @patch('dbus_service.DbusService._get_config', return_value=config_for_test_if_number_of_inverters_are_set)
+    @patch('dbus_service.dbus')
+    @patch('dbus_service.logging')
+    @patch('dbus_service.requests.get', side_effect=mocked_requests_get)
+    def test_if_number_of_inverters_are_set(self, mock__get_config, mock_dbus, mock_logging, mock_get):
+        """ Test fetch_url with custom responses for different URLs """
+
+        servicename = "com.victronenergy.pvinverter"
+        actual_inverter = 0
+        istemplate = False
+
+        service = DbusService(servicename, actual_inverter, istemplate)
+
+        self.assertEqual(service.dtuvariant, "ahoy")
+        self.assertEqual(service.get_number_of_inverters(), 2)
+
     template_config = {
         "DEFAULT": {
             "DTU": "ahoy",
