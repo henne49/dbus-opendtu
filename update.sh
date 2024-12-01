@@ -1,12 +1,12 @@
 # Set the repository name and username
 REPO="henne49/dbus-opendtu"
-
+STARTUP_FILE="/data/home/root/rc.local"
 #!/bin/bash
 
 # Check if the file exists
-if [ -f /data/rc.local ]; then
+if [ -f $STARTUP_FILE ]; then
   # Use grep to find lines containing install.sh and extract the full path
-  FOLDERS=$(grep 'install.sh' /data/rc.local | sed -r 's/^(.*)\/install\.sh/\1/')
+  FOLDERS=$(grep 'install.sh' $STARTUP_FILE | sed -r 's/bash //; s/install\.sh$//; s/\/$//')
 
   # If no folder is found, ask the user to enter one
   if [ $(echo "$FOLDERS" | wc -l) -eq 0 ]; then
@@ -48,7 +48,7 @@ fi
 
 if [ ! -d "$SCRIPT_DIR" ]; then
   read -p "The directory $SCRIPT_DIR does not exist. Do you want to create it? (yes/no) " answer
-  if [ "$answer" = "yes" ]; then
+  if [ "$answer" in ["yes","y"] ]; then
     mkdir -p "$SCRIPT_DIR"
     echo "Directory $SCRIPT_DIR created successfully."
     cd "$SCRIPT_DIR/"
@@ -131,7 +131,7 @@ else
     # If the installed version is the same as the version, print a message
     read -p "INSTALLED VERSION ($INSTALLED_VERSION) is the same as UPDATE VERSION ($VERSION). Do you want to continue? (yes/no) " response
 fi
-if [ "$response" != "yes" ]; then
+if [ "$response" !in ["yes","y"] ]; then
     # If the user doesn't want to continue, exit the script
     echo "Exiting..."
     exit 1
