@@ -60,8 +60,9 @@ After that call the `install.sh script.
 The following commands should do everything for you:
 
 ```bash
-wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
-unzip main.zip "dbus-opendtu-main/*" -d /data
+wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/tags/$(curl -s https://api.github.com/repos/henne49/dbus-opendtu/releases/latest | grep "tag_name" | cut -d '"' -f 4).zip
+mkdir temp_dir
+unzip main.zip -d temp_dir && find temp_dir -mindepth 1 -maxdepth 1 -type d -exec mv {} /data/dbus-opendtu-main/ \; && rmdir temp_dir
 mv /data/dbus-opendtu-main /data/dbus-opendtu
 chmod a+x /data/dbus-opendtu/*.sh
 ```
@@ -89,15 +90,17 @@ After that call the `install.sh script.
 
 ```bash
 cp /data/dbus-opendtu/config.ini /data/dbus-opendtu/config.backup
-wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
-unzip main.zip "dbus-opendtu-main/*" -d /data
+wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/tags/$(curl -s https://api.github.com/repos/henne49/dbus-opendtu/releases/latest | grep "tag_name" | cut -d '"' -f 4).zip
+mkdir temp_dir
+unzip main.zip -d temp_dir && find temp_dir -mindepth 1 -maxdepth 1 -type d -exec mv {} /data/dbus-opendtu-main/ \; && rmdir temp_dir
 cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
-rm -rf /data/dbus-opendtu-main/
+rm -r /data/dbus-opendtu-main/
 chmod a+x /data/dbus-opendtu/*.sh
 /data/dbus-opendtu/uninstall.sh
 /data/dbus-opendtu/install.sh
 /data/dbus-opendtu/restart.sh
 rm main.zip
+rm -r /data/dbus-opendtu-main/
 ```
 
 The last 4 step is to install the service and remove the downloaded files:
