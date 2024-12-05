@@ -94,7 +94,6 @@ wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/tags/$(cur
 mkdir temp_dir
 unzip main.zip -d temp_dir && find temp_dir -mindepth 1 -maxdepth 1 -type d -exec mv {} /data/dbus-opendtu-main/ \; && rmdir temp_dir
 cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
-rm -r /data/dbus-opendtu-main/
 chmod a+x /data/dbus-opendtu/*.sh
 /data/dbus-opendtu/uninstall.sh
 /data/dbus-opendtu/install.sh
