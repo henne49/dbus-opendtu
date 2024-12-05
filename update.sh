@@ -166,8 +166,9 @@ rm -rf $SCRIPT_DIR/$EXTRACT_FOLDER
 # Make all shell scripts executable
 chmod a+x $SCRIPT_DIR/*.sh
 
+#install the service
+$SCRIPT_DIR/install.sh
+
 #restart the service
 $SCRIPT_DIR/restart.sh
 
-#install the service
-$SCRIPT_DIR/install.sh
