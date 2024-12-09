@@ -92,7 +92,10 @@ After that call the `install.sh script.
 cp /data/dbus-opendtu/config.ini /data/dbus-opendtu/config.backup
 wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/tags/$(curl -s https://api.github.com/repos/henne49/dbus-opendtu/releases/latest | grep "tag_name" | cut -d '"' -f 4).zip
 mkdir temp_dir
-unzip main.zip -d temp_dir && find temp_dir -mindepth 1 -maxdepth 1 -type d -exec mv {} /data/dbus-opendtu-main/ \; && rmdir temp_dir
+set -e
+unzip main.zip -d temp_dir
+mv temp_dir/* /data/dbus-opendtu-main/
+rmdir temp_dir
 cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
 chmod a+x /data/dbus-opendtu/*.sh
 /data/dbus-opendtu/uninstall.sh
