@@ -11,6 +11,24 @@ import time
 import logging
 
 
+# region formatting helping functions (used in constant)
+def _kwh(_p, value: float) -> str:
+    return f"{value:.2f}KWh"
+
+
+def _a(_p, value: float) -> str:
+    return f"{value:.1f}A"
+
+
+def _w(_p, value: float) -> str:
+    return f"{value:.1f}W"
+
+
+def _v(_p, value: float) -> str:
+    return f"{value:.1f}V"
+# endregion
+
+
 def get_config_value(config, name, inverter_or_template, inverter_or_tpl_number, defaultvalue=None):
     '''check if config value exist in current inverter/template's section, otherwise throw error'''
     if name in config[f"{inverter_or_template}{inverter_or_tpl_number}"]:

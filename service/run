@@ -9,4 +9,4 @@ if [ -f "$FILENAME" ]; then
     #If the file exists, print its contents to stdout
     cat "$FILENAME"
 fi
-python $(realpath $SCRIPT_DIR/../dbus-opendtu.py)
+python $(realpath $SCRIPT_DIR/../dbus_opendtu.py)
