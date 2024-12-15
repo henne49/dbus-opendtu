@@ -1,6 +1,6 @@
 # Set the repository name and username
 REPO="henne49/dbus-opendtu"
-STARTUP_FILE="/data/home/root/rc.local"
+STARTUP_FILE="/data/rc.local"
 #!/bin/bash
 
 # Check if the file exists
