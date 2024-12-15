@@ -14,6 +14,15 @@ if [ -f $SCRIPT_DIR/current.log ]; then
     rm $SCRIPT_DIR/current.log*  
 fi 
 
+# check if version.txt exists and is larger than 2.0.0
+if [ -f $SCRIPT_DIR/version.txt ] && 
+    ( [ "$(grep -o 'Version: [^ ]*' version.txt | cut -d' ' -f2)" = "2.0.0" ] || 
+    [ "$(grep -o 'Version: [^ ]*' version.txt | cut -d' ' -f2)" \> "2.0.0" ] ); then
+    # delete old dbus-opendtu.py file
+    if [ -f $SCRIPT_DIR/dbus-opendtu.py ]; then  
+        rm $SCRIPT_DIR/dbus-opendtu.py 
+    fi 
+fi
 
 # set permissions for script files
 chmod a+x $SCRIPT_DIR/restart.sh

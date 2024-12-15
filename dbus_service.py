@@ -112,7 +112,7 @@ class DbusService:
         self._dbusservice.add_path("/Connected", 1)
 
         self._dbusservice.add_path("/Latency", None)
-        self._dbusservice.add_path("/FirmwareVersion", 0.1)
+        self._dbusservice.add_path("/FirmwareVersion", read_version('version.txt'))
         self._dbusservice.add_path("/HardwareVersion", 0)
         self._dbusservice.add_path("/Position", self.acposition)  # normaly only needed for pvinverter
         self._dbusservice.add_path("/Serial", self._get_serial(self.pvinverternumber))
