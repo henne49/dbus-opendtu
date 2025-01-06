@@ -94,7 +94,7 @@ class DbusService:
             else dbus.SystemBus(private=True)
         )
 
-        self._dbusservice = VeDbusService(f"{servicename}.http_{self.deviceinstance}", dbus_conn)
+        self._dbusservice = VeDbusService(f"{servicename}.http_{self.deviceinstance}", bus=dbus_conn, register=False)
         self._paths = constants.VICTRON_PATHS
 
         # Create the management objects, as specified in the ccgx dbus-api document
@@ -143,6 +143,8 @@ class DbusService:
                 writeable=True,
                 onchangecallback=self._handlechangedvalue,
             )
+        
+        self._dbusservice.register()
 
         self.polling_interval = self._get_polling_interval()
         self.last_polling = 0

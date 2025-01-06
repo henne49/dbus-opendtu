@@ -73,8 +73,9 @@ class TestDbusOpendtu(unittest.TestCase):
             "DTU=some_dtu"
         )
     )
+    @patch("os.path.exists", return_value=True)
     @patch("os.path.realpath")
-    def test_get_config(self, mock_realpath, mock_open):  # pylint: disable=W0613
+    def test_get_config(self, mock_realpath, mock_exists, mock_open):  # pylint: disable=W0613
         """ Test the get_config function """
         # Mock the realpath to return a fixed path
         mock_realpath.return_value = "../config.example"
