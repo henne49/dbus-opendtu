@@ -16,7 +16,12 @@ def getConfig():
     """
     # configure logging
     config = configparser.ConfigParser()
-    config.read(f"{(os.path.dirname(os.path.realpath(__file__)))}/config.ini")
+    config_path = f"{os.path.dirname(os.path.realpath(__file__))}/config.ini"
+
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+
+    config.read(config_path)
     logging_level = config["DEFAULT"]["Logging"].upper()
 
     logging.basicConfig(
