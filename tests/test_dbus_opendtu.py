@@ -38,7 +38,6 @@ class TestDbusOpendtu(unittest.TestCase):
         config = {
             "DEFAULT": {
                 "NumberOfInvertersToQuery": "1",
-                "NumberOfTemplates": "0",
                 "DTU": "openDTU"
             },
             "INVERTER0": {
@@ -73,8 +72,9 @@ class TestDbusOpendtu(unittest.TestCase):
             "DTU=some_dtu"
         )
     )
+    @patch("os.path.exists", return_value=True)
     @patch("os.path.realpath")
-    def test_get_config(self, mock_realpath, mock_open):  # pylint: disable=W0613
+    def test_get_config(self, mock_realpath, mock_exists, mock_open):  # pylint: disable=W0613
         """ Test the get_config function """
         # Mock the realpath to return a fixed path
         mock_realpath.return_value = "../config.example"
@@ -374,21 +374,21 @@ class TestDbusOpendtu(unittest.TestCase):
         mock_sign_of_life_all_services.assert_called_once_with(mock_services)
         mock_gobject.MainLoop.assert_called_once()
 
-    @patch('dbus_opendtu.get_DbusServices')
     @patch('dbus_opendtu.gobject')
     @patch('dbus_opendtu.logging')
+    @patch('dbus_opendtu.get_DbusServices')
     def test_main_exception(
         self,
-        mock_logging,
         mock_gobject,
+        mock_logging,
         mock_get_dbus_services,  # pylint: disable=W0613
     ):
         """ Test the main function with exception """
-        # Mock gobject.MainLoop to raise an exception
-        mock_gobject.MainLoop.side_effect = Exception("Test exception")
 
-        main()
-        mock_logging.critical.assert_called_once_with("Error at %s", "main",  exc_info=ANY)
+        mock_get_dbus_services.side_effect = FileNotFoundError
+
+        with self.assertRaises(FileNotFoundError):
+            main()
 
 
 if __name__ == '__main__':

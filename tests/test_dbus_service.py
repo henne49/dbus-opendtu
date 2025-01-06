@@ -91,6 +91,11 @@ def mocked_requests_get(url, params=None, **kwargs):  # pylint: disable=unused-a
         with open(json_file_path, 'r', encoding="UTF-8") as file:
             json_data = json.load(file)
         return MockResponse(json_data, 200)
+    elif url == 'http://localhost/api/livedata/status':
+        json_file_path = os.path.join(os.path.dirname(__file__), '../docs/opendtu_v24.2.12_livedata_status.json')
+        with open(json_file_path, 'r', encoding="UTF-8") as file:
+            json_data = json.load(file)
+        return MockResponse(json_data, 200)
     return MockResponse(None, 404)
 
 
@@ -141,7 +146,6 @@ class TestDbusService(unittest.TestCase):
     config_for_test_if_number_of_inverters_are_set = {
         "DEFAULT": {
             "DTU": "ahoy",
-            "NumberOfInvertersToQuery": 0
         },
         "INVERTER0": {
             "Phase": "L1",
@@ -165,6 +169,34 @@ class TestDbusService(unittest.TestCase):
         service = DbusService(servicename, actual_inverter, istemplate)
 
         self.assertEqual(service.dtuvariant, "ahoy")
+        self.assertEqual(service.get_number_of_inverters(), 2)
+
+    config_for_test_if_number_of_inverters_are_set_opendtu = {
+        "DEFAULT": {
+            "DTU": "opendtu",
+        },
+        "INVERTER0": {
+            "Phase": "L1",
+            "DeviceInstance": "34",
+            "AcPosition": "1",
+            "Host": "localhost",
+        },
+    }
+
+    @patch('dbus_service.DbusService._get_config', return_value=config_for_test_if_number_of_inverters_are_set_opendtu)
+    @patch('dbus_service.dbus')
+    @patch('dbus_service.logging')
+    @patch('dbus_service.requests.get', side_effect=mocked_requests_get)
+    def test_if_number_of_inverters_are_set_opendtu(self, mock__get_config, mock_dbus, mock_logging, mock_get):
+        """ Test fetch_url with custom responses for different URLs """
+
+        servicename = "com.victronenergy.pvinverter"
+        actual_inverter = 0
+        istemplate = False
+
+        service = DbusService(servicename, actual_inverter, istemplate)
+
+        self.assertEqual(service.dtuvariant, "opendtu")
         self.assertEqual(service.get_number_of_inverters(), 2)
 
     template_config = {
