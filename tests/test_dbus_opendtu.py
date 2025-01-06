@@ -38,7 +38,6 @@ class TestDbusOpendtu(unittest.TestCase):
         config = {
             "DEFAULT": {
                 "NumberOfInvertersToQuery": "1",
-                "NumberOfTemplates": "0",
                 "DTU": "openDTU"
             },
             "INVERTER0": {
