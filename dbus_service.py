@@ -202,6 +202,7 @@ class DbusService:
         self.username = get_config_value(config, "Username", "DEFAULT", "", self.pvinverternumber)
         self.password = get_config_value(config, "Password", "DEFAULT", "", self.pvinverternumber)
         self.digestauth = is_true(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, False))
+        self.uselegacypath= int(get_config_value(config, "useLegacyPaths", "DEFAULT", "", 0))
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MaxAgeTsLastSuccess"])
@@ -239,6 +240,7 @@ class DbusService:
         self.useyieldday = int(get_config_value(config, "useYieldDay", "DEFAULT", "", 0))
         self.pvinverterphase = str(config[f"TEMPLATE{template_number}"]["Phase"])
         self.digestauth = is_true(get_config_value(config, "DigestAuth", "TEMPLATE", template_number, False))
+        self.uselegacypath= int(get_config_value(config, "useLegacyPaths", "DEFAULT", "", 0))
 
         try:
             self.custcurrent = config[f"TEMPLATE{template_number}"]["CUST_Current"].split("/")
@@ -730,6 +732,11 @@ class DbusService:
                 if power > 0:
                     self._dbusservice[pre + "/Energy/Forward"] = pvyield
                     self._dbusservice["/Ac/Energy/Forward"] = pvyield
+
+            #deprecated but used for display
+            if self.uselegacypath:
+                self._dbusservice["/Ac/Voltage"] = voltage
+                self._dbusservice["/Ac/Current"] = current
 
             logging.debug(f"Inverter #{self.pvinverternumber} Power (/Ac/Power): {power}")
             logging.debug(f"Inverter #{self.pvinverternumber} Energy (/Ac/Energy/Forward): {pvyield}")

@@ -31,4 +31,6 @@ VICTRON_PATHS = {
     "/Ac/Out/L1/V": {"initial": None, "textformat": _v},
     "/Ac/Out/L1/P": {"initial": None, "textformat": _w},
     "/Dc/0/Voltage": {"initial": None, "textformat": _v},
+    "/Ac/Voltage": {"initial": None, "textformat": _v},
+    "/Ac/Current": {"initial": None, "textformat": _a},
 }

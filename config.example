@@ -16,6 +16,9 @@ NumberOfInvertersToQuery = 0
 # send YieldDay instead of YieldTotal
 useYieldDay=0
 
+# use legacy path in dbus, which should be deprecated according to https://github.com/victronenergy/venus/wiki/dbus#pv-inverters
+useLegacyPaths=0
+
 #For ESP8266 reduce polling intervall to reduce load
 ESP8266PollingIntervall=10000
 
