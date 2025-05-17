@@ -27,6 +27,9 @@ Logging=ERROR
 # Set this to < 0 to disable this check.
 MaxAgeTsLastSuccess=600
 
+# If AhoyDTU/OpenDTU is not reachable try to reconnect after x minutes
+ReconnectAfter=2
+
 # if this is not 0, then no values are actually sent via dbus to vrm/venus.
 DryRun=0
 

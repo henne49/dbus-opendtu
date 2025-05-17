@@ -78,6 +78,7 @@ class DbusService:
         self.esptype = None
         self.meter_data = None
         self.dtuvariant = None
+        self.failed_update_count = 0
 
         if not istemplate:
             self._read_config_dtu(actual_inverter)
@@ -202,6 +203,7 @@ class DbusService:
         self.username = get_config_value(config, "Username", "DEFAULT", "", self.pvinverternumber)
         self.password = get_config_value(config, "Password", "DEFAULT", "", self.pvinverternumber)
         self.digestauth = is_true(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, False))
+        self.reconnectAfter = int(get_config_value(config, "ReconnectAfter", "DEFAULT", "", 5) * 60)  # in seconds
 
         try:
             self.max_age_ts = int(config["DEFAULT"]["MaxAgeTsLastSuccess"])
@@ -560,29 +562,30 @@ class DbusService:
         """
         logging.debug("_update")
         successful = False
+        now = time.time()
         try:
-            # update data from DTU once per _update call:
-            self._refresh_data()
-
-            if self.is_data_up2date():
-                if self.dry_run:
-                    logging.info("DRY RUN. No data is sent!!")
-                else:
-                    self.set_dbus_values()
-            self._update_index()
-            successful = True
+            if self.failed_update_count >= 3:
+                if (now - self._last_update) <= self.reconnectAfter:
+                    logging.debug("Waiting for reconnect time after 3 failed attempts")
+                    return
+            if self.last_update_successful or (now - self._last_update) >= self.reconnectAfter or self.failed_update_count < 3:
+                self._refresh_data()
+                if self.is_data_up2date():
+                    if self.dry_run:
+                        logging.info("DRY RUN. No data is sent!!")
+                    else:
+                        self.set_dbus_values()
+                self._update_index()
+                successful = True
         except requests.exceptions.RequestException as exception:
-            if self.last_update_successful:
-                logging.warning(f"HTTP Error at _update for inverter "
-                                f"{self.pvinverternumber} ({self._get_name()}): {str(exception)}")
+            logging.warning(f"HTTP Error at _update for inverter "
+                            f"{self.pvinverternumber} ({self._get_name()}): {str(exception)}")
         except ValueError as error:
-            if self.last_update_successful:
-                logging.warning(f"Error at _update for inverter "
-                                f"{self.pvinverternumber} ({self._get_name()}): {str(error)}")
+            logging.warning(f"Error at _update for inverter "
+                            f"{self.pvinverternumber} ({self._get_name()}): {str(error)}")
         except Exception as error:  # pylint: disable=broad-except
-            if self.last_update_successful:
-                logging.warning(f"Error at _update for inverter "
-                                f"{self.pvinverternumber} ({self._get_name()})", exc_info=error)
+            logging.warning(f"Error at _update for inverter "
+                            f"{self.pvinverternumber} ({self._get_name()})", exc_info=error)
         finally:
             if successful:
                 if not self.last_update_successful:
@@ -591,9 +594,11 @@ class DbusService:
                         f"Successfully fetched data now: "
                         f"{'NOT (yet?)' if not self.is_data_up2date() else 'Is'} up-to-date"
                     )
-                    self.last_update_successful = True
+                self.last_update_successful = True
+                self.failed_update_count = 0  # Reset bei Erfolg
             else:
                 self.last_update_successful = False
+                self.failed_update_count += 1  # Erhöhe bei Fehlschlag
 
     def _update_index(self):
         if self.dry_run:
