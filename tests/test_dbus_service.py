@@ -1,7 +1,8 @@
 ''' This file contains the unit tests for the DbusService class. '''
 
+import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 import os
 import json
 import requests
@@ -225,9 +226,9 @@ class TestDbusService(unittest.TestCase):
         }
     }
 
-    @ patch('dbus_service.DbusService._get_config', return_value=template_config)
-    @ patch('dbus_service.dbus')
-    @ patch('dbus_service.logging')
+    @patch('dbus_service.DbusService._get_config', return_value=template_config)
+    @patch('dbus_service.dbus')
+    @patch('dbus_service.logging')
     @patch('dbus_service.requests.get', side_effect=mocked_requests_get)
     def test_init_template(self,  mock__get_config, mock_dbus,  mock_logging, mock_get):
         # Test the initialization with template servicename
@@ -241,6 +242,71 @@ class TestDbusService(unittest.TestCase):
         self.assertEqual(service.pvinverternumber, actual_inverter)
         self.assertFalse(service.last_update_successful)
         self.assertIsNotNone(service._dbusservice)
+
+
+class ReconnectLogicTest(unittest.TestCase):
+    def setUp(self):
+        # Minimale Konfiguration für DbusService
+        config = {
+            "DEFAULT": {"DTU": "ahoy", "ReconnectAfter": "10"},
+            "INVERTER0": {"Phase": "L1", "DeviceInstance": "34", "AcPosition": "1", "Host": "localhost"},
+        }
+        with patch('dbus_service.DbusService._get_config', return_value=config), \
+                patch('dbus_service.dbus'), \
+                patch('dbus_service.logging'), \
+                patch('dbus_service.requests.get', side_effect=mocked_requests_get):
+            self.service = DbusService("com.victronenergy.pvinverter", 0, False)
+        self.service._refresh_data = MagicMock()
+        self.service.is_data_up2date = MagicMock(return_value=False)
+        self.service.set_dbus_values = MagicMock()
+        self.service._update_index = MagicMock()
+        self.service.dry_run = True
+        self.service.reconnectAfter = 300  # seconds
+        self.service._last_update = time.time() - 100
+
+    def test_failed_update_count_increments(self):
+        # Simuliere 3 Fehlschläge durch Exception in _refresh_data
+        self.service._refresh_data.side_effect = requests.exceptions.RequestException("Test exception")
+        for _ in range(3):
+            self.service.last_update_successful = False
+            self.service.update()
+        self.assertEqual(self.service.failed_update_count, 3)
+        # Reset side effect für andere Tests
+        self.service._refresh_data.side_effect = None
+
+    def test_reconnect_pause_after_3_failures(self):
+        self.service.failed_update_count = 3
+        self.service.last_update_successful = False
+        self.service._last_update = time.time() - (4 * 60)  # reconnectAfter = 5
+        self.service._refresh_data.reset_mock()
+        self.service.update()
+        self.service._refresh_data.assert_not_called()
+
+    def test_update_allowed_after_reconnect_pause(self):
+        self.service.failed_update_count = 3
+        self.service.last_update_successful = False
+        self.service._last_update = time.time() - 10 * 60  # reconnectAfter = 5
+        self.service._refresh_data.reset_mock()
+        self.service.update()
+        # Jetzt darf ein neuer Versuch gemacht werden
+        self.service._refresh_data.assert_called_once()
+
+    def test_failed_update_count_reset_on_success(self):
+        self.service.failed_update_count = 3
+        self.service.last_update_successful = True
+        self.service._last_update = time.time() - 10 * 60  # reconnectAfter = 5
+        self.service.is_data_up2date = MagicMock(return_value=True)
+        self.service.update()
+        self.assertEqual(self.service.failed_update_count, 0)
+
+    def test_reconnect_pause_not_applied_before_3_failures(self):
+        self.service.failed_update_count = 2
+        self.service.last_update_successful = False
+        self.service._last_update = time.time()
+        self.service._refresh_data.reset_mock()
+        self.service.update()
+        # Es darf trotzdem ein Versuch gemacht werden
+        self.service._refresh_data.assert_called_once()
 
 
 if __name__ == '__main__':
