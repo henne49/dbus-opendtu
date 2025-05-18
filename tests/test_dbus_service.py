@@ -132,6 +132,7 @@ class TestDbusService(unittest.TestCase):
     def test_init_non_template(self, mock__get_config, mock_dbus, mock_logging, mock_get):
         """ Test fetch_url with custom responses for different URLs """
 
+        DbusService._meter_data = None
         servicename = "com.victronenergy.pvinverter"
         actual_inverter = 0
         istemplate = False
@@ -191,6 +192,7 @@ class TestDbusService(unittest.TestCase):
     def test_if_number_of_inverters_are_set_opendtu(self, mock__get_config, mock_dbus, mock_logging, mock_get):
         """ Test fetch_url with custom responses for different URLs """
 
+        DbusService._meter_data = None
         servicename = "com.victronenergy.pvinverter"
         actual_inverter = 0
         istemplate = False
@@ -246,7 +248,6 @@ class TestDbusService(unittest.TestCase):
 
 class ReconnectLogicTest(unittest.TestCase):
     def setUp(self):
-        # Minimale Konfiguration für DbusService
         config = {
             "DEFAULT": {"DTU": "ahoy", "ReconnectAfter": "10"},
             "INVERTER0": {"Phase": "L1", "DeviceInstance": "34", "AcPosition": "1", "Host": "localhost"},
@@ -265,13 +266,11 @@ class ReconnectLogicTest(unittest.TestCase):
         self.service._last_update = time.time() - 100
 
     def test_failed_update_count_increments(self):
-        # Simuliere 3 Fehlschläge durch Exception in _refresh_data
         self.service._refresh_data.side_effect = requests.exceptions.RequestException("Test exception")
         for _ in range(3):
             self.service.last_update_successful = False
             self.service.update()
         self.assertEqual(self.service.failed_update_count, 3)
-        # Reset side effect für andere Tests
         self.service._refresh_data.side_effect = None
 
     def test_reconnect_pause_after_3_failures(self):
@@ -288,7 +287,6 @@ class ReconnectLogicTest(unittest.TestCase):
         self.service._last_update = time.time() - 10 * 60  # reconnectAfter = 5
         self.service._refresh_data.reset_mock()
         self.service.update()
-        # Jetzt darf ein neuer Versuch gemacht werden
         self.service._refresh_data.assert_called_once()
 
     def test_failed_update_count_reset_on_success(self):
@@ -305,7 +303,6 @@ class ReconnectLogicTest(unittest.TestCase):
         self.service._last_update = time.time()
         self.service._refresh_data.reset_mock()
         self.service.update()
-        # Es darf trotzdem ein Versuch gemacht werden
         self.service._refresh_data.assert_called_once()
 
 
