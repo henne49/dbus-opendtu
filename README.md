@@ -122,12 +122,13 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 | useYieldDay | send YieldDay instead of YieldTotal. Set this to 1 to prevent VRM from adding the total value to the history on one day. E.g. if you don't start using the inverter at 0. |
 | ESP8266PollingIntervall |  For ESP8266 reduce polling intervall to reduce load, default 10000ms|
 | Logging | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL |
- MaxAgeTsLastSuccess | Maximum accepted age of ts_last_success in Ahoy status message. If ts_last_success is older than this number of seconds, values are not used.  Set this to < 0 to disable this check.                                    |
+| MaxAgeTsLastSuccess | Maximum accepted age of ts_last_success in Ahoy status message. If ts_last_success is older than this number of seconds, values are not used.  Set this to < 0 to disable this check.                                    |
 | DryRun | Set this to a value different to "0" to prevent values from being sent. Use this for debugging or experiments. |
 | Host | IP or hostname of ahoy or OpenDTU API/web-interface |
 | HTTPTimeout | Timeout when doing the HTTP request to the DTU or template. Default: 2.5 sec |
 | Username | use if authentication required, leave empty if no authentication needed |
 | Password | use if authentication required, leave empty if no authentication needed |
+| MinRetriesUntilFail | Minimum number of consecutive update failures before entering error state (StatusCode=10, zero values). Default is 3. |
 
 *1: Please assure that the order is correct in the DTU, we can only extract the first one in a row.
 

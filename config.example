@@ -27,8 +27,8 @@ Logging=ERROR
 # Set this to < 0 to disable this check.
 MaxAgeTsLastSuccess=600
 
-# If AhoyDTU/OpenDTU is not reachable try to reconnect after x minutes
-ReconnectAfter=2
+# If AhoyDTU/OpenDTU is not reachable, try to reconnect after this many seconds Default is 120.
+RetryAfterSeconds=120
 
 # if this is not 0, then no values are actually sent via dbus to vrm/venus.
 DryRun=0
@@ -41,6 +41,9 @@ HTTPTimeout=2.5
 # Username/Password leave empty if no authentication is required
 Username =
 Password =
+
+# Minimum number of consecutive update failures before entering error state (StatusCode=10, zero values). Default is 3.
+MinRetriesUntilFail=3
 
 ### Only needed for OpenDTU and ahoy
 # Phase: Either L1, L2, L3 or 3P for 3 phase HMT series, if unsure use L1 

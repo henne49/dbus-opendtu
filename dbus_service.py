@@ -80,6 +80,7 @@ class DbusService:
         self.dtuvariant = None
         self.failed_update_count = 0
         self.statuscode_set_on_reconnect = False
+        self.min_retries_until_fail = 3  # Default value, can be overridden by config
 
         if not istemplate:
             self._read_config_dtu(actual_inverter)
@@ -204,8 +205,7 @@ class DbusService:
         self.username = get_config_value(config, "Username", "DEFAULT", "", self.pvinverternumber)
         self.password = get_config_value(config, "Password", "DEFAULT", "", self.pvinverternumber)
         self.digestauth = is_true(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, False))
-        self.reconnectAfter = int(get_config_value(config, "ReconnectAfter", "DEFAULT", "", 5) * 60)  # in seconds
-
+        self.retryAfterSeconds = int(get_config_value(config, "RetryAfterSeconds", "DEFAULT", "", 300))
         try:
             self.max_age_ts = int(config["DEFAULT"]["MaxAgeTsLastSuccess"])
         except (KeyError, ValueError) as ex:
@@ -217,6 +217,12 @@ class DbusService:
         self.pollinginterval = int(get_config_value(config, "ESP8266PollingIntervall", "DEFAULT", "", 10000))
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
+
+        # Load min_retries_until_fail from config, default to 3
+        try:
+            self.min_retries_until_fail = int(get_default_config(config, "MinRetriesUntilFail", 3))
+        except Exception:
+            self.min_retries_until_fail = 3
 
     def _read_config_template(self, template_number):
         config = self._get_config()
@@ -548,9 +554,9 @@ class DbusService:
 
         Main logic:
         - Handles reconnect logic after repeated failures, including setting error codes and zeroing values.
-        - On the first reconnect error (after 3 failed updates), sets StatusCode to 10 and sets voltage, current, and power values to 0 (only once per error event).
+        - On the first reconnect error (after min_retries_until_fail failed updates), sets StatusCode to 10 and sets voltage, current, and power values to 0 (only once per error event).
         - After a successful update following a reconnect error, sets StatusCode back to 7 (only once per recovery event).
-        - Otherwise, fetches new data, checks if it is up-to-date, and updates DBus values and index as needed.
+        - Otherwise (if no error occured, we're in normal operation mode), fetches new data, checks if it is up-to-date, and updates DBus values and index as needed.
         - Increments or resets the failed_update_count and manages reconnect timing.
 
         Exception handling:
@@ -563,24 +569,13 @@ class DbusService:
         successful = False
         now = time.time()
         try:
-            if self.failed_update_count >= 3:
-                if (now - self._last_update) <= self.reconnectAfter:
-                    # Waiting for reconnect time after 3 failed attempts
-                    if not self.statuscode_set_on_reconnect:
-                        self._dbusservice["/StatusCode"] = 10
-                        if self._servicename == "com.victronenergy.inverter":
-                            self._dbusservice["/Ac/Out/L1/V"] = 0
-                            self._dbusservice["/Ac/Out/L1/I"] = 0
-                            self._dbusservice["/Ac/Out/L1/P"] = 0
-                            self._dbusservice["/Dc/0/Voltage"] = 0
-                            self._dbusservice["/Ac/Power"] = 0
-                            self._dbusservice["/Ac/L1/Current"] = 0
-                            self._dbusservice["/Ac/L1/Energy/Forward"] = 0
-                            self._dbusservice["/Ac/L1/Power"] = 0
-                            self._dbusservice["/Ac/L1/Voltage"] = 0
-                        self.statuscode_set_on_reconnect = True
-                    return
-            if self.last_update_successful or (now - self._last_update) >= self.reconnectAfter or self.failed_update_count < 3:
+            if self.failed_update_count >= self.min_retries_until_fail and (now - self._last_update) <= self.retryAfterSeconds:
+                # Waiting for reconnect time after min_retries_until_fail failed attempts
+                if not self.statuscode_set_on_reconnect:
+                    self.set_dbus_values_to_zero()
+                    self.statuscode_set_on_reconnect = True
+                return
+            if self.last_update_successful or (now - self._last_update) >= self.retryAfterSeconds or self.failed_update_count < self.min_retries_until_fail:
                 self._refresh_data()
                 if self.is_data_up2date():
                     if self.dry_run:
@@ -677,12 +672,50 @@ class DbusService:
 
         return (power, pvyield, current, voltage, dc_voltage)
 
+    def set_dbus_values_to_zero(self):
+        '''zero power data and cleat connection status and set dbus values'''
+
+        if self._servicename == "com.victronenergy.inverter":
+            # see https://github.com/victronenergy/venus/wiki/dbus#inverter
+            self._dbusservice["/Ac/Out/L1/V"] = 0
+            self._dbusservice["/Ac/Out/L1/I"] = 0
+            self._dbusservice["/Ac/Out/L1/P"] = 0
+            self._dbusservice["/Dc/0/Voltage"] = 0
+            self._dbusservice["/Ac/Power"] = 0
+
+            self._dbusservice["/Ac/L1/Current"] = 0
+            self._dbusservice["/Ac/L1/Power"] = 0
+            self._dbusservice["/Ac/L1/Voltage"] = 0
+        else:
+            # 0=Startup 0; 1=Startup 1; 2=Startup 2; 3=Startup 3; 4=Startup 4; 5=Startup 5; 6=Startup 6; 7=Running; 8=Standby; 9=Boot loading; 10=Error
+            self._dbusservice["/StatusCode"] = 10
+
+            # three-phase inverter: split total power equally over all three phases
+            if "3P" == self.pvinverterphase:
+
+                self._dbusservice["/Ac/L1/Voltage"] = 0
+                self._dbusservice["/Ac/L1/Current"] = 0
+                self._dbusservice["/Ac/L1/Power"] = 0
+                self._dbusservice["/Ac/L2/Voltage"] = 0
+                self._dbusservice["/Ac/L2/Current"] = 0
+                self._dbusservice["/Ac/L2/Power"] = 0
+                self._dbusservice["/Ac/L3/Voltage"] = 0
+                self._dbusservice["/Ac/L3/Current"] = 0
+                self._dbusservice["/Ac/L3/Power"] = 0
+                self._dbusservice["/Ac/Power"] = 0
+
+            else:
+                pre = "/Ac/" + self.pvinverterphase
+                self._dbusservice[pre + "/Voltage"] = 0
+                self._dbusservice[pre + "/Current"] = 0
+                self._dbusservice[pre + "/Power"] = 0
+                self._dbusservice["/Ac/Power"] = 0
+
     def set_dbus_values(self):
         '''read data and set dbus values'''
         (power, pvyield, current, voltage, dc_voltage) = self.get_values_for_inverter()
         state = self.get_ac_inverter_state(current)
 
-        # This will be refactored later in classes
         if self._servicename == "com.victronenergy.inverter":
             # see https://github.com/victronenergy/venus/wiki/dbus#inverter
             self._dbusservice["/Ac/Out/L1/V"] = voltage

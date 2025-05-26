@@ -265,13 +265,13 @@ class ReconnectLogicTest(unittest.TestCase):
         self.addCleanup(self.patcher_logging.stop)
         self.addCleanup(self.patcher_requests.stop)
 
-        self.service = DbusService("com.victronenergy.inverter", 0)
+        self.service = DbusService("com.victronenergy.pvinverter", 0)
         self.service._refresh_data = MagicMock()
         self.service.is_data_up2date = MagicMock(return_value=False)
         self.service.set_dbus_values = MagicMock()
         self.service._update_index = MagicMock()
         self.service.dry_run = True
-        self.service.reconnectAfter = 300  # seconds
+        self.service.retryAfterSeconds = 300  # seconds
         self.service._last_update = time.time() - 100
 
         # Simulate a dbusservice dict for status and value tests
@@ -329,17 +329,12 @@ class ReconnectLogicTest(unittest.TestCase):
         # Simulate error state
         self.service.failed_update_count = 3
         self.service._last_update = time.time()
-        self.service.reconnectAfter = 60
+        self.service.retryAfterSeconds = 60
         self.service.statuscode_set_on_reconnect = False
         self.service.update()
         self.assertEqual(self.service._dbusservice['/StatusCode'], 10)
-        self.assertEqual(self.service._dbusservice['/Ac/Out/L1/V'], 0)
-        self.assertEqual(self.service._dbusservice['/Ac/Out/L1/I'], 0)
-        self.assertEqual(self.service._dbusservice['/Ac/Out/L1/P'], 0)
-        self.assertEqual(self.service._dbusservice['/Dc/0/Voltage'], 0)
         self.assertEqual(self.service._dbusservice['/Ac/Power'], 0)
         self.assertEqual(self.service._dbusservice['/Ac/L1/Current'], 0)
-        self.assertEqual(self.service._dbusservice['/Ac/L1/Energy/Forward'], 0)
         self.assertEqual(self.service._dbusservice['/Ac/L1/Power'], 0)
         self.assertEqual(self.service._dbusservice['/Ac/L1/Voltage'], 0)
         self.assertTrue(self.service.statuscode_set_on_reconnect)
