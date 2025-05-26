@@ -129,6 +129,7 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 | Username | use if authentication required, leave empty if no authentication needed |
 | Password | use if authentication required, leave empty if no authentication needed |
 | MinRetriesUntilFail | Minimum number of consecutive update failures before entering error state (StatusCode=10, zero values). Default is 3. |
+| RetryAfterSeconds | If AhoyDTU/OpenDTU is not reachable, try to reconnect after this many seconds. Default is 120. |
 
 *1: Please assure that the order is correct in the DTU, we can only extract the first one in a row.
 
