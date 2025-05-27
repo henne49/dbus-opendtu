@@ -33,7 +33,7 @@ RetryAfterSeconds=120
 # Minimum number of consecutive update failures before entering error state (StatusCode=10, zero values). Default is 3.
 MinRetriesUntilFail=3
 
-# Fehlerbehandlungsmodus: "retrycount" (Standard, wie bisher) oder "timeout" (nach Zeitspanne)
+# Error handling mode: "retrycount" (default, as before) or "timeout" (after a time period)
 ErrorMode=retrycount
 
 # Für "retrycount"-Modus:
