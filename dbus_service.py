@@ -224,6 +224,16 @@ class DbusService:
         except Exception:
             self.min_retries_until_fail = 3
 
+        # Error handling logic: mode and time interval from config
+        try:
+            self.error_mode = config["DEFAULT"].get("ErrorMode", "retrycount").strip()
+        except Exception:
+            self.error_mode = "retrycount"
+        try:
+            self.error_state_after_seconds = int(config["DEFAULT"].get("ErrorStateAfterSeconds", 0))
+        except Exception:
+            self.error_state_after_seconds = 0
+
     def _read_config_template(self, template_number):
         config = self._get_config()
         self.pvinverternumber = template_number
@@ -276,6 +286,16 @@ class DbusService:
         self.dry_run = is_true(get_default_config(config, "DryRun", False))
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
+
+        # Error handling logic: mode and time interval from config
+        try:
+            self.error_mode = config["DEFAULT"].get("ErrorMode", "retrycount").strip()
+        except Exception:
+            self.error_mode = "retrycount"
+        try:
+            self.error_state_after_seconds = int(config["DEFAULT"].get("ErrorStateAfterSeconds", 0))
+        except Exception:
+            self.error_state_after_seconds = 0
 
     # get the Serialnumber
     def _get_serial(self, pvinverternumber):
@@ -548,14 +568,23 @@ class DbusService:
                      self.pvinverternumber, self._dbusservice["/Ac/Power"])
         return True
 
+    def _refresh_and_update(self):
+        """
+        Helper method to refresh data, handle data update if up-to-date, update index, and set successful flag.
+        """
+        self._refresh_data()
+        if self.is_data_up2date():
+            self._handle_data_update()
+        self._update_index()
+        return True
+
     def update(self):
         """
         Updates inverter data from the DTU (Data Transfer Unit) and sets DBus values if the data is up-to-date.
 
         Main logic:
-        - If repeated failures occurred, waits before retrying and sets error codes/zero values as needed.
-        - If a refresh is due (normal operation or after wait), fetches new data.
-        - If data is up-to-date, updates DBus values.
+        - In timeout mode: Always attempt reconnect every RetryAfterSeconds. Only set zero values after ErrorStateAfterSeconds has elapsed since last success.
+        - In retrycount mode: After min_retries_until_fail failures, wait RetryAfterSeconds before next attempt and set zero values immediately.
         - Always updates the DBus update index after a refresh.
         - Tracks success/failure state and manages reconnect timing.
 
@@ -570,19 +599,26 @@ class DbusService:
         successful = False
         now = time.time()
         try:
-            # Handle reconnect wait after repeated failures
-            if self.failed_update_count >= self.min_retries_until_fail and (now - self._last_update) <= self.retryAfterSeconds:
-                self._handle_reconnect_wait()
-                return
-
-            # If we should refresh data (normal operation or after wait)
-            if self._should_refresh_data(now):
-                self._refresh_data()
-                if self.is_data_up2date():
-                    self._handle_data_update()
-                self._update_index()
-                successful = True
-
+            if self.error_mode == "timeout" and self.error_state_after_seconds > 0:
+                # Set zero values only after ErrorStateAfterSeconds has elapsed since last success
+                if (not self.last_update_successful and (now - self._last_update) >= self.error_state_after_seconds):
+                    self._handle_reconnect_wait()
+                # Always allow a reconnect attempt every RetryAfterSeconds
+                if (now - self._last_update) >= self.retryAfterSeconds:
+                    successful = self._refresh_and_update()
+                # In normal operation (no error), always call _refresh_data on every update
+                if self.last_update_successful:
+                    successful = self._refresh_and_update()
+            elif self.error_mode == "retrycount":
+                # Classic retry-count-based error handling
+                if self.failed_update_count >= self.min_retries_until_fail and (now - self._last_update) <= self.retryAfterSeconds:
+                    self._handle_reconnect_wait()
+                    return
+                if self._should_refresh_data(now):
+                    successful = self._refresh_and_update()
+                # In normal operation (no error), always call _refresh_data on every update
+                elif self.last_update_successful:
+                    successful = self._refresh_and_update()
         except requests.exceptions.RequestException as exception:
             logging.warning(f"HTTP Error at _update for inverter "
                             f"{self.pvinverternumber} ({self._get_name()}): {str(exception)}")
