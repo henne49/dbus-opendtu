@@ -616,9 +616,6 @@ class DbusService:
                     return
                 if self._should_refresh_data(now):
                     successful = self._refresh_and_update()
-                # In normal operation (no error), always call _refresh_data on every update
-                elif self.last_update_successful:
-                    successful = self._refresh_and_update()
         except requests.exceptions.RequestException as exception:
             logging.warning(f"HTTP Error at _update for inverter "
                             f"{self.pvinverternumber} ({self._get_name()}): {str(exception)}")

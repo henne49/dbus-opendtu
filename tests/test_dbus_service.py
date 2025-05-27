@@ -393,6 +393,41 @@ class ReconnectLogicTest(unittest.TestCase):
         self.service.update()
         self.assertNotEqual(self.service._dbusservice['/StatusCode'], 10)
 
+    def test_normal_operation_successful_update(self):
+        """Test that in normal operation, update calls all expected methods and resets error state."""
+        self.service.failed_update_count = 0
+        self.service.last_update_successful = True
+        self.service._last_update = time.time()
+        self.service.dry_run = False
+        self.service.is_data_up2date = MagicMock(return_value=True)
+        self.service.update()
+        self.service._refresh_data.assert_called_once()
+        self.service.is_data_up2date.assert_called_once()
+        self.service.set_dbus_values.assert_called_once()
+        self.service._update_index.assert_called_once()
+        self.assertEqual(self.service.failed_update_count, 0)
+        self.assertTrue(self.service.last_update_successful)
+
+    def test_normal_operation_successful_update_timeout_mode(self):
+        """Test that in timeout mode, normal operation calls all expected methods and resets error state."""
+        self.service.error_mode = "timeout"
+        self.service.error_state_after_seconds = 600  # 10 minutes
+        self.service.failed_update_count = 0
+        self.service.last_update_successful = True
+        self.service._last_update = time.time()
+        self.service.dry_run = False
+        self.service.is_data_up2date = MagicMock(return_value=True)
+        self.service._refresh_data = MagicMock()
+        self.service.set_dbus_values = MagicMock()
+        self.service._update_index = MagicMock()
+        self.service.update()
+        self.service._refresh_data.assert_called_once()
+        self.service.is_data_up2date.assert_called_once()
+        self.service.set_dbus_values.assert_called_once()
+        self.service._update_index.assert_called_once()
+        self.assertEqual(self.service.failed_update_count, 0)
+        self.assertTrue(self.service.last_update_successful)
+
 
 if __name__ == '__main__':
     unittest.main()
