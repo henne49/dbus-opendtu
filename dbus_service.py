@@ -78,9 +78,14 @@ class DbusService:
         self.esptype = None
         self.meter_data = None
         self.dtuvariant = None
+
+        # Initialize error handling properties
+        self.error_mode = None
+        self.retry_after_seconds = 0
+        self.min_retries_until_fail = 0
+        self.error_state_after_seconds = 0
         self.failed_update_count = 0
         self.statuscode_set_on_reconnect = False
-        self.min_retries_until_fail = 3  # Default value, can be overridden by config
 
         if not istemplate:
             self._read_config_dtu(actual_inverter)
@@ -205,7 +210,7 @@ class DbusService:
         self.username = get_config_value(config, "Username", "DEFAULT", "", self.pvinverternumber)
         self.password = get_config_value(config, "Password", "DEFAULT", "", self.pvinverternumber)
         self.digestauth = is_true(get_config_value(config, "DigestAuth", "INVERTER", self.pvinverternumber, False))
-        self.retryAfterSeconds = int(get_config_value(config, "RetryAfterSeconds", "DEFAULT", "", 300))
+
         try:
             self.max_age_ts = int(config["DEFAULT"]["MaxAgeTsLastSuccess"])
         except (KeyError, ValueError) as ex:
@@ -217,22 +222,7 @@ class DbusService:
         self.pollinginterval = int(get_config_value(config, "ESP8266PollingIntervall", "DEFAULT", "", 10000))
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
-
-        # Load min_retries_until_fail from config, default to 3
-        try:
-            self.min_retries_until_fail = int(get_default_config(config, "MinRetriesUntilFail", 3))
-        except Exception:
-            self.min_retries_until_fail = 3
-
-        # Error handling logic: mode and time interval from config
-        try:
-            self.error_mode = config["DEFAULT"].get("ErrorMode", "retrycount").strip()
-        except Exception:
-            self.error_mode = "retrycount"
-        try:
-            self.error_state_after_seconds = int(config["DEFAULT"].get("ErrorStateAfterSeconds", 0))
-        except Exception:
-            self.error_state_after_seconds = 0
+        self._get_error_handling_config(config)
 
     def _read_config_template(self, template_number):
         config = self._get_config()
@@ -286,16 +276,15 @@ class DbusService:
         self.dry_run = is_true(get_default_config(config, "DryRun", False))
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
+        self._get_error_handling_config(config)
 
-        # Error handling logic: mode and time interval from config
-        try:
-            self.error_mode = config["DEFAULT"].get("ErrorMode", "retrycount").strip()
-        except Exception:
-            self.error_mode = "retrycount"
-        try:
-            self.error_state_after_seconds = int(config["DEFAULT"].get("ErrorStateAfterSeconds", 0))
-        except Exception:
-            self.error_state_after_seconds = 0
+    def _get_error_handling_config(self, config):
+        '''Loads error handling configuration values from the provided config object.'''
+
+        self.error_mode = get_default_config(config, "ErrorMode", "retrycount").strip()
+        self.retry_after_seconds = int(get_default_config(config, "RetryAfterSeconds", 180))
+        self.min_retries_until_fail = int(get_default_config(config, "MinRetriesUntilFail", 3))
+        self.error_state_after_seconds = int(get_default_config(config, "ErrorStateAfterSeconds", 0))
 
     # get the Serialnumber
     def _get_serial(self, pvinverternumber):
@@ -604,14 +593,14 @@ class DbusService:
                 if (not self.last_update_successful and (now - self._last_update) >= self.error_state_after_seconds):
                     self._handle_reconnect_wait()
                 # Always allow a reconnect attempt every RetryAfterSeconds
-                if (now - self._last_update) >= self.retryAfterSeconds:
+                if (now - self._last_update) >= self.retry_after_seconds:
                     successful = self._refresh_and_update()
                 # In normal operation (no error), always call _refresh_data on every update
                 if self.last_update_successful:
                     successful = self._refresh_and_update()
             elif self.error_mode == "retrycount":
                 # Classic retry-count-based error handling
-                if self.failed_update_count >= self.min_retries_until_fail and (now - self._last_update) <= self.retryAfterSeconds:
+                if self.failed_update_count >= self.min_retries_until_fail and (now - self._last_update) <= self.retry_after_seconds:
                     self._handle_reconnect_wait()
                     return
                 if self._should_refresh_data(now):
@@ -636,7 +625,7 @@ class DbusService:
     def _should_refresh_data(self, now):
         return (
             self.last_update_successful or
-            (now - self._last_update) >= self.retryAfterSeconds or
+            (now - self._last_update) >= self.retry_after_seconds or
             self.failed_update_count < self.min_retries_until_fail
         )
 

@@ -271,7 +271,7 @@ class ReconnectLogicTest(unittest.TestCase):
         self.service.set_dbus_values = MagicMock()
         self.service._update_index = MagicMock()
         self.service.dry_run = True
-        self.service.retryAfterSeconds = 300  # seconds
+        self.service.retry_after_seconds = 300  # seconds
         self.service._last_update = time.time() - 100
 
         # Simulate a dbusservice dict for status and value tests
@@ -329,7 +329,7 @@ class ReconnectLogicTest(unittest.TestCase):
         # Simulate error state
         self.service.failed_update_count = 3
         self.service._last_update = time.time()
-        self.service.retryAfterSeconds = 60
+        self.service.retry_after_seconds = 60
         self.service.statuscode_set_on_reconnect = False
         self.service.update()
         self.assertEqual(self.service._dbusservice['/StatusCode'], 10)
@@ -427,6 +427,30 @@ class ReconnectLogicTest(unittest.TestCase):
         self.service._update_index.assert_called_once()
         self.assertEqual(self.service.failed_update_count, 0)
         self.assertTrue(self.service.last_update_successful)
+
+    def test_config_values_are_read_correctly(self):
+        """Test that config values are read and mapped to class attributes correctly."""
+        config = {
+            "DEFAULT": {
+                "DTU": "ahoy",
+                "ErrorMode": "timeout",
+                "RetryAfterSeconds": "123",
+                "MinRetriesUntilFail": "7",
+                "ErrorStateAfterSeconds": "456"
+            },
+            "INVERTER0": {
+                "Phase": "L1",
+                "DeviceInstance": "34",
+                "AcPosition": "1",
+                "Host": "localhost",
+            },
+        }
+        with patch('dbus_service.DbusService._get_config', return_value=config):
+            service = DbusService("com.victronenergy.pvinverter", 0)
+            self.assertEqual(service.error_mode, "timeout")
+            self.assertEqual(service.retry_after_seconds, 123)
+            self.assertEqual(service.min_retries_until_fail, 7)
+            self.assertEqual(service.error_state_after_seconds, 456)
 
 
 if __name__ == '__main__':
