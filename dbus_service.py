@@ -600,9 +600,8 @@ class DbusService:
                     successful = self._refresh_and_update()
             elif self.error_mode == "retrycount":
                 # Classic retry-count-based error handling
-                if self.failed_update_count >= self.min_retries_until_fail and (now - self._last_update) <= self.retry_after_seconds:
+                if self.failed_update_count >= self.min_retries_until_fail:
                     self._handle_reconnect_wait()
-                    return
                 if self._should_refresh_data(now):
                     successful = self._refresh_and_update()
         except requests.exceptions.RequestException as exception:
