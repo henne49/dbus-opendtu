@@ -6,9 +6,28 @@
 # system imports
 import functools
 import time
+import os
 
 # our imports:
 import logging
+
+
+# region formatting helping functions (used in constant)
+def _kwh(_p, value: float) -> str:
+    return f"{value:.2f}KWh"
+
+
+def _a(_p, value: float) -> str:
+    return f"{value:.1f}A"
+
+
+def _w(_p, value: float) -> str:
+    return f"{value:.1f}W"
+
+
+def _v(_p, value: float) -> str:
+    return f"{value:.1f}V"
+# endregion
 
 
 def get_config_value(config, name, inverter_or_template, inverter_or_tpl_number, defaultvalue=None):
@@ -106,3 +125,15 @@ def timeit(func):
         logging.debug(f"function {func.__name__} finished in {round(elapsed_time * 1000)} ms")
         return result
     return wrapped_func
+
+def read_version(file_name):
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(current_dir, file_name)
+        with open(file_path, 'r') as file:
+            line = file.readline()
+            version = line.split(':')[-1].strip()
+            return version
+    except FileNotFoundError:
+        logging.error(f"File {file_name} not found in the current directory.")
+        return 0.1

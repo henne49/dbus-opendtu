@@ -34,14 +34,7 @@
     "Efficiency",
     "Q_AC"
   ],
-  "fld_units": [
-    "V",
-    "A",
-    "W",
-    "Wh",
-    "kWh",
-    "%"
-  ],
+  "fld_units": ["V", "A", "W", "Wh", "kWh", "%"],
   "fld_names": [
     "U_DC",
     "I_DC",
@@ -50,16 +43,5 @@
     "YieldTotal",
     "Irradiation"
   ],
-  "iv": [
-    true,
-    true,
-    true,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false
-  ]
+  "iv": [true, true, false, false, false, false, false, false, false, false]
 }

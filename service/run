@@ -2,11 +2,11 @@
 #Script Directory
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 #Define the version filename
-FILENAME=$(realpath $SCRIPT_DIR/../version.txt)
+CODE_VERSION_FILE=$(realpath $SCRIPT_DIR/../version.txt)
 exec 2>&1
 #Check if the file exists
-if [ -f "$FILENAME" ]; then
+if [ -f "$CODE_VERSION_FILE" ]; then
     #If the file exists, print its contents to stdout
-    cat "$FILENAME"
+    cat "$CODE_VERSION_FILE"
 fi
-python $(realpath $SCRIPT_DIR/../dbus-opendtu.py)
+python $(realpath $SCRIPT_DIR/../dbus_opendtu.py)
