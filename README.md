@@ -15,6 +15,7 @@
       - [Default options](#default-options)
       - [Inverter options](#inverter-options)
       - [Template options](#template-options)
+      - [Error Handling Modes](#error-handling-modes)
     - [Service names](#service-names)
     - [Videos how to install](#videos-how-to-install)
     - [Use Cases](#use-cases)
@@ -122,12 +123,15 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 | useYieldDay | send YieldDay instead of YieldTotal. Set this to 1 to prevent VRM from adding the total value to the history on one day. E.g. if you don't start using the inverter at 0. |
 | ESP8266PollingIntervall |  For ESP8266 reduce polling intervall to reduce load, default 10000ms|
 | Logging | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL |
- MaxAgeTsLastSuccess | Maximum accepted age of ts_last_success in Ahoy status message. If ts_last_success is older than this number of seconds, values are not used.  Set this to < 0 to disable this check.                                    |
+| MaxAgeTsLastSuccess | Maximum accepted age of ts_last_success in Ahoy status message. If ts_last_success is older than this number of seconds, values are not used.  Set this to < 0 to disable this check.                                    |
 | DryRun | Set this to a value different to "0" to prevent values from being sent. Use this for debugging or experiments. |
 | Host | IP or hostname of ahoy or OpenDTU API/web-interface |
 | HTTPTimeout | Timeout when doing the HTTP request to the DTU or template. Default: 2.5 sec |
 | Username | use if authentication required, leave empty if no authentication needed |
 | Password | use if authentication required, leave empty if no authentication needed |
+| MinRetriesUntilFail | Minimum number of consecutive update failures before entering error state (StatusCode=10, zero values). Default is 3. |
+| RetryAfterSeconds | If AhoyDTU/OpenDTU is not reachable, try to reconnect after this many seconds. Default is 120. |
+| ErrorMode | Error handling mode: `retrycount` (default, error after N failures) or `timeout` (error after a time period without success). See section below for details. |
 
 *1: Please assure that the order is correct in the DTU, we can only extract the first one in a row.
 
@@ -181,6 +185,54 @@ This applies to each `TEMPLATE[X]` section. X is the number of Template starting
 *3: Use 3P to split power equally over three phases (use this for Hoymiles three-phase micro-inverters as they report total power only, not seperated by phase).
 
 *4: Path in JSON: use keywords and array index numbers separated by `/`. Example (compare [tasmota_shelly_2pm.json](docs/tasmota_shelly_2pm.json)): `StatusSNS/ENERGY/Current/0` fetches dictionary (map) entry `StatusSNS` containting an entry `ENERGY` containing an entry `Current` containing an array where the first element (index 0) is taken.
+
+---
+
+#### Error Handling Modes
+
+The error handling behavior of dbus-opendtu can be configured using the `ErrorMode` and `ErrorStateAfterSeconds` options in your configuration file. This allows you to choose between two flexible strategies for handling communication errors with your DTU (Data Transfer Unit):
+
+##### 1. `retrycount` Mode (Default)
+- **Behavior:**
+  - The system will attempt to update data from the DTU on every cycle.
+  - If a number of consecutive update attempts fail (as set by `MinRetriesUntilFail`), the system enters an error state:
+    - All DBus values are set to zero.
+    - The DBus `StatusCode` is set to 10 (error).
+  - After waiting for `RetryAfterSeconds`, the system will attempt to reconnect and recover.
+- **Configuration:**
+  - `ErrorMode=retrycount`
+  - `MinRetriesUntilFail=3` (default)
+  - `RetryAfterSeconds=120` (default)
+
+##### 2. `timeout` Mode
+- **Behavior:**
+  - The system always attempts to reconnect and refresh data every `RetryAfterSeconds`.
+  - Zero values and error state are only set if the time since the last successful update exceeds `ErrorStateAfterSeconds`.
+  - This means the system will keep trying to reconnect, but will only show an error after a defined timeout period has passed without success.
+- **Configuration:**
+  - `ErrorMode=timeout`
+  - `ErrorStateAfterSeconds=600` (for example, 10 minutes)
+  - `RetryAfterSeconds=120` (default)
+
+##### Example Configuration
+
+```
+# Error handling mode: "retrycount" (default, as before) or "timeout" (after a time period)
+ErrorMode=timeout
+# For "timeout" mode:
+ErrorStateAfterSeconds=600
+# For both modes:
+RetryAfterSeconds=120
+MinRetriesUntilFail=3
+```
+
+##### Summary Table
+| Mode        | When are zero values set?                | When is reconnect attempted?         |
+|-------------|------------------------------------------|--------------------------------------|
+| retrycount  | After N consecutive failures             | After `RetryAfterSeconds`            |
+| timeout     | After `ErrorStateAfterSeconds` timeout   | Always, every `RetryAfterSeconds`    |
+
+Choose the mode that best fits your reliability and error reporting needs. For most users, the default `retrycount` mode is sufficient. Use `timeout` mode if you want to avoid error states for short outages and only show errors after a longer period without successful updates.
 
 ### Service names
 
