@@ -132,3 +132,7 @@ dmypy.json
 
 # mac
 .DS_Store
+
+# others
+sync2venus.sh
+README.dev.tmp.md
