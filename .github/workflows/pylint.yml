@@ -1,5 +1,7 @@
 name: Pylint
 
+permissions:
+  contents: read
 on: [push, fork]
 
 jobs:
