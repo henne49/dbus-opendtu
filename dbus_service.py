@@ -222,7 +222,7 @@ class DbusService:
         self.pollinginterval = int(get_config_value(config, "ESP8266PollingIntervall", "DEFAULT", "", 10000))
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
-        self._get_error_handling_config(config)
+        self._load_error_handling_config(config)
 
     def _read_config_template(self, template_number):
         config = self._get_config()
@@ -276,12 +276,12 @@ class DbusService:
         self.dry_run = is_true(get_default_config(config, "DryRun", False))
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
-        self._get_error_handling_config(config)
+        self._load_error_handling_config(config)
 
-    def _get_error_handling_config(self, config):
+    def _load_error_handling_config(self, config):
         '''Loads error handling configuration values from the provided config object.'''
 
-        self.error_mode = get_default_config(config, "ErrorMode", "retrycount").strip()
+        self.error_mode = get_default_config(config, "ErrorMode", constants.MODE_RETRYCOUNT).strip()
         self.retry_after_seconds = int(get_default_config(config, "RetryAfterSeconds", 180))
         self.min_retries_until_fail = int(get_default_config(config, "MinRetriesUntilFail", 3))
         self.error_state_after_seconds = int(get_default_config(config, "ErrorStateAfterSeconds", 0))
@@ -588,7 +588,7 @@ class DbusService:
         successful = False
         now = time.time()
         try:
-            if self.error_mode == "timeout" and self.error_state_after_seconds > 0:
+            if self.error_mode == constants.MODE_TIMEOUT and self.error_state_after_seconds > 0:
                 # Set zero values only after ErrorStateAfterSeconds has elapsed since last success
                 if (not self.last_update_successful and (now - self._last_update) >= self.error_state_after_seconds):
                     self._handle_reconnect_wait()
@@ -598,11 +598,23 @@ class DbusService:
                 # In normal operation (no error), always call _refresh_data on every update
                 if self.last_update_successful:
                     successful = self._refresh_and_update()
-            elif self.error_mode == "retrycount":
+            elif self.error_mode == constants.MODE_RETRYCOUNT:
                 # Classic retry-count-based error handling
                 if self.failed_update_count >= self.min_retries_until_fail:
                     self._handle_reconnect_wait()
-                if self._should_refresh_data(now):
+                # Determine if we should refresh data based on current state and timing
+                is_last_update_successful = self.last_update_successful
+                time_since_last_update = now - self._last_update
+                is_retry_interval_elapsed = time_since_last_update >= self.retry_after_seconds
+                is_below_min_retries = self.failed_update_count < self.min_retries_until_fail
+
+                should_refresh_data = (
+                    is_last_update_successful or
+                    is_retry_interval_elapsed or
+                    is_below_min_retries
+                )
+
+                if should_refresh_data:
                     successful = self._refresh_and_update()
         except requests.exceptions.RequestException as exception:
             logging.warning(f"HTTP Error at _update for inverter "

@@ -7,6 +7,8 @@ DTUVARIANT_OPENDTU = "opendtu"
 DTUVARIANT_TEMPLATE = "template"
 PRODUCTNAME = "henne49_dbus-opendtu"
 CONNECTION = "TCP/IP (HTTP)"
+MODE_TIMEOUT = "timeout"
+MODE_RETRYCOUNT = "retrycount"
 
 # Status codes for the DTU
 STATUSCODE_STARTUP = 0
