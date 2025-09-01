@@ -288,7 +288,7 @@ These are some useful commands which help to use the script or to debug.
 
 ### Check if the script is running
 
-`svstat /service/dbus-opendtu` show if the service (our script) is running. If the number of seconds shown is low, it is probably restarting and you should look into `/var/log/dbus-opendtu/current`.
+`svstat /service/dbus-opendtu/service` show if the service (our script) is running. If the number of seconds shown is low, it is probably restarting and you should look into `/var/log/dbus-opendtu/current`.
 
 ### How to debug
 
@@ -300,17 +300,15 @@ This is useful to check if the script is running and sending values to Venus OS.
 
 `/data/dbus-opendtu/install.sh` installs the service persistently (see above).
 
-This also activates the service, so you don't need to run `svcadm enable /service/dbus-opendtu` manually.
-
 ### How to restart
 
 `/data/dbus-opendtu/restart.sh` restarts the service - e.g. after a config.ini change.
 
 ### How to uninstall
 
-`/data/dbus-opendtu/uninstall.sh` stops the service and prevents it from being restarted (e.g. after a reboot).
+`/data/dbus-opendtu/uninstall.sh` stops the service and prevents it from being restarted after a reboot. You have to reboot to stop the service. 
 
-If you want to remove the service completely, you can do so by running `rm -rf /data/dbus-opendtu`.
+If you want to remove the service completely, you can do so by running `rm -r /data/dbus-opendtu`.
 
 ---
 

@@ -16,8 +16,8 @@ fi
 
 # check if version.txt exists and is larger than 2.0.0
 if [ -f $SCRIPT_DIR/version.txt ] && 
-    ( [ "$(grep -o 'Version: [^ ]*' version.txt | cut -d' ' -f2)" = "2.0.0" ] || 
-    [ "$(grep -o 'Version: [^ ]*' version.txt | cut -d' ' -f2)" \> "2.0.0" ] ); then
+    ( [ "$(grep -o 'Version: [^ ]*' $SCRIPT_DIR/version.txt | cut -d' ' -f2)" = "2.0.0" ] || 
+    [ "$(grep -o 'Version: [^ ]*' $SCRIPT_DIR/version.txt | cut -d' ' -f2)" \> "2.0.0" ] ); then
     # delete old dbus-opendtu.py file
     if [ -f $SCRIPT_DIR/dbus-opendtu.py ]; then  
         rm $SCRIPT_DIR/dbus-opendtu.py 
@@ -38,7 +38,9 @@ chmod a+x $SCRIPT_DIR/service/log/run
 chmod 755 $SCRIPT_DIR/service/log/run
 
 # create sym-link to run script in deamon
-ln -s $SCRIPT_DIR/service /service/$SERVICE_NAME
+if [ ! -L /service/$SERVICE_NAME/service ]; then
+   ln -s $SCRIPT_DIR/service /service/$SERVICE_NAME
+fi
 
 # add install-script to rc.local to be ready for firmware update
 filename=/data/rc.local
@@ -54,3 +56,5 @@ fi
 
 #check if the service exists? if not add it to rc.local
 grep -qxF "$SCRIPT_DIR/install.sh" $filename || echo "$SCRIPT_DIR/install.sh" >> $filename
+
+echo "All Done"
