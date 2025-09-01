@@ -460,7 +460,7 @@ class DbusService:
             # check for response
             if not json_str:
                 logging.info("No Response from DTU")
-                raise ConnectionError("No response from DTU - ", self.host)
+                raise ConnectionError("No valid response from DTU - ", self.host)
 
             json = None
             try:
@@ -537,6 +537,7 @@ class DbusService:
         logging.debug("Last inverter #%d _update() call: %s", self.pvinverternumber, self._last_update)
         logging.info("[%s] Last inverter #%d '/Ac/Power': %s", self._servicename,
                      self.pvinverternumber, self._dbusservice["/Ac/Power"])
+        #self.check_dbus_connectionproblem()
         return True
 
     def update(self):
@@ -558,7 +559,8 @@ class DbusService:
         Attributes:
             successful (bool): Indicates whether the update was successful.
         """
-        logging.debug("_update")
+        logging.debug("_update: last update: %s", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self._last_update)))
+
         successful = False
         try:
             # update data from DTU once per _update call:
@@ -569,20 +571,23 @@ class DbusService:
                     logging.info("DRY RUN. No data is sent!!")
                 else:
                     self.set_dbus_values()
-            self._update_index()
+                    self._update_index()
             successful = True
         except requests.exceptions.RequestException as exception:
             if self.last_update_successful:
                 logging.warning(f"HTTP Error at _update for inverter "
                                 f"{self.pvinverternumber} ({self._get_name()}): {str(exception)}")
+            self.check_dbus_connectionproblem()
         except ValueError as error:
             if self.last_update_successful:
                 logging.warning(f"Error at _update for inverter "
                                 f"{self.pvinverternumber} ({self._get_name()}): {str(error)}")
+            self.check_dbus_connectionproblem()
         except Exception as error:  # pylint: disable=broad-except
             if self.last_update_successful:
                 logging.warning(f"Error at _update for inverter "
                                 f"{self.pvinverternumber} ({self._get_name()})", exc_info=error)
+            self.check_dbus_connectionproblem()
         finally:
             if successful:
                 if not self.last_update_successful:
@@ -689,6 +694,8 @@ class DbusService:
             logging.debug(f"Inverter #{self.pvinverternumber} Current (/State): {state}")
             logging.debug("---")
         else:
+            self._dbusservice["/StatusCode"] = 7 # 0=Startup 0; 1=Startup 1; 2=Startup 2; 3=Startup 3; 4=Startup 4; 5=Startup 5; 6=Startup 6; 7=Running; 8=Standby; 9=Boot loading; 10=Error    
+
             # three-phase inverter: split total power equally over all three phases
             if "3P" == self.pvinverterphase:
                 powerthird = power/3
@@ -734,3 +741,59 @@ class DbusService:
             logging.debug(f"Inverter #{self.pvinverternumber} Power (/Ac/Power): {power}")
             logging.debug(f"Inverter #{self.pvinverternumber} Energy (/Ac/Energy/Forward): {pvyield}")
             logging.debug("---")
+
+    def check_dbus_connectionproblem(self):
+        '''zero power data and cleat connection status and set dbus values'''
+        update_age = (time.time() - self._last_update)
+        logging.debug("Last update %d s ago", update_age)
+        
+        if (update_age > constants.CONNECTION_TIMEOUT ):
+            # This will be refactored later in classes
+            if self._servicename == "com.victronenergy.inverter":
+                # see https://github.com/victronenergy/venus/wiki/dbus#inverter
+                self._dbusservice["/Ac/Out/L1/V"] = 0
+                self._dbusservice["/Ac/Out/L1/I"] = 0
+                self._dbusservice["/Ac/Out/L1/P"] = 0
+                self._dbusservice["/Dc/0/Voltage"] = 0
+                self._dbusservice["/Ac/Power"] = 0
+
+                #self._dbusservice["/State"] = 2 # 2=Fault
+                #self._dbusservice["/Mode"] = 2  # Switch position: 2=Inverter on; 4=Off; 5=Low Power/ECO
+
+                self._dbusservice["/Ac/L1/Current"] = 0
+                self._dbusservice["/Ac/L1/Power"] = 0
+                self._dbusservice["/Ac/L1/Voltage"] = 0
+
+                logging.debug(f"Inverter #{self.pvinverternumber} Voltage (/Ac/Out/L1/V): {voltage}")
+                logging.debug(f"Inverter #{self.pvinverternumber} Current (/Ac/Out/L1/I): {current}")
+
+                logging.debug(f"Inverter #{self.pvinverternumber} Current (/Dc/0/Voltage): {dc_voltage}")
+                logging.debug(f"Inverter #{self.pvinverternumber} Voltage (/Ac/Power): {power}")
+                logging.debug(f"Inverter #{self.pvinverternumber} Current (/State): {state}")
+                logging.debug("---")
+            else:
+                self._dbusservice["/StatusCode"] = 10 # 0=Startup 0; 1=Startup 1; 2=Startup 2; 3=Startup 3; 4=Startup 4; 5=Startup 5; 6=Startup 6; 7=Running; 8=Standby; 9=Boot loading; 10=Error
+
+                # three-phase inverter: split total power equally over all three phases
+                if "3P" == self.pvinverterphase:
+
+                    self._dbusservice["/Ac/L1/Voltage"] = 0
+                    self._dbusservice["/Ac/L1/Current"] = 0
+                    self._dbusservice["/Ac/L1/Power"] = 0
+                    self._dbusservice["/Ac/L2/Voltage"] = 0
+                    self._dbusservice["/Ac/L2/Current"] = 0
+                    self._dbusservice["/Ac/L2/Power"] = 0
+                    self._dbusservice["/Ac/L3/Voltage"] = 0
+                    self._dbusservice["/Ac/L3/Current"] = 0
+                    self._dbusservice["/Ac/L3/Power"] = 0
+                    self._dbusservice["/Ac/Power"] = 0
+
+                else:
+                    pre = "/Ac/" + self.pvinverterphase
+                    self._dbusservice[pre + "/Voltage"] = 0
+                    self._dbusservice[pre + "/Current"] = 0
+                    self._dbusservice[pre + "/Power"] = 0
+                    self._dbusservice["/Ac/Power"] = 0
+
+                logging.debug(f"Inverter #{self.pvinverternumber} Power (/Ac/Power): 0")
+                logging.debug("---")
