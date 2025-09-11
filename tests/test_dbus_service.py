@@ -251,7 +251,7 @@ class ReconnectLogicTest(unittest.TestCase):
     def setUp(self):
         # Set up all required patches and a default DbusService instance for each test
         self.patcher_config = patch('dbus_service.DbusService._get_config', return_value={
-            "DEFAULT": {"DTU": "ahoy", "ReconnectAfter": "10"},
+            "DEFAULT": {"DTU": "ahoy", "RetryAfterSeconds": "10"},
             "INVERTER0": {"Phase": "L1", "DeviceInstance": "34", "AcPosition": "1", "Host": "localhost"},
         })
         self.patcher_dbus = patch('dbus_service.dbus')
@@ -331,18 +331,18 @@ class ReconnectLogicTest(unittest.TestCase):
         self.service.failed_update_count = 3
         self.service._last_update = time.time()
         self.service.retry_after_seconds = 60
-        self.service.statuscode_set_on_reconnect = False
+        self.service.reset_statuscode_on_next_success = False
         self.service.update()
         self.assertEqual(self.service._dbusservice['/StatusCode'], 10)
         self.assertEqual(self.service._dbusservice['/Ac/Power'], 0)
         self.assertEqual(self.service._dbusservice['/Ac/L1/Current'], 0)
         self.assertEqual(self.service._dbusservice['/Ac/L1/Power'], 0)
         self.assertEqual(self.service._dbusservice['/Ac/L1/Voltage'], 0)
-        self.assertTrue(self.service.statuscode_set_on_reconnect)
+        self.assertTrue(self.service.reset_statuscode_on_next_success)
 
         # Simulate recovery
         self.service.failed_update_count = 0
-        self.service.statuscode_set_on_reconnect = True
+        self.service.reset_statuscode_on_next_success = True
         self.service._refresh_data = MagicMock()
         self.service.is_data_up2date = MagicMock(return_value=True)
         self.service.dry_run = True
@@ -351,7 +351,7 @@ class ReconnectLogicTest(unittest.TestCase):
         self.service.last_update_successful = False
         self.service.update()
         self.assertEqual(self.service._dbusservice['/StatusCode'], 7)
-        self.assertFalse(self.service.statuscode_set_on_reconnect)
+        self.assertFalse(self.service.reset_statuscode_on_next_success)
 
     def test_timeout_mode_no_zero_before_timeout(self):
         """If ErrorMode=timeout and error_state_after_seconds=600, before 10min no zero/StatusCode=10 is sent."""
@@ -359,7 +359,7 @@ class ReconnectLogicTest(unittest.TestCase):
         self.service.error_state_after_seconds = 600  # 10 minutes
         self.service.last_update_successful = False
         self.service._last_update = time.time() - 300  # 5 minutes ago
-        self.service.statuscode_set_on_reconnect = False
+        self.service.reset_statuscode_on_next_success = False
         self.service.set_dbus_values_to_zero = MagicMock()
         self.service.update()
         # Should NOT set zero values yet
@@ -372,7 +372,7 @@ class ReconnectLogicTest(unittest.TestCase):
         self.service.error_state_after_seconds = 600  # 10 minutes
         self.service.last_update_successful = False
         self.service._last_update = time.time() - 601  # just over 10 minutes ago
-        self.service.statuscode_set_on_reconnect = False
+        self.service.reset_statuscode_on_next_success = False
         self.service._refresh_data = MagicMock(side_effect=Exception("Test exception for error handling"))
         self.service.set_dbus_values_to_zero = MagicMock(wraps=self.service.set_dbus_values_to_zero)
         self.service.update()
@@ -386,7 +386,7 @@ class ReconnectLogicTest(unittest.TestCase):
         self.service.error_state_after_seconds = 600  # 10 Minuten
         self.service.last_update_successful = False
         self.service._last_update = time.time() - 601  # Über Timeout, würde Nullwerte senden
-        self.service.statuscode_set_on_reconnect = False
+        self.service.reset_statuscode_on_next_success = False
         self.service._refresh_data.side_effect = requests.exceptions.RequestException("Test exception")
         self.service.update()
         # reset refresh_data to simulate a successful update

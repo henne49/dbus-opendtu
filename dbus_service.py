@@ -85,7 +85,7 @@ class DbusService:
         self.min_retries_until_fail = 0
         self.error_state_after_seconds = 0
         self.failed_update_count = 0
-        self.statuscode_set_on_reconnect = False
+        self.reset_statuscode_on_next_success = False
 
         if not istemplate:
             self._read_config_dtu(actual_inverter)
@@ -629,9 +629,9 @@ class DbusService:
             self._finalize_update(successful)
 
     def _handle_reconnect_wait(self):
-        if not self.statuscode_set_on_reconnect:
+        if not self.reset_statuscode_on_next_success:
             self.set_dbus_values_to_zero()
-            self.statuscode_set_on_reconnect = True
+            self.reset_statuscode_on_next_success = True
 
     def _should_refresh_data(self, now):
         return (
@@ -648,7 +648,7 @@ class DbusService:
 
     def _finalize_update(self, successful):
         if successful:
-            if self.statuscode_set_on_reconnect:
+            if self.reset_statuscode_on_next_success:
                 self._dbusservice["/StatusCode"] = constants.STATUSCODE_RUNNING
             if not self.last_update_successful:
                 logging.warning(
@@ -658,7 +658,7 @@ class DbusService:
                 )
             self.last_update_successful = True
             self.failed_update_count = 0
-            self.statuscode_set_on_reconnect = False
+            self.reset_statuscode_on_next_success = False
         else:
             self.last_update_successful = False
             self.failed_update_count += 1
