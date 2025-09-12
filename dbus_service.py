@@ -79,6 +79,14 @@ class DbusService:
         self.meter_data = None
         self.dtuvariant = None
 
+        # Initialize error handling properties
+        self.error_mode = None
+        self.retry_after_seconds = 0
+        self.min_retries_until_fail = 0
+        self.error_state_after_seconds = 0
+        self.failed_update_count = 0
+        self.reset_statuscode_on_next_success = False
+
         if not istemplate:
             self._read_config_dtu(actual_inverter)
             self.numberofinverters = self.get_number_of_inverters()
@@ -118,7 +126,7 @@ class DbusService:
         self._dbusservice.add_path("/Serial", self._get_serial(self.pvinverternumber))
         self._dbusservice.add_path("/UpdateIndex", 0)
         # set path StatusCode to 7=Running so VRM detects a working PV-Inverter
-        self._dbusservice.add_path("/StatusCode", 7)
+        self._dbusservice.add_path("/StatusCode", constants.STATUSCODE_RUNNING)
 
         # If the Servicname is an (AC-)Inverter, add the Mode path (to show it as ON)
         # Also, we will set different paths and variables in the _update(self) method.
@@ -143,7 +151,7 @@ class DbusService:
                 writeable=True,
                 onchangecallback=self._handlechangedvalue,
             )
-        
+
         self._dbusservice.register()
 
         self.polling_interval = self._get_polling_interval()
@@ -214,6 +222,7 @@ class DbusService:
         self.pollinginterval = int(get_config_value(config, "ESP8266PollingIntervall", "DEFAULT", "", 10000))
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
+        self._load_error_handling_config(config)
 
     def _read_config_template(self, template_number):
         config = self._get_config()
@@ -267,6 +276,15 @@ class DbusService:
         self.dry_run = is_true(get_default_config(config, "DryRun", False))
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
+        self._load_error_handling_config(config)
+
+    def _load_error_handling_config(self, config):
+        '''Loads error handling configuration values from the provided config object.'''
+
+        self.error_mode = get_default_config(config, "ErrorMode", constants.MODE_RETRYCOUNT).strip()
+        self.retry_after_seconds = int(get_default_config(config, "RetryAfterSeconds", 180))
+        self.min_retries_until_fail = int(get_default_config(config, "MinRetriesUntilFail", 3))
+        self.error_state_after_seconds = int(get_default_config(config, "ErrorStateAfterSeconds", 0))
 
     # get the Serialnumber
     def _get_serial(self, pvinverternumber):
@@ -539,61 +557,111 @@ class DbusService:
                      self.pvinverternumber, self._dbusservice["/Ac/Power"])
         return True
 
+    def _refresh_and_update(self):
+        """
+        Helper method to refresh data, handle data update if up-to-date, update index, and set successful flag.
+        """
+        self._refresh_data()
+        if self.is_data_up2date():
+            self._handle_data_update()
+        self._update_index()
+        return True
+
     def update(self):
         """
-        Updates the data from the DTU (Data Transfer Unit) and sets the DBus values if the data is up-to-date.
+        Updates inverter data from the DTU (Data Transfer Unit) and sets DBus values if the data is up-to-date.
 
-        This method performs the following steps:
-        1. Refreshes the data from the DTU.
-        2. Checks if the data is up-to-date.
-        3. If in dry run mode, logs that no data is sent.
-        4. If not in dry run mode, sets the DBus values.
-        5. Updates the index.
-        6. Handles various exceptions that may occur during the update process:
-            - requests.exceptions.RequestException: Logs an HTTP error if the last update was successful.
-            - ValueError: Logs a value error if the last update was successful.
-            - Exception: Logs a general error if the last update was successful.
-        7. Logs a recovery message if the update was successful after a previous failure.
+        Main logic:
+        - In timeout mode: Always attempt reconnect every RetryAfterSeconds. Only set zero values after ErrorStateAfterSeconds has elapsed since last success.
+        - In retrycount mode: After min_retries_until_fail failures, wait RetryAfterSeconds before next attempt and set zero values immediately.
+        - Always updates the DBus update index after a refresh.
+        - Tracks success/failure state and manages reconnect timing.
 
-        Attributes:
-            successful (bool): Indicates whether the update was successful.
+        Exception handling:
+        - Catches and logs HTTP, value, and general exceptions during update.
+        - Ensures update state is finalized regardless of outcome.
+
+        Returns:
+            None
         """
         logging.debug("_update")
         successful = False
+        now = time.time()
         try:
-            # update data from DTU once per _update call:
-            self._refresh_data()
+            if self.error_mode == constants.MODE_TIMEOUT and self.error_state_after_seconds > 0:
+                # Set zero values only after ErrorStateAfterSeconds has elapsed since last success
+                if (not self.last_update_successful and (now - self._last_update) >= self.error_state_after_seconds):
+                    self._handle_reconnect_wait()
+                # Always allow a reconnect attempt every RetryAfterSeconds
+                if (now - self._last_update) >= self.retry_after_seconds:
+                    successful = self._refresh_and_update()
+                # In normal operation (no error), always call _refresh_data on every update
+                if self.last_update_successful:
+                    successful = self._refresh_and_update()
+            elif self.error_mode == constants.MODE_RETRYCOUNT:
+                # Classic retry-count-based error handling
+                if self.failed_update_count >= self.min_retries_until_fail:
+                    self._handle_reconnect_wait()
+                # Determine if we should refresh data based on current state and timing
+                is_last_update_successful = self.last_update_successful
+                time_since_last_update = now - self._last_update
+                is_retry_interval_elapsed = time_since_last_update >= self.retry_after_seconds
+                is_below_min_retries = self.failed_update_count < self.min_retries_until_fail
 
-            if self.is_data_up2date():
-                if self.dry_run:
-                    logging.info("DRY RUN. No data is sent!!")
-                else:
-                    self.set_dbus_values()
-            self._update_index()
-            successful = True
+                should_refresh_data = (
+                    is_last_update_successful or
+                    is_retry_interval_elapsed or
+                    is_below_min_retries
+                )
+
+                if should_refresh_data:
+                    successful = self._refresh_and_update()
         except requests.exceptions.RequestException as exception:
-            if self.last_update_successful:
-                logging.warning(f"HTTP Error at _update for inverter "
-                                f"{self.pvinverternumber} ({self._get_name()}): {str(exception)}")
+            logging.warning(f"HTTP Error at _update for inverter "
+                            f"{self.pvinverternumber} ({self._get_name()}): {str(exception)}")
         except ValueError as error:
-            if self.last_update_successful:
-                logging.warning(f"Error at _update for inverter "
-                                f"{self.pvinverternumber} ({self._get_name()}): {str(error)}")
+            logging.warning(f"Error at _update for inverter "
+                            f"{self.pvinverternumber} ({self._get_name()}): {str(error)}")
         except Exception as error:  # pylint: disable=broad-except
-            if self.last_update_successful:
-                logging.warning(f"Error at _update for inverter "
-                                f"{self.pvinverternumber} ({self._get_name()})", exc_info=error)
+            logging.warning(f"Error at _update for inverter "
+                            f"{self.pvinverternumber} ({self._get_name()})", exc_info=error)
         finally:
-            if successful:
-                if not self.last_update_successful:
-                    logging.warning(
-                        f"Recovered inverter {self.pvinverternumber} ({self._get_name()}): "
-                        f"Successfully fetched data now: "
-                        f"{'NOT (yet?)' if not self.is_data_up2date() else 'Is'} up-to-date"
-                    )
-                    self.last_update_successful = True
-            else:
-                self.last_update_successful = False
+            self._finalize_update(successful)
+
+    def _handle_reconnect_wait(self):
+        if not self.reset_statuscode_on_next_success:
+            self.set_dbus_values_to_zero()
+            self.reset_statuscode_on_next_success = True
+
+    def _should_refresh_data(self, now):
+        return (
+            self.last_update_successful or
+            (now - self._last_update) >= self.retry_after_seconds or
+            self.failed_update_count < self.min_retries_until_fail
+        )
+
+    def _handle_data_update(self):
+        if self.dry_run:
+            logging.info("DRY RUN. No data is sent!!")
+        else:
+            self.set_dbus_values()
+
+    def _finalize_update(self, successful):
+        if successful:
+            if self.reset_statuscode_on_next_success:
+                self._dbusservice["/StatusCode"] = constants.STATUSCODE_RUNNING
+            if not self.last_update_successful:
+                logging.warning(
+                    f"Recovered inverter {self.pvinverternumber} ({self._get_name()}): "
+                    f"Successfully fetched data now: "
+                    f"{'NOT (yet?)' if not self.is_data_up2date() else 'Is'} up-to-date"
+                )
+            self.last_update_successful = True
+            self.failed_update_count = 0
+            self.reset_statuscode_on_next_success = False
+        else:
+            self.last_update_successful = False
+            self.failed_update_count += 1
 
     def _update_index(self):
         if self.dry_run:
@@ -657,12 +725,50 @@ class DbusService:
 
         return (power, pvyield, current, voltage, dc_voltage)
 
+    def set_dbus_values_to_zero(self):
+        '''zero power data and cleat connection status and set dbus values'''
+
+        if self._servicename == "com.victronenergy.inverter":
+            # see https://github.com/victronenergy/venus/wiki/dbus#inverter
+            self._dbusservice["/Ac/Out/L1/V"] = 0
+            self._dbusservice["/Ac/Out/L1/I"] = 0
+            self._dbusservice["/Ac/Out/L1/P"] = 0
+            self._dbusservice["/Dc/0/Voltage"] = 0
+            self._dbusservice["/Ac/Power"] = 0
+
+            self._dbusservice["/Ac/L1/Current"] = 0
+            self._dbusservice["/Ac/L1/Power"] = 0
+            self._dbusservice["/Ac/L1/Voltage"] = 0
+        else:
+            # 0=Startup 0; 1=Startup 1; 2=Startup 2; 3=Startup 3; 4=Startup 4; 5=Startup 5; 6=Startup 6; 7=Running; 8=Standby; 9=Boot loading; 10=Error
+            self._dbusservice["/StatusCode"] = constants.STATUSCODE_ERROR
+
+            # three-phase inverter: split total power equally over all three phases
+            if "3P" == self.pvinverterphase:
+
+                self._dbusservice["/Ac/L1/Voltage"] = 0
+                self._dbusservice["/Ac/L1/Current"] = 0
+                self._dbusservice["/Ac/L1/Power"] = 0
+                self._dbusservice["/Ac/L2/Voltage"] = 0
+                self._dbusservice["/Ac/L2/Current"] = 0
+                self._dbusservice["/Ac/L2/Power"] = 0
+                self._dbusservice["/Ac/L3/Voltage"] = 0
+                self._dbusservice["/Ac/L3/Current"] = 0
+                self._dbusservice["/Ac/L3/Power"] = 0
+                self._dbusservice["/Ac/Power"] = 0
+
+            else:
+                pre = "/Ac/" + self.pvinverterphase
+                self._dbusservice[pre + "/Voltage"] = 0
+                self._dbusservice[pre + "/Current"] = 0
+                self._dbusservice[pre + "/Power"] = 0
+                self._dbusservice["/Ac/Power"] = 0
+
     def set_dbus_values(self):
         '''read data and set dbus values'''
         (power, pvyield, current, voltage, dc_voltage) = self.get_values_for_inverter()
         state = self.get_ac_inverter_state(current)
 
-        # This will be refactored later in classes
         if self._servicename == "com.victronenergy.inverter":
             # see https://github.com/victronenergy/venus/wiki/dbus#inverter
             self._dbusservice["/Ac/Out/L1/V"] = voltage
