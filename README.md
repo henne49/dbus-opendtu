@@ -289,7 +289,7 @@ These are some useful commands which help to use the script or to debug.
 
 ### Check if the script is running
 
-`svstat /service/dbus-opendtu/service` show if the service (our script) is running. If the number of seconds shown is low, it is probably restarting and you should look into `/var/log/dbus-opendtu/current`.
+`svstat /service/dbus-opendtu` show if the service (our script) is running. If the number of seconds shown is low, it is probably restarting and you should look into `/var/log/dbus-opendtu/current` by using e.g. `tail -f /var/log/dbus-opendtu/current | tai64nlocal`.
 
 ### How to debug
 
