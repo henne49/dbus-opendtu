@@ -10,6 +10,7 @@ if [ -d /service/$SERVICE_NAME ]; then
 fi 
 
 # end the dbus-opendtu process
+kill $(pgrep -f "supervise $SERVICE_NAME\$")
 kill $(pgrep -f "python $SCRIPT_DIR/dbus_opendtu.py")
 
 # delete old logs if they exist  
