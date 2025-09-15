@@ -86,7 +86,8 @@ rm main.zip
 Check configuration after that - because the service is already installed and running. In case of wrong connection data (host, username, pwd) you will spam the log-file! Also, check to **set a** proper (minimal) **log level**
 
 ### Update the code
-Just grap a copy of the main branch and copy the content to `/data/` e.g. `/data/dbus-opendtu`. The process will preserve your existing config ini. 
+
+Just grap a copy of the main branch and copy the content to `/data/` e.g. `/data/dbus-opendtu`. The process will preserve your existing config ini.
 After that call the `install.sh script.
 
 ```bash
@@ -114,37 +115,37 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 
 #### Default options
 
-| Config value        | Explanation   |
-|-------------------- | ------------- |
-| SignOfLifeLog  | Time in minutes how often a status is added to the log-file `current` with log-level INFO |
-| NumberOfTemplates | Number ob Template Inverter to query |
-| DTU | Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template. template is template only, ahoy and opendtu can use a dtu and templates together.|
-| NumberOfInvertersToQuery | Number of Inverters to query. Set a value larger than "0" when not all inverters should be considered. *1 |
-| useYieldDay | send YieldDay instead of YieldTotal. Set this to 1 to prevent VRM from adding the total value to the history on one day. E.g. if you don't start using the inverter at 0. |
-| ESP8266PollingIntervall |  For ESP8266 reduce polling intervall to reduce load, default 10000ms|
-| Logging | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL |
-| MaxAgeTsLastSuccess | Maximum accepted age of ts_last_success in Ahoy status message. If ts_last_success is older than this number of seconds, values are not used.  Set this to < 0 to disable this check.                                    |
-| DryRun | Set this to a value different to "0" to prevent values from being sent. Use this for debugging or experiments. |
-| Host | IP or hostname of ahoy or OpenDTU API/web-interface |
-| HTTPTimeout | Timeout when doing the HTTP request to the DTU or template. Default: 2.5 sec |
-| Username | use if authentication required, leave empty if no authentication needed |
-| Password | use if authentication required, leave empty if no authentication needed |
-| MinRetriesUntilFail | Minimum number of consecutive update failures before entering error state (StatusCode=10, zero values). Default is 3. |
-| RetryAfterSeconds | If AhoyDTU/OpenDTU is not reachable, try to reconnect after this many seconds. Default is 120. |
-| ErrorMode | Error handling mode: `retrycount` (default, error after N failures) or `timeout` (error after a time period without success). See section below for details. |
+| Config value             | Explanation                                                                                                                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SignOfLifeLog            | Time in minutes how often a status is added to the log-file `current` with log-level INFO                                                                                             |
+| NumberOfTemplates        | Number ob Template Inverter to query                                                                                                                                                  |
+| DTU                      | Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template. template is template only, ahoy and opendtu can use a dtu and templates together. |
+| NumberOfInvertersToQuery | Number of Inverters to query. Set a value larger than "0" when not all inverters should be considered. \*1                                                                            |
+| useYieldDay              | send YieldDay instead of YieldTotal. Set this to 1 to prevent VRM from adding the total value to the history on one day. E.g. if you don't start using the inverter at 0.             |
+| ESP8266PollingIntervall  | For ESP8266 reduce polling intervall to reduce load, default 10000ms                                                                                                                  |
+| Logging                  | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL                                                               |
+| MaxAgeTsLastSuccess      | Maximum accepted age of ts_last_success in Ahoy status message. If ts_last_success is older than this number of seconds, values are not used. Set this to < 0 to disable this check.  |
+| DryRun                   | Set this to a value different to "0" to prevent values from being sent. Use this for debugging or experiments.                                                                        |
+| Host                     | IP or hostname of ahoy or OpenDTU API/web-interface                                                                                                                                   |
+| HTTPTimeout              | Timeout when doing the HTTP request to the DTU or template. Default: 2.5 sec                                                                                                          |
+| Username                 | use if authentication required, leave empty if no authentication needed                                                                                                               |
+| Password                 | use if authentication required, leave empty if no authentication needed                                                                                                               |
+| MinRetriesUntilFail      | Minimum number of consecutive update failures before entering error state (StatusCode=10, zero values). Default is 3.                                                                 |
+| RetryAfterSeconds        | If AhoyDTU/OpenDTU is not reachable, try to reconnect after this many seconds. Default is 120.                                                                                        |
+| ErrorMode                | Error handling mode: `retrycount` (default, error after N failures) or `timeout` (error after a time period without success). See section below for details.                          |
 
-*1: Please assure that the order is correct in the DTU, we can only extract the first one in a row.
+\*1: Please assure that the order is correct in the DTU, we can only extract the first one in a row.
 
 #### Inverter options
 
 This applies to each `INVERTER[X]` section. X is the number of Inverter starting with 0. So the first inverter is INVERTER0, the second INVERTER1 and so on.
 
-| Config value        | Explanation   |
-|-------------------- | ------------- |
-| Phase | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters *1 |
-| DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
-| AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) *2 |
-| Servicename | e.g. com.victronenergy.pvinverter see [Service names](#service-names) |
+| Config value   | Explanation                                                                    |
+| -------------- | ------------------------------------------------------------------------------ |
+| Phase          | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters \*1           |
+| DeviceInstance | Unique ID identifying the OpenDTU in Venus OS                                  |
+| AcPosition     | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) \*2 |
+| Servicename    | e.g. com.victronenergy.pvinverter see [Service names](#service-names)          |
 
 *1: Use 3P to split power equally over three phases (use this for Hoymiles three-phase micro-inverters as they report total power only, not seperated by phase).
 *2 Important for proper visualization in Venus OS / VRM
@@ -153,38 +154,38 @@ This applies to each `INVERTER[X]` section. X is the number of Inverter starting
 
 This applies to each `TEMPLATE[X]` section. X is the number of Template starting with 0. So the first template is TEMPLATE0, the second TEMPLATE1 and so on.
 
-| Config value        | Explanation   |
-|-------------------- | ------------- |
-| Host | IP or hostname of Template API/web-interface |
-| Username | use if authentication required, leave empty if no authentication needed |
-| Password | use if authentication required, leave empty if no authentication needed |
-| DigestAuth | TRUE if authentication is required using Digest Auth, as for Shelly Plus Devices, False if you Basic Auth to be used|
-| CUST_SN | Serialnumber to register device in VenusOS|
-| CUST_API_PATH | Location of REST API Path for JSON to be used |
-| CUST_POLLING | Polling interval in ms for Device |
-| CUST_Total | Path in JSON *4 where to find total Energy |
-| CUST_Total_Mult | Multiplier to convert W per minute for example in kWh|
-| CUST_Total_Default | [optional] Default value if no value is found in JSON |
-| CUST_Power | Path in JSON *4 where to find actual Power |
-| CUST_Power_Mult | Multiplier to convert W in negative or positive |
-| CUST_Power_Default | [optional] Default value if no value is found in JSON |
-| CUST_Voltage | Path in JSON *4 where to find actual Voltage |
-| CUST_Voltage_Default | [optional] Default value if no value is found in JSON |
-| CUST_Current | Path in JSON *4 where to find actual Current |
-| CUST_Current_Default | [optional] Default value if no value is found in JSON |
-| CUST_DCVoltage | Path in JSON *4 where to find actual DC Voltage (e.g. Batterie voltage) *2|
-| CUST_DCVoltage_Default | [optional] Default value if no value is found in JSON |
-| Phase | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters *3 |
-| DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
-| AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2 please do not use) |
-| Name | Name to be shown in VenusOS, use a descriptive name |
-| Servicename | e.g. com.victronenergy.pvinverter see [Service names](#service-names) |
+| Config value           | Explanation                                                                                                          |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Host                   | IP or hostname of Template API/web-interface                                                                         |
+| Username               | use if authentication required, leave empty if no authentication needed                                              |
+| Password               | use if authentication required, leave empty if no authentication needed                                              |
+| DigestAuth             | TRUE if authentication is required using Digest Auth, as for Shelly Plus Devices, False if you Basic Auth to be used |
+| CUST_SN                | Serialnumber to register device in VenusOS                                                                           |
+| CUST_API_PATH          | Location of REST API Path for JSON to be used                                                                        |
+| CUST_POLLING           | Polling interval in ms for Device                                                                                    |
+| CUST_Total             | Path in JSON \*4 where to find total Energy                                                                          |
+| CUST_Total_Mult        | Multiplier to convert W per minute for example in kWh                                                                |
+| CUST_Total_Default     | [optional] Default value if no value is found in JSON                                                                |
+| CUST_Power             | Path in JSON \*4 where to find actual Power                                                                          |
+| CUST_Power_Mult        | Multiplier to convert W in negative or positive                                                                      |
+| CUST_Power_Default     | [optional] Default value if no value is found in JSON                                                                |
+| CUST_Voltage           | Path in JSON \*4 where to find actual Voltage                                                                        |
+| CUST_Voltage_Default   | [optional] Default value if no value is found in JSON                                                                |
+| CUST_Current           | Path in JSON \*4 where to find actual Current                                                                        |
+| CUST_Current_Default   | [optional] Default value if no value is found in JSON                                                                |
+| CUST_DCVoltage         | Path in JSON *4 where to find actual DC Voltage (e.g. Batterie voltage) *2                                           |
+| CUST_DCVoltage_Default | [optional] Default value if no value is found in JSON                                                                |
+| Phase                  | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters \*3                                                 |
+| DeviceInstance         | Unique ID identifying the OpenDTU in Venus OS                                                                        |
+| AcPosition             | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2 please do not use)                         |
+| Name                   | Name to be shown in VenusOS, use a descriptive name                                                                  |
+| Servicename            | e.g. com.victronenergy.pvinverter see [Service names](#service-names)                                                |
 
-*2: is only used if Servicename is com.victronenergy.inverter
+\*2: is only used if Servicename is com.victronenergy.inverter
 
-*3: Use 3P to split power equally over three phases (use this for Hoymiles three-phase micro-inverters as they report total power only, not seperated by phase).
+\*3: Use 3P to split power equally over three phases (use this for Hoymiles three-phase micro-inverters as they report total power only, not seperated by phase).
 
-*4: Path in JSON: use keywords and array index numbers separated by `/`. Example (compare [tasmota_shelly_2pm.json](docs/tasmota_shelly_2pm.json)): `StatusSNS/ENERGY/Current/0` fetches dictionary (map) entry `StatusSNS` containting an entry `ENERGY` containing an entry `Current` containing an array where the first element (index 0) is taken.
+\*4: Path in JSON: use keywords and array index numbers separated by `/`. Example (compare [tasmota_shelly_2pm.json](docs/tasmota_shelly_2pm.json)): `StatusSNS/ENERGY/Current/0` fetches dictionary (map) entry `StatusSNS` containting an entry `ENERGY` containing an entry `Current` containing an array where the first element (index 0) is taken.
 
 ---
 
@@ -193,6 +194,7 @@ This applies to each `TEMPLATE[X]` section. X is the number of Template starting
 The error handling behavior of dbus-opendtu can be configured using the `ErrorMode` and `ErrorStateAfterSeconds` options in your configuration file. This allows you to choose between two flexible strategies for handling communication errors with your DTU (Data Transfer Unit):
 
 ##### 1. `retrycount` Mode (Default)
+
 - **Behavior:**
   - The system will attempt to update data from the DTU on every cycle.
   - If a number of consecutive update attempts fail (as set by `MinRetriesUntilFail`), the system enters an error state:
@@ -205,6 +207,7 @@ The error handling behavior of dbus-opendtu can be configured using the `ErrorMo
   - `RetryAfterSeconds=120` (default)
 
 ##### 2. `timeout` Mode
+
 - **Behavior:**
   - The system always attempts to reconnect and refresh data every `RetryAfterSeconds`.
   - Zero values and error state are only set if the time since the last successful update exceeds `ErrorStateAfterSeconds`.
@@ -227,10 +230,11 @@ MinRetriesUntilFail=3
 ```
 
 ##### Summary Table
-| Mode        | When are zero values set?                | When is reconnect attempted?         |
-|-------------|------------------------------------------|--------------------------------------|
-| retrycount  | After N consecutive failures             | After `RetryAfterSeconds`            |
-| timeout     | After `ErrorStateAfterSeconds` timeout   | Always, every `RetryAfterSeconds`    |
+
+| Mode       | When are zero values set?              | When is reconnect attempted?      |
+| ---------- | -------------------------------------- | --------------------------------- |
+| retrycount | After N consecutive failures           | After `RetryAfterSeconds`         |
+| timeout    | After `ErrorStateAfterSeconds` timeout | Always, every `RetryAfterSeconds` |
 
 Choose the mode that best fits your reliability and error reporting needs. For most users, the default `retrycount` mode is sufficient. Use `timeout` mode if you want to avoid error states for short outages and only show errors after a longer period without successful updates.
 
@@ -238,9 +242,9 @@ Choose the mode that best fits your reliability and error reporting needs. For m
 
 The following servicenames are supported:
 
-* com.victronenergy.pvinverter
-* com.victronenergy.inverter (non-PV - see below)
-* others might work but are not tested or undocumented yet
+- com.victronenergy.pvinverter
+- com.victronenergy.inverter (non-PV - see below)
+- others might work but are not tested or undocumented yet
 
 **Note: Non-PV inverters are BETA! The functionality will be limited** (due to limited understanding of Victrons/Venus's behavior).
 
@@ -250,14 +254,14 @@ For more Information about non-PV inverters, see this [Issue #42](https://github
 Also, please note the use case about non-PV inverters below.
 
 It is possible that other servicenames are supported, but they have not been tested by us. If you have a device with a different servicename, please open an issue. Any help or research is welcome and appreciated.
-  
+
 ### Videos how to install
 
 Here are some videos on how to install and use the script. They are in German, but you can use subtitles and auto-translate to your language.
-*(Don't be confused that the config they used is not the up-to-date.)*
+_(Don't be confused that the config they used is not the up-to-date.)_
 
-* <https://youtu.be/PpjCz33pGkk> Meine Energiewende
-* <https://youtu.be/UNuIOa72eP4> Schatten PV
+- <https://youtu.be/PpjCz33pGkk> Meine Energiewende
+- <https://youtu.be/UNuIOa72eP4> Schatten PV
 
 ### Use Cases
 
@@ -340,7 +344,7 @@ These are some useful commands which help to use the script or to debug.
 
 ### Check if the script is running
 
-`svstat /service/dbus-opendtu` show if the service (our script) is running. If the number of seconds shown is low, it is probably restarting and you should look into `/var/log/dbus-opendtu/current`.
+`svstat /service/dbus-opendtu` show if the service (our script) is running. If the number of seconds shown is low, it is probably restarting and you should look into `/var/log/dbus-opendtu/current` by using e.g. `tail -f /var/log/dbus-opendtu/current | tai64nlocal`.
 
 ### How to debug
 
@@ -352,17 +356,15 @@ This is useful to check if the script is running and sending values to Venus OS.
 
 `/data/dbus-opendtu/install.sh` installs the service persistently (see above).
 
-This also activates the service, so you don't need to run `svcadm enable /service/dbus-opendtu` manually.
-
 ### How to restart
 
 `/data/dbus-opendtu/restart.sh` restarts the service - e.g. after a config.ini change.
 
 ### How to uninstall
 
-`/data/dbus-opendtu/uninstall.sh` stops the service and prevents it from being restarted (e.g. after a reboot).
+`/data/dbus-opendtu/uninstall.sh` stops the service and prevents it from being restarted after a reboot.
 
-If you want to remove the service completely, you can do so by running `rm -rf /data/dbus-opendtu`.
+If you want to remove the service completely, you can do so by running `rm -r /data/dbus-opendtu`.
 
 ---
 
@@ -370,14 +372,14 @@ If you want to remove the service completely, you can do so by running `rm -rf /
 
 The script is inspired by @fabian-lauer dbus-shelly-3em-smartmeter implementation. So what is the script doing:
 
-* Running as a service
-* Connecting to DBus of the Venus OS `com.victronenergy.pvinverter.http_{DeviceInstanceID_from_config}`
-* After successful DBus connection, OpenDTU (resp. Ahoy) is accessed via REST-API - simply the `/status` (resp. `api/live`) is called which returns a JSON with all details.
-  * A sample JSON file from OpenDTU can be found [here](docs/OpenDTU.json).
-  * A sample JSON file from Ahoy can be found [here](docs/ahoy_0.6.9_live.json)
-* Serial/devicename is taken from the response as device serial
-* Paths are added to the DBus with default value 0 - including some settings like name etc.
-* After that, a "loop" is started which pulls OpenDTU/AhoyDTU data every 5s (configurable) from the REST-API and updates the values in the DBus, for ESP 8266 based ahoy systems we even pull data only every 10seconds.
+- Running as a service
+- Connecting to DBus of the Venus OS `com.victronenergy.pvinverter.http_{DeviceInstanceID_from_config}`
+- After successful DBus connection, OpenDTU (resp. Ahoy) is accessed via REST-API - simply the `/status` (resp. `api/live`) is called which returns a JSON with all details.
+  - A sample JSON file from OpenDTU can be found [here](docs/OpenDTU.json).
+  - A sample JSON file from Ahoy can be found [here](docs/ahoy_0.6.9_live.json)
+- Serial/devicename is taken from the response as device serial
+- Paths are added to the DBus with default value 0 - including some settings like name etc.
+- After that, a "loop" is started which pulls OpenDTU/AhoyDTU data every 5s (configurable) from the REST-API and updates the values in the DBus, for ESP 8266 based ahoy systems we even pull data only every 10seconds.
 
 Thats it 😄
 
@@ -394,16 +396,16 @@ The code allows you to query either an Ahoy or OpenDTU Device, plus multiple tem
 
 Following combinations are possible:
 
-* Use one or more devices configured via template configuration
-* Use a OpenDTU device
-* Use a AhoyDTU device
-* Use either a OpenDTU or a AhoyDTU device and one or more template devices.
+- Use one or more devices configured via template configuration
+- Use a OpenDTU device
+- Use a AhoyDTU device
+- Use either a OpenDTU or a AhoyDTU device and one or more template devices.
 
 Tested examples for template devices:
 
-* Tasmota unauthenticated
-* Shelly 1 PM authenticated/unauthenticated
-* Shelly Plus 1 PM unathenticated
+- Tasmota unauthenticated
+- Shelly 1 PM authenticated/unauthenticated
+- Shelly Plus 1 PM unathenticated
 
 All [configuration](#configuration) is done via config.ini. Examples are commented in config.ini
 
@@ -412,8 +414,9 @@ All [configuration](#configuration) is done via config.ini. Examples are comment
 ## Frequently asked questions
 
 Frequently asked questions:
-* **Can I use multiple instances?** - YES, but limit the usage to a minimal level and check the stability of your system for free space on your device and load. Also remeber, that templates can be queried together with a single dtu, no need for another instance. 
-* **Do I need multiple instances to query a DTU and templates?** - NO, templates can be queried together with a single dtu, no need for another instance. But limit the usage of templates and check the stability of your system.
+
+- **Can I use multiple instances?** - YES, but limit the usage to a minimal level and check the stability of your system for free space on your device and load. Also remeber, that templates can be queried together with a single dtu, no need for another instance.
+- **Do I need multiple instances to query a DTU and templates?** - NO, templates can be queried together with a single dtu, no need for another instance. But limit the usage of templates and check the stability of your system.
 
 ---
 
@@ -428,16 +431,17 @@ Rerun the script and share the log file current.log use the following command to
 ```
 cat /var/log/dbus-opendtu/current | tai64nlocal > current.log
 ```
+
 Please provide the config.ini and JSON file and upload to the github issues, you can download the JSON file using your browser or using a commandline like tool like curl
 
-| Type of DTU | URL |
-| ------------- | ------------- |
-| OpenDTU | <http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status> |
-| Ahoy | <http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/live> |
-| Template Tasmota| <http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/cm?cmnd=STATUS+8> |
-| Template Shelly 1 | <http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/status> |
+| Type of DTU          | URL                                                                 |
+| -------------------- | ------------------------------------------------------------------- |
+| OpenDTU              | <http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/livedata/status>       |
+| Ahoy                 | <http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/api/live>                  |
+| Template Tasmota     | <http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/cm?cmnd=STATUS+8>          |
+| Template Shelly 1    | <http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/status>                    |
 | Template Shelly Plus | <http://REPLACE_WITH_YOUR_IP_OR_HOSTNAME/rpc/Switch.GetStatus?id=0> |
-| Template Your Own | You will know best|
+| Template Your Own    | You will know best                                                  |
 
 OpenDTU Curl example which uses jq to make the output pretty:
 
@@ -462,14 +466,14 @@ For openDTU, you can use authentication for the web Interface, but allow access 
 Idea is inspired on @fabian-lauer & @vikt0rm project linked below.
 This project is my first on GitHub and with the Victron Venus OS, so I took some ideas and approaches from the following projects - many thanks for sharing the knowledge:
 
-* [dbus-shelly-3em-smartmeter](https://github.com/fabian-lauer/dbus-shelly-3em-smartmeter)
-* [shelly-api-docs](https://shelly-api-docs.shelly.cloud/gen1/#shelly1-shelly1pm)
-* [Victron Wiki](https://github.com/victronenergy/venus/wiki/dbus#pv-inverters)
-* [dbus-shelly-1pm-pvinverter](https://github.com/vikt0rm/dbus-shelly-1pm-pvinverter)
-* [OpenDTU](https://github.com/tbnobody/OpenDTU )
-* [OpenDTU Web-API Docs](https://github.com/tbnobody/OpenDTU/blob/master/docs/Web-API.md)
-* [AhoyDTU](https://ahoydtu.de/)
-* [AhoyDTU git](https://github.com/lumapu/ahoy)
+- [dbus-shelly-3em-smartmeter](https://github.com/fabian-lauer/dbus-shelly-3em-smartmeter)
+- [shelly-api-docs](https://shelly-api-docs.shelly.cloud/gen1/#shelly1-shelly1pm)
+- [Victron Wiki](https://github.com/victronenergy/venus/wiki/dbus#pv-inverters)
+- [dbus-shelly-1pm-pvinverter](https://github.com/vikt0rm/dbus-shelly-1pm-pvinverter)
+- [OpenDTU](https://github.com/tbnobody/OpenDTU)
+- [OpenDTU Web-API Docs](https://github.com/tbnobody/OpenDTU/blob/master/docs/Web-API.md)
+- [AhoyDTU](https://ahoydtu.de/)
+- [AhoyDTU git](https://github.com/lumapu/ahoy)
 
 ---
 
@@ -479,13 +483,13 @@ If you like to read more about the Venus OS and the DBus, please check the follo
 
 ### used Documentation
 
-* [DBus paths for Victron namespace](https://github.com/victronenergy/venus/wiki/dbus#pv-inverters)
-* [DBus API from Victron](https://github.com/victronenergy/venus/wiki/dbus-api)
-* [How to get root access on GX device/Venus OS](https://www.victronenergy.com/live/ccgx:root_access)
-* [OpenDTU Web-API](https://github.com/tbnobody/OpenDTU/blob/master/docs/Web-API.md)
+- [DBus paths for Victron namespace](https://github.com/victronenergy/venus/wiki/dbus#pv-inverters)
+- [DBus API from Victron](https://github.com/victronenergy/venus/wiki/dbus-api)
+- [How to get root access on GX device/Venus OS](https://www.victronenergy.com/live/ccgx:root_access)
+- [OpenDTU Web-API](https://github.com/tbnobody/OpenDTU/blob/master/docs/Web-API.md)
 
 ### Discussions on the web
 
 This module/repository has been posted on the following threads:
 
-* [Community Victronenergy](https://community.victronenergy.com/questions/169076/opendtu-as-pv-inverter-in-venusos.html)
+- [Community Victronenergy](https://community.victronenergy.com/questions/169076/opendtu-as-pv-inverter-in-venusos.html)
