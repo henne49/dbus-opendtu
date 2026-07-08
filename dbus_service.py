@@ -122,7 +122,8 @@ class DbusService:
         self._dbusservice.add_path("/Latency", None)
         self._dbusservice.add_path("/FirmwareVersion", read_version('version.txt'))
         self._dbusservice.add_path("/HardwareVersion", 0)
-        self._dbusservice.add_path("/Position", self.acposition)  # normaly only needed for pvinverter
+        self._dbusservice.add_path("/Position", self.acposition, writeable=True)  # normaly only needed for pvinverter
+        self._dbusservice.add_path("/PositionIsAdjustable", 1)
         self._dbusservice.add_path("/Serial", self._get_serial(self.pvinverternumber))
         self._dbusservice.add_path("/UpdateIndex", 0)
         # set path StatusCode to 7=Running so VRM detects a working PV-Inverter
