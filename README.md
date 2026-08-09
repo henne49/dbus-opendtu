@@ -146,7 +146,7 @@ This applies to each `INVERTER[X]` section. X is the number of Inverter starting
 > Before assigning `DeviceInstance` or `Phase`, compare `id` and `order` in `/api/inverter/list`. Afterwards verify that each D-Bus service reports the serial you expect:
 >
 > ```bash
-> dbus-send --system --print-reply --dest=com.victronenergy.pvinverter.http_<DeviceInstance> \
+> dbus-send --system --print-reply --dest=com.victronenergy.pvinverter.http_{DeviceInstance} \
 >     /Serial com.victronenergy.BusItem.GetValue
 > ```
 >
