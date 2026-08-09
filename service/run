@@ -1,12 +1,17 @@
 #!/bin/sh
 #Script Directory
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+# $0 instead of ${BASH_SOURCE[0]}: Venus OS runs busybox ash, which has no
+# BASH_SOURCE, so SCRIPT_DIR silently fell back to the current directory.
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 #Define the version filename
-CODE_VERSION_FILE=$(realpath $SCRIPT_DIR/../version.txt)
+CODE_VERSION_FILE=$(realpath "$SCRIPT_DIR/../version.txt")
 exec 2>&1
 #Check if the file exists
 if [ -f "$CODE_VERSION_FILE" ]; then
     #If the file exists, print its contents to stdout
     cat "$CODE_VERSION_FILE"
 fi
-python $(realpath $SCRIPT_DIR/../dbus_opendtu.py)
+# exec so that supervise watches python itself. Without it the shell stays as
+# the supervised child, a restart leaves python orphaned, and the new process
+# dies with "Bus name already exists" until the old one is killed by hand.
+exec python "$(realpath "$SCRIPT_DIR/../dbus_opendtu.py")"
