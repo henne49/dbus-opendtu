@@ -1,8 +1,10 @@
 #!/bin/sh
 exec 2>&1
 #Script Directory
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-SCRIPT_DIR=$(realpath $SCRIPT_DIR/../../)
-SERVICE_NAME=$(basename $SCRIPT_DIR)
+# $0 instead of ${BASH_SOURCE[0]}: Venus OS runs busybox ash, which has no
+# BASH_SOURCE, so SCRIPT_DIR silently fell back to the current directory.
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+SCRIPT_DIR=$(realpath "$SCRIPT_DIR/../../")
+SERVICE_NAME=$(basename "$SCRIPT_DIR")
 # documentation on how to use multilog https://manpages.debian.org/stretch/daemontools/multilog.8.en.html
-exec multilog t s153600 n2 /var/log/${SERVICE_NAME}
+exec multilog t s153600 n2 "/var/log/${SERVICE_NAME}"
