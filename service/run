@@ -1,7 +1,7 @@
 #!/bin/sh
 #Script Directory
-# $0 instead of ${BASH_SOURCE[0]}: Venus OS runs busybox ash, which has no
-# BASH_SOURCE, so SCRIPT_DIR silently fell back to the current directory.
+# BASH_SOURCE and &> are bash-only in a #!/bin/sh script; they work today only
+# because /bin/sh is bash on Venus OS.
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 #Define the version filename
 CODE_VERSION_FILE=$(realpath "$SCRIPT_DIR/../version.txt")
@@ -11,7 +11,6 @@ if [ -f "$CODE_VERSION_FILE" ]; then
     #If the file exists, print its contents to stdout
     cat "$CODE_VERSION_FILE"
 fi
-# exec so that supervise watches python itself. Without it the shell stays as
-# the supervised child, a restart leaves python orphaned, and the new process
-# dies with "Bus name already exists" until the old one is killed by hand.
+# exec so supervise watches python itself: otherwise a restart orphans python,
+# it keeps the D-Bus names, and the new process dies with "Bus name already exists".
 exec python "$(realpath "$SCRIPT_DIR/../dbus_opendtu.py")"

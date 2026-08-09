@@ -1,8 +1,8 @@
 #!/bin/sh
 exec 2>&1
 #Script Directory
-# $0 instead of ${BASH_SOURCE[0]}: Venus OS runs busybox ash, which has no
-# BASH_SOURCE, so SCRIPT_DIR silently fell back to the current directory.
+# BASH_SOURCE and &> are bash-only in a #!/bin/sh script; they work today only
+# because /bin/sh is bash on Venus OS.
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 SCRIPT_DIR=$(realpath "$SCRIPT_DIR/../../")
 SERVICE_NAME=$(basename "$SCRIPT_DIR")
