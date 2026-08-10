@@ -140,6 +140,18 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 
 This applies to each `INVERTER[X]` section. X is the number of Inverter starting with 0. So the first inverter is INVERTER0, the second INVERTER1 and so on.
 
+> [!IMPORTANT]
+> `X` is the position of the inverter in the DTU's API response (the `inverters` array of `/api/livedata/status`) — **not** the order shown in the OpenDTU web UI. The UI sorts by each inverter's `order` field, and that field may differ from the position in the API response, which is what this project uses.
+>
+> Before assigning `DeviceInstance` or `Phase`, compare `id` and `order` in `/api/inverter/list`. Afterwards verify that each D-Bus service reports the serial you expect:
+>
+> ```bash
+> dbus-send --system --print-reply --dest=com.victronenergy.pvinverter.http_{DeviceInstance} \
+>     /Serial com.victronenergy.BusItem.GetValue
+> ```
+>
+> Getting this wrong fails silently: all inverters show up, but `Phase` and `DeviceInstance` are attached to the wrong device.
+
 | Config value   | Explanation                                                                    |
 | -------------- | ------------------------------------------------------------------------------ |
 | Phase          | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters \*1           |
