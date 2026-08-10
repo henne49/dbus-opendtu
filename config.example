@@ -19,6 +19,14 @@ useYieldDay=0
 #For ESP8266 reduce polling intervall to reduce load
 ESP8266PollingIntervall=10000
 
+#How often an OpenDTU is polled, in ms. Raise this if the DTU gets slow with many inverters.
+OpenDTUPollingIntervall=5000
+
+#How often a failed HTTP call is attempted before the value is dropped.
+#Every attempt blocks the mainloop for up to HTTPTimeout, so lowering this keeps the dbus
+#service responsive while the DTU is slow, at the price of losing a reading now and then.
+MaxFetchTries=3
+
 #Possible Options for Log Level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 #To keep current.log small use ERROR
 Logging=ERROR
