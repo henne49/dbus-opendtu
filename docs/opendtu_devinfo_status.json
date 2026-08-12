@@ -1,0 +1,11 @@
+{
+    "valid_data": true,
+    "fw_bootloader_version": 101,
+    "fw_build_version": 10027,
+    "hw_part_number": 270692630,
+    "hw_version": "01.10",
+    "hw_model_name": "HMS-2000-4T",
+    "max_power": 2000,
+    "fw_build_datetime": "2023-06-05 10:24:00",
+    "pdl_supported": false
+}

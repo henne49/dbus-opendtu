@@ -12,6 +12,7 @@ import platform
 import sys
 import logging
 import time
+from json import dumps as json_dumps
 import requests  # for http GET
 from requests.auth import HTTPDigestAuth
 
@@ -103,30 +104,59 @@ class DbusService:
         )
 
         self._dbusservice = VeDbusService(f"{servicename}.http_{self.deviceinstance}", bus=dbus_conn, register=False)
-        self._paths = constants.VICTRON_PATHS
+        self._paths = (constants.PVINVERTER_PATHS
+                       if servicename == "com.victronenergy.pvinverter"
+                       else constants.VICTRON_PATHS)
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path("/Mgmt/ProcessName", __file__)
         self._dbusservice.add_path("/Mgmt/ProcessVersion",
                                    "Unkown version, and running on Python " + platform.python_version())
-        self._dbusservice.add_path("/Mgmt/Connection", constants.CONNECTION)
+        self._dbusservice.add_path("/Mgmt/Connection", constants.PRODUCTNAME + " - " + constants.CONNECTION)
+
+        # Fetch serial + OpenDTU devinfo once so management paths can be populated
+        # with real hardware/firmware metadata instead of placeholders.
+        self.serial = self._get_serial(self.pvinverternumber)
+        self.devinfo = self._fetch_devinfo_safe()
+        # Seed /Ac/MaxPower and /Ac/PowerLimit from OpenDTU before add_path; writing
+        # them later would emit PropertiesChanged and round-trip back as an external
+        # Set that our onchangecallback re-applies to OpenDTU, stomping on user limits.
+        limit_entry = self._fetch_limit_entry_safe()
+        initial_max_power, initial_power_limit = self._initial_power_limit_from_entry(limit_entry)
+        # If the initial fetch failed, _refresh_limit_status will seed these paths
+        # on its first successful call. Track the state so the seed fires at most once.
+        self._limit_seeded = limit_entry is not None
+
+        product_name = (self.devinfo.get("hw_model_name") if self.devinfo else None) or self._get_name()
+        firmware_version = self._format_firmware_version() or read_version('version.txt')
+        hardware_version = self._decode_version(
+            self.devinfo.get("hw_version") if self.devinfo else None) or 0
+        initial_status = (constants.STATUSCODE_ERROR
+                          if self.devinfo is not None and not is_true(self.devinfo.get("valid_data", True))
+                          else constants.STATUSCODE_STARTUP)
+
+        self.polling_interval = self._get_polling_interval()
 
         # Create the mandatory objects
         self._dbusservice.add_path("/DeviceInstance", self.deviceinstance)
         self._dbusservice.add_path("/ProductId", 0xFFFF)  # id assigned by Victron Support from SDM630v2.py
-        self._dbusservice.add_path("/ProductName", constants.PRODUCTNAME)
+        self._dbusservice.add_path("/ProductName", product_name)
         self._dbusservice.add_path("/CustomName", self._get_name())
         logging.info(f"Name of Inverters found: {self._get_name()}")
-        self._dbusservice.add_path("/Connected", 1)
+        connected = int(is_true(self.devinfo.get("valid_data"))) if self.devinfo else 1
+        self._dbusservice.add_path("/Connected", connected)
 
-        self._dbusservice.add_path("/Latency", None)
-        self._dbusservice.add_path("/FirmwareVersion", read_version('version.txt'))
-        self._dbusservice.add_path("/HardwareVersion", 0)
-        self._dbusservice.add_path("/Position", self.acposition)  # normaly only needed for pvinverter
-        self._dbusservice.add_path("/Serial", self._get_serial(self.pvinverternumber))
+        self._dbusservice.add_path("/Latency", self.polling_interval)
+        self._dbusservice.add_path("/FirmwareVersion", firmware_version)
+        self._dbusservice.add_path("/HardwareVersion", hardware_version)
+        self._dbusservice.add_path("/Serial", self.serial)
         self._dbusservice.add_path("/UpdateIndex", 0)
-        # set path StatusCode to 7=Running so VRM detects a working PV-Inverter
-        self._dbusservice.add_path("/StatusCode", constants.STATUSCODE_RUNNING)
+        # StatusCode starts at Startup(0); first successful update_dbus_values() transitions to Running/Standby.
+        # devinfo.valid_data=false at startup already flags ERROR.
+        self._dbusservice.add_path("/StatusCode", initial_status)
+        if servicename == "com.victronenergy.pvinverter":
+            self._dbusservice.add_path("/Position", self.acposition)
+            self._dbusservice.add_path("/PositionIsAdjustable", 1)
 
         # If the Servicname is an (AC-)Inverter, add the Mode path (to show it as ON)
         # Also, we will set different paths and variables in the _update(self) method.
@@ -143,10 +173,15 @@ class DbusService:
             self._dbusservice.add_path("/State", 9)
 
         # add path values to dbus
+        initial_overrides = {
+            "/Ac/MaxPower": initial_max_power,
+            "/Ac/PowerLimit": initial_power_limit,
+        }
         for path, settings in self._paths.items():
+            initial_value = initial_overrides.get(path, settings["initial"])
             self._dbusservice.add_path(
                 path,
-                settings["initial"],
+                initial_value,
                 gettextcallback=settings["textformat"],
                 writeable=True,
                 onchangecallback=self._handlechangedvalue,
@@ -154,7 +189,6 @@ class DbusService:
 
         self._dbusservice.register()
 
-        self.polling_interval = self._get_polling_interval()
         self.last_polling = 0
 
     @staticmethod
@@ -170,9 +204,10 @@ class DbusService:
             ac_inverter_state = 0  # = Off
         return ac_inverter_state
 
-    @staticmethod
-    def _handlechangedvalue(path, value):
+    def _handlechangedvalue(self, path, value):
         logging.debug("someone else updated %s to %s", path, value)
+        if path == "/Ac/PowerLimit" and self.dtuvariant == constants.DTUVARIANT_OPENDTU:
+            return self._apply_power_limit(value)
         return True  # accept the change
 
     @staticmethod
@@ -453,6 +488,155 @@ class DbusService:
         logging.debug(f"Inverter URL: {iv_url}")
         return self.fetch_url(iv_url)
 
+    def fetch_opendtu_devinfo(self, inverter_serial):
+        '''Fetch device info (firmware/hardware metadata) from OpenDTU for one inverter.'''
+        url = f"{self.get_opendtu_base_url()}/devinfo/status?inv={inverter_serial}"
+        logging.debug(f"Devinfo URL: {url}")
+        return self.fetch_url(url)
+
+    def _fetch_devinfo_safe(self):
+        '''OpenDTU only: one-shot devinfo fetch at startup. Returns dict or None on failure.'''
+        if self.dtuvariant != constants.DTUVARIANT_OPENDTU:
+            return None
+        try:
+            return self.fetch_opendtu_devinfo(self.serial)
+        except Exception as error:
+            logging.warning(f"devinfo fetch failed: {error}")
+            return None
+
+    def _fetch_limit_entry_safe(self):
+        '''OpenDTU only: one-shot /api/limit/status fetch for this inverter at startup.
+           Returns the per-serial entry dict or None on failure.'''
+        if self.dtuvariant != constants.DTUVARIANT_OPENDTU:
+            return None
+        try:
+            status = self.fetch_url(f"{self.get_opendtu_base_url()}/limit/status")
+            return status.get(self.serial)
+        except Exception as error:
+            logging.warning(f"limit status fetch failed: {error}")
+            return None
+
+    @staticmethod
+    def _initial_power_limit_from_entry(entry):
+        '''Derive (max_power, power_limit) pair from a /api/limit/status entry.
+           Either value may be None if the entry is missing or incomplete.'''
+        if not entry:
+            return (None, None)
+        max_power = entry.get("max_power")
+        limit_relative = entry.get("limit_relative")
+        power_limit = None
+        if max_power is not None and limit_relative is not None:
+            power_limit = max_power * float(limit_relative) / 100.0
+        return (max_power, power_limit)
+
+    @staticmethod
+    def _decode_version(value):
+        '''Decode OpenDTU version fields. Strings pass through; ints are split into
+           2-digit groups from the right (e.g. 10027 -> "1.0.27", 101 -> "0.1.1").'''
+        if value is None:
+            return None
+        if isinstance(value, str):
+            return value
+        if isinstance(value, int):
+            return f"{value // 10000}.{(value // 100) % 100}.{value % 100}"
+        return str(value)
+
+    def _format_firmware_version(self):
+        '''Combine devinfo fw_build_version and fw_build_datetime into a display string.'''
+        if not self.devinfo:
+            return None
+        fw_ver = self._decode_version(self.devinfo.get("fw_build_version"))
+        fw_dt = self.devinfo.get("fw_build_datetime")
+        if fw_ver and fw_dt:
+            return f"{fw_ver} ({fw_dt})"
+        return fw_ver or fw_dt
+
+    def _refresh_limit_status(self):
+        '''OpenDTU only: fetch /api/limit/status and mirror limit_set_status to
+           /StatusCode. Returns the limit_set_status string (or None) so callers can
+           poll through a "Pending" phase. /Ac/MaxPower and /Ac/PowerLimit are seeded
+           at init via add_path; if that initial fetch failed, this function performs
+           a one-shot fallback seed (guarded by echo suppression in _handlechangedvalue
+           so the internal write doesn't round-trip back as a POST).'''
+        if self.dtuvariant != constants.DTUVARIANT_OPENDTU:
+            return None
+        url = f"{self.get_opendtu_base_url()}/limit/status"
+        status = self.fetch_url(url)
+        entry = status.get(self.serial)
+        if not entry:
+            logging.warning(f"No limit status entry for serial {self.serial}")
+            return None
+        if not getattr(self, "_limit_seeded", True):
+            # Mark seeded before writes so any re-entrant _refresh_limit_status (via
+            # onchangecallback -> _apply_power_limit -> _wait_for_limit_settled) skips.
+            self._limit_seeded = True
+            max_power, power_limit = self._initial_power_limit_from_entry(entry)
+            if max_power is not None:
+                self._dbusservice["/Ac/MaxPower"] = max_power
+            if power_limit is not None:
+                self._dbusservice["/Ac/PowerLimit"] = power_limit
+        limit_set_status = entry.get("limit_set_status")
+        if limit_set_status == "Ok":
+            self._dbusservice["/StatusCode"] = constants.STATUSCODE_RUNNING
+        elif limit_set_status == "Pending":
+            # Transient: inverter hasn't acknowledged the new limit yet. Leave
+            # /StatusCode unchanged so callers can poll without flapping.
+            logging.debug(f"limit_set_status=Pending for serial {self.serial}")
+        else:
+            logging.warning(f"limit_set_status={limit_set_status} for serial {self.serial}")
+            self._dbusservice["/StatusCode"] = constants.STATUSCODE_ERROR
+        return limit_set_status
+
+    def _wait_for_limit_settled(self, timeout=5.0, interval=0.5):
+        '''Poll _refresh_limit_status until limit_set_status leaves "Pending" or
+           timeout elapses. Returns the final status string (or None).'''
+        deadline = time.time() + timeout
+        status = None
+        while True:
+            try:
+                status = self._refresh_limit_status()
+            except Exception as error:
+                logging.warning(f"Limit status refresh failed during poll: {error}")
+                return status
+            if status != "Pending":
+                return status
+            if time.time() >= deadline:
+                logging.warning(
+                    f"limit_set_status still Pending after {timeout:.1f}s for serial {self.serial}")
+                return status
+            time.sleep(interval)
+
+    def _apply_power_limit(self, watts):
+        '''Write /Ac/PowerLimit -> POST /api/limit/config (absolute watts, non-persistent).
+           Return True to accept the DBus write, False to reject.'''
+        try:
+            watts_int = int(watts)
+        except (TypeError, ValueError):
+            logging.warning(f"Rejecting non-numeric PowerLimit write: {watts!r}")
+            return False
+        if watts_int < 0:
+            logging.warning(f"Rejecting negative PowerLimit write: {watts_int}")
+            return False
+        max_power = self._dbusservice["/Ac/MaxPower"]
+        if max_power and watts_int > max_power:
+            logging.debug(f"Clamping PowerLimit {watts_int}W to MaxPower {max_power}W")
+            watts_int = int(max_power)
+        payload = {"serial": self.serial, "limit_type": 0, "limit_value": watts_int}
+        url = f"{self.get_opendtu_base_url()}/limit/config"
+        try:
+            response = self.post_url(url, payload)
+        except Exception as error:
+            logging.warning(f"Failed to apply power limit: {error}")
+            return False
+        if response.get("type") != "success":
+            logging.warning(f"OpenDTU rejected limit: {response}")
+            return False
+        try:
+            self._wait_for_limit_settled()
+        except Exception as error:
+            logging.warning(f"Post-write limit status refresh failed: {error}")
+        return True
+
     def fetch_ahoy_iv_data(self, inverter_number):
         '''Fetch inverter data from Ahoy device for one inverter'''
         iv_url = self.get_ahoy_base_url() + "/inverter/id/" + str(inverter_number)
@@ -507,6 +691,21 @@ class DbusService:
             else:
                 raise
 
+    def post_url(self, url, payload):
+        '''POST payload to url wrapped as form field data=<json>. Return parsed JSON response.'''
+        form = {"data": json_dumps(payload)}
+        logging.debug(f"POST {url} with payload={payload}")
+        if self.digestauth:
+            response = requests.post(url=url, data=form, auth=HTTPDigestAuth(
+                self.username, self.password), timeout=float(self.httptimeout))
+        elif self.username and self.password:
+            response = requests.post(url=url, data=form, auth=(
+                self.username, self.password), timeout=float(self.httptimeout))
+        else:
+            response = requests.post(url=url, data=form, timeout=float(self.httptimeout))
+        response.raise_for_status()
+        return response.json()
+
     def _get_data(self) -> dict:
         if self._test_meter_data:
             return self._test_meter_data
@@ -545,6 +744,33 @@ class DbusService:
             return is_true(meter_data["inverters"][self.pvinverternumber]["reachable"])
         return True
 
+    def _compute_status_code(self):
+        '''Map inverter reachable/producing state onto STATUSCODE_* (7/8/10).
+           OpenDTU reachable=false means the HTTP fetch succeeded but the
+           inverter itself is silent (typically night) -> Standby, not Error.
+           HTTP-failure paths still flag Error via set_dbus_values_to_zero().'''
+        try:
+            meter_data = self._get_data()
+            if self.dtuvariant == constants.DTUVARIANT_OPENDTU:
+                inv = meter_data["inverters"][self.pvinverternumber]
+                if not is_true(inv.get("reachable")):
+                    return constants.STATUSCODE_STANDBY
+                if is_true(inv.get("producing")):
+                    return constants.STATUSCODE_RUNNING
+                return constants.STATUSCODE_STANDBY
+            if not self.is_data_up2date():
+                return constants.STATUSCODE_ERROR
+            if self.dtuvariant == constants.DTUVARIANT_AHOY:
+                power = get_ahoy_field_by_name(meter_data, self.pvinverternumber, "P_AC")
+                if power and float(power) > 0:
+                    return constants.STATUSCODE_RUNNING
+                return constants.STATUSCODE_STANDBY
+            # TEMPLATE: best-effort; assume running when data is up to date
+            return constants.STATUSCODE_RUNNING
+        except Exception as error:
+            logging.debug(f"_compute_status_code fallback to ERROR: {error}")
+            return constants.STATUSCODE_ERROR
+
     def get_ts_last_success(self, meter_data):
         '''return ts_last_success from the meter_data structure - depending on the API version'''
         return meter_data["inverter"][self.pvinverternumber]["ts_last_success"]
@@ -566,13 +792,35 @@ class DbusService:
 
     def _refresh_and_update(self):
         """
-        Helper method to refresh data, handle data update if up-to-date, update index, and set successful flag.
+        Refresh data and publish it regardless of reachability/age. When the inverter
+        is offline (OpenDTU reachable=false, or Ahoy data older than max_age_ts)
+        we still want cumulative values (Energy/Forward) on DBus and /StatusCode
+        set to ERROR via _compute_status_code.
         """
         self._refresh_data()
-        if self.is_data_up2date():
-            self._handle_data_update()
+        self._publish_connected()
+        self._handle_data_update()
         self._update_index()
         return True
+
+    def _publish_connected(self):
+        '''OpenDTU only: re-fetch devinfo and publish /Connected = 1 iff both
+           devinfo.valid_data and the livedata inverter.reachable flag are true.
+           self.devinfo is kept current so hardware metadata survives transient errors
+           (we only overwrite it on a successful fetch).'''
+        if self.dtuvariant != constants.DTUVARIANT_OPENDTU:
+            return
+        devinfo = self._fetch_devinfo_safe()
+        if devinfo is not None:
+            self.devinfo = devinfo
+        valid = is_true(self.devinfo.get("valid_data")) if self.devinfo else False
+        reachable = False
+        try:
+            meter_data = self._get_data()
+            reachable = is_true(meter_data["inverters"][self.pvinverternumber].get("reachable"))
+        except Exception as error:
+            logging.debug(f"reachable lookup failed: {error}")
+        self._dbusservice["/Connected"] = int(valid and reachable)
 
     def update(self):
         """
@@ -656,7 +904,7 @@ class DbusService:
     def _finalize_update(self, successful):
         if successful:
             if self.reset_statuscode_on_next_success:
-                self._dbusservice["/StatusCode"] = constants.STATUSCODE_RUNNING
+                self._dbusservice["/StatusCode"] = self._compute_status_code()
             if not self.last_update_successful:
                 logging.warning(
                     f"Recovered inverter {self.pvinverternumber} ({self._get_name()}): "
@@ -828,7 +1076,9 @@ class DbusService:
                 self._dbusservice["/Ac/L3/Power"] = powerthird
                 self._dbusservice["/Ac/Power"] = power
 
-                if power > 0:
+                # Energy/Forward is cumulative; publish every cycle so totals stay visible
+                # while the inverter is offline (e.g. at night).
+                if pvyield is not None:
                     self._dbusservice["/Ac/L1/Energy/Forward"] = pvyield / 3
                     self._dbusservice["/Ac/L2/Energy/Forward"] = pvyield / 3
                     self._dbusservice["/Ac/L3/Energy/Forward"] = pvyield / 3
@@ -840,10 +1090,12 @@ class DbusService:
                 self._dbusservice[pre + "/Current"] = current
                 self._dbusservice[pre + "/Power"] = power
                 self._dbusservice["/Ac/Power"] = power
-                if power > 0:
+                if pvyield is not None:
                     self._dbusservice[pre + "/Energy/Forward"] = pvyield
                     self._dbusservice["/Ac/Energy/Forward"] = pvyield
 
             logging.debug(f"Inverter #{self.pvinverternumber} Power (/Ac/Power): {power}")
             logging.debug(f"Inverter #{self.pvinverternumber} Energy (/Ac/Energy/Forward): {pvyield}")
             logging.debug("---")
+
+        self._dbusservice["/StatusCode"] = self._compute_status_code()
