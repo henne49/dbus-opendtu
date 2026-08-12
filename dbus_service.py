@@ -255,6 +255,13 @@ class DbusService:
 
         self.dry_run = is_true(get_default_config(config, "DryRun", False))
         self.pollinginterval = int(get_config_value(config, "ESP8266PollingIntervall", "DEFAULT", "", 10000))
+        # The mainloop is single threaded and fetches every inverter separately and
+        # synchronously, so poll rate and retry count decide how long dbus method calls on this
+        # service stay unanswered: worst case = inverters x tries x HTTPTimeout. With five
+        # inverters, three tries and a 1.5s timeout that is 27.5s - long enough for GetValue
+        # callers to run into org.freedesktop.DBus.Error.NoReply while the DTU is slow.
+        self.opendtu_polling_interval = int(get_config_value(config, "OpenDTUPollingIntervall", "DEFAULT", "", 5000))
+        self.max_fetch_tries = int(get_config_value(config, "MaxFetchTries", "DEFAULT", "", 3))
         self.meter_data = 0
         self.httptimeout = get_default_config(config, "HTTPTimeout", 2.5)
         self._load_error_handling_config(config)
@@ -387,7 +394,7 @@ class DbusService:
                 polling_interval = 5000
 
         elif self.dtuvariant == constants.DTUVARIANT_OPENDTU:
-            polling_interval = 5000
+            polling_interval = self.opendtu_polling_interval
 
         elif self.dtuvariant == constants.DTUVARIANT_TEMPLATE:
             polling_interval = self.pollinginterval
@@ -677,8 +684,8 @@ class DbusService:
                                  f"status={json_str.status_code},\nresponse={json_str.text}")
             return json
         except Exception:
-            # retry same call up to 3 times
-            if try_number < 3:  # pylint: disable=no-else-return
+            # retry same call up to MaxFetchTries times
+            if try_number < self.max_fetch_tries:  # pylint: disable=no-else-return
                 time.sleep(0.5)
                 return self.fetch_url(url, try_number + 1)
             else:

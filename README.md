@@ -123,6 +123,8 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 | NumberOfInvertersToQuery | Number of Inverters to query. Set a value larger than "0" when not all inverters should be considered. \*1                                                                            |
 | useYieldDay              | send YieldDay instead of YieldTotal. Set this to 1 to prevent VRM from adding the total value to the history on one day. E.g. if you don't start using the inverter at 0.             |
 | ESP8266PollingIntervall  | For ESP8266 reduce polling intervall to reduce load, default 10000ms                                                                                                                  |
+| OpenDTUPollingIntervall  | How often an OpenDTU is polled, in ms. Raise this if the DTU gets slow with many inverters. Default: 5000ms                                                                            |
+| MaxFetchTries            | How often a failed HTTP call is attempted before the value is dropped. Every attempt blocks the mainloop for up to HTTPTimeout, so lowering this keeps the dbus service responsive while the DTU is slow. Default: 3 |
 | Logging                  | Valid options for log level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET, to keep logfile small use ERROR or CRITICAL                                                               |
 | MaxAgeTsLastSuccess      | Maximum accepted age of ts_last_success in Ahoy status message. If ts_last_success is older than this number of seconds, values are not used. Set this to < 0 to disable this check.  |
 | DryRun                   | Set this to a value different to "0" to prevent values from being sent. Use this for debugging or experiments.                                                                        |
@@ -139,6 +141,18 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 #### Inverter options
 
 This applies to each `INVERTER[X]` section. X is the number of Inverter starting with 0. So the first inverter is INVERTER0, the second INVERTER1 and so on.
+
+> [!IMPORTANT]
+> `X` is the position of the inverter in the DTU's API response (the `inverters` array of `/api/livedata/status`) — **not** the order shown in the OpenDTU web UI. The UI sorts by each inverter's `order` field, and that field may differ from the position in the API response, which is what this project uses.
+>
+> Before assigning `DeviceInstance` or `Phase`, compare `id` and `order` in `/api/inverter/list`. Afterwards verify that each D-Bus service reports the serial you expect:
+>
+> ```bash
+> dbus-send --system --print-reply --dest=com.victronenergy.pvinverter.http_{DeviceInstance} \
+>     /Serial com.victronenergy.BusItem.GetValue
+> ```
+>
+> Getting this wrong fails silently: all inverters show up, but `Phase` and `DeviceInstance` are attached to the wrong device.
 
 | Config value   | Explanation                                                                    |
 | -------------- | ------------------------------------------------------------------------------ |
