@@ -163,7 +163,7 @@ This applies to each `INVERTER[X]` section. X is the number of Inverter starting
 
 \*1: Use 3P to split power equally over three phases (use this for Hoymiles three-phase micro-inverters as they report total power only, not seperated by phase).
 
-\*2 Important for proper visualization in Venus OS / VRM. NOTE: in GUI-v2 it is possible to change the position of the inverter within the GUI, but this change is not safed and therfore falls back to the configured value after every restart of the service. 
+\*2 Important for proper visualization in Venus OS / VRM. NOTE: in GUI-v2 it is possible to change the position of the inverter within the GUI, but this change is not saved and does not survive a service restart. To permanently fix it, please edit config.ini properly.
 
 #### Template options
 
