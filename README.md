@@ -29,6 +29,7 @@
     - [How to uninstall](#how-to-uninstall)
   - [How does it work](#how-does-it-work)
     - [Pictures](#pictures)
+  - [ESS Feed-in Control (zero feed-in)](#ess-feed-in-control-zero-feed-in)
   - [Tested Devices](#tested-devices)
   - [Frequently asked Questions](#frequently-asked-questions)
   - [Troubleshooting](#troubleshooting)
@@ -402,6 +403,28 @@ Thats it 😄
 
 <img src="img/overview.png" width="400" /> <img src="img/devicelist.png" width="400" />
 <img src="img/device.png" width="400" /> <img src="img/devicedetails.png" width="400" />
+
+---
+
+## ESS Feed-in Control (zero feed-in)
+
+**What it does:** Venus OS can now control how much your Hoymiles inverters produce. This is more than a fixed power cap. It works like the zero feed-in support for Fronius inverters: when the ESS limits grid feed-in, Venus OS keeps adjusting the inverter's output in real time. Your house loads and the battery still get as much PV power as they can use, and only the surplus that would go to the grid gets cut. Without this feature, Hoymiles inverters are "unmanaged" PV inverters for Venus OS: they always feed in at full power and cannot be curtailed.
+
+**How to activate it:**
+
+1. Use `DTU=opendtu` and configure the inverter with `Servicename=com.victronenergy.pvinverter`. Nothing else is needed in `config.ini`; the feature turns on automatically. It is not available for Ahoy or template devices.
+2. OpenDTU only accepts limit changes from authenticated users. Set `Username` (usually `admin`) and `Password` in `config.ini` to the OpenDTU admin credentials. Reading the status pages can stay unauthenticated (see [Security settings in OpenDTU](#security-settings-in-opendtu)).
+3. In Venus OS, go to *Settings → ESS → Grid feed-in* and enable *AC-coupled PV – feed in excess* and *Limit system feed-in*. Then set *Maximum feed-in* (e.g. 0 W for zero feed-in). *Feed-in limiting active* should then show *Yes*.
+
+**How it works:**
+
+- At startup the service reads `/api/limit/status` from OpenDTU and publishes the inverter's rated power as `/Ac/MaxPower` and its current limit (in watts) as `/Ac/PowerLimit` on DBus.
+- When the ESS wants less (or more) PV power, Venus OS writes a new value to `/Ac/PowerLimit`. The service sends it to OpenDTU (`POST /api/limit/config`) as an absolute, **non-persistent** limit: the inverter's flash memory is not worn out by frequent changes, and the inverter goes back to its stored limit after a restart. Values above `/Ac/MaxPower` are clamped. Negative or non-numeric values are rejected.
+- The service then waits briefly until the inverter confirms the new limit, mirroring OpenDTU's `limit_set_status` to `/StatusCode`: `Ok` → Running, a failed/rejected limit → Error.
+- With several inverters behind one OpenDTU, each inverter is a separate DBus service and gets its own limit.
+
+> [!NOTE]
+> Hoymiles inverters take a few seconds to apply a new limit, so control is slower than with a Fronius inverter. Expect short overshoots of grid feed-in when loads change suddenly.
 
 ---
 

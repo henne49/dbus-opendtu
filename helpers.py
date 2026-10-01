@@ -13,20 +13,29 @@ import logging
 
 
 # region formatting helping functions (used in constant)
-def _kwh(_p, value: float) -> str:
-    return f"{value:.2f}KWh"
+# GetText runs on every SetValue, including writes from external dbus peers
+# (e.g. `dbus -y ... SetValue "100"`). Coerce so a string/None can't raise.
+def _fmt(value, precision: int, suffix: str) -> str:
+    try:
+        return f"{float(value):.{precision}f}{suffix}"
+    except (TypeError, ValueError):
+        return "" if value is None else f"{value}{suffix}"
 
 
-def _a(_p, value: float) -> str:
-    return f"{value:.1f}A"
+def _kwh(_p, value) -> str:
+    return _fmt(value, 2, "KWh")
 
 
-def _w(_p, value: float) -> str:
-    return f"{value:.1f}W"
+def _a(_p, value) -> str:
+    return _fmt(value, 1, "A")
 
 
-def _v(_p, value: float) -> str:
-    return f"{value:.1f}V"
+def _w(_p, value) -> str:
+    return _fmt(value, 1, "W")
+
+
+def _v(_p, value) -> str:
+    return _fmt(value, 1, "V")
 # endregion
 
 
