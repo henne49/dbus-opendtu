@@ -1,69 +1,64 @@
-name: "Update Version"
+name: Versioning
 
 on:
   push:
     branches: ["main"]
   release:
     types: [published]
-    # creating a new release https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#release
   workflow_dispatch:
-    # manual workflow 
-env:
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   versioning:
-    name: Versioning
-    environment: versioning
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
-      actions: read
       contents: write
-      security-events: write
 
     steps:
-      - uses: actions/create-github-app-token@v1
-        id: app-token
+      - name: Checkout repository
+        uses: actions/checkout@v5
         with:
-          app-id: ${{ secrets.VERSION_BUMPER_APPID }}
-          private-key: ${{ secrets.VERSION_BUMPER_SECRET }}
-      
-      - name: Checkout using app token
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
           fetch-depth: 0
-          #token: ${{ secrets.PAT_TOKEN }} 
-          token: ${{ steps.app-token.outputs.token }}         
 
-      - name: setup .net core
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"
-
-      - name: install gitversion
-        uses: gittools/actions/gitversion/setup@v0
-        with:
-          versionspec: "5.x"
-
-      - name: Use GitVersion
-        id: gitversion
-        uses: gittools/actions/gitversion/execute@v0
-
-      - name: Create version file
+      - name: Determine version
+        id: version
+        shell: bash
         run: |
-          echo "Version: ${{ steps.gitversion.outputs.majorMinorPatch }}" > version.txt
-      
-      - name: Commit
+          set -e
+
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG="${{ github.event.release.tag_name }}"
+            VERSION="${TAG#v}"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          CURRENT="0.0.0"
+          if [[ -f version.txt ]]; then
+            CURRENT=$(grep -E '^Version:' version.txt | head -n1 | awk '{print $2}' || true)
+          fi
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          PATCH=$((PATCH + 1))
+          VERSION="${MAJOR}.${MINOR}.${PATCH}"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Write version file
+        shell: bash
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          echo "Version: ${{ steps.version.outputs.version }}" > version.txt
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
           git add version.txt
-          git commit -m "Update version [skip ci]"
-      
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          #github_token: ${{ secrets.PAT_TOKEN }}
-          github_token: ${{ steps.app-token.outputs.token }}
-          repository: henne49/dbus-opendtu
-          force_with_lease: true
+
+          if git diff --cached --quiet; then
+            echo "No version change required"
+          else
+            git commit -m "Update version to ${{ steps.version.outputs.version }} [skip ci]"
+            git push origin HEAD:main
+          fi
