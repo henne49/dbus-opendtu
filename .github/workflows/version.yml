@@ -14,10 +14,18 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.VERSION_BUMPER_APPID }}
+          private-key: ${{ secrets.VERSION_BUMPER_SECRET }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Determine version
         id: version
@@ -48,17 +56,17 @@ jobs:
         run: |
           echo "Version: ${{ steps.version.outputs.version }}" > version.txt
 
-      - name: Commit and push
+      - name: Commit
         shell: bash
         run: |
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
-
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git add version.txt
+          git commit -m "Update version to ${{ steps.version.outputs.version }} [skip ci]"
 
-          if git diff --cached --quiet; then
-            echo "No version change required"
-          else
-            git commit -m "Update version to ${{ steps.version.outputs.version }} [skip ci]"
-            git push origin HEAD:main
-          fi
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ steps.app-token.outputs.token }}
+          repository: henne49/dbus-opendtu
+          force_with_lease: true
