@@ -110,8 +110,7 @@ class DbusService:
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path("/Mgmt/ProcessName", __file__)
-        self._dbusservice.add_path("/Mgmt/ProcessVersion",
-                                   "Unkown version, and running on Python " + platform.python_version())
+        self._dbusservice.add_path("/Mgmt/ProcessVersion", read_version('version.txt'))
         self._dbusservice.add_path("/Mgmt/Connection", constants.PRODUCTNAME + " - " + constants.CONNECTION)
 
         # Fetch serial + OpenDTU devinfo once so management paths can be populated
@@ -128,7 +127,13 @@ class DbusService:
         self._limit_seeded = limit_entry is not None
 
         product_name = (self.devinfo.get("hw_model_name") if self.devinfo else None) or self._get_name()
-        firmware_version = self._format_firmware_version() or read_version('version.txt')
+        release_version = read_version('version.txt')
+        inverter_firmware_version = self._format_firmware_version()
+        firmware_version = (
+            f"{inverter_firmware_version} / dbus-opendtu {release_version}"
+            if inverter_firmware_version
+            else release_version
+        )
         hardware_version = self._decode_version(
             self.devinfo.get("hw_version") if self.devinfo else None) or 0
         initial_status = (constants.STATUSCODE_ERROR

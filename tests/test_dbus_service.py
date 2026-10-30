@@ -658,12 +658,16 @@ class PowerLimitTest(unittest.TestCase):
     @patch('dbus_service.requests.get', side_effect=mocked_requests_get)
     def test_init_uses_devinfo_for_management_paths(
             self, mock_get, mock_logging, mock_dbus, mock_config):
-        """At init, /ProductName, /FirmwareVersion, /HardwareVersion come from devinfo."""
+        """At init, devinfo and the application version populate management paths."""
         DbusService._meter_data = None
-        service = DbusService("com.victronenergy.pvinverter", 0)
+        with patch('dbus_service.read_version', return_value="2.2.1"):
+            service = DbusService("com.victronenergy.pvinverter", 0)
         by_path = {c.args[0]: c.args[1] for c in service._dbusservice.add_path.call_args_list}
         self.assertEqual(by_path["/ProductName"], "HMS-2000-4T")
-        self.assertEqual(by_path["/FirmwareVersion"], "1.0.27 (2023-06-05 10:24:00)")
+        self.assertEqual(by_path["/Mgmt/ProcessVersion"], "2.2.1")
+        self.assertEqual(by_path["/Mgmt/Connection"], "henne49_dbus-opendtu - TCP/IP (HTTP)")
+        self.assertEqual(by_path["/FirmwareVersion"],
+                 "1.0.27 (2023-06-05 10:24:00) / dbus-opendtu 2.2.1")
         self.assertEqual(by_path["/HardwareVersion"], "01.10")
 
     @patch('dbus_service.DbusService._get_config', return_value=opendtu_config)
