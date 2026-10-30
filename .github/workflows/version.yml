@@ -9,6 +9,8 @@ on:
 
 jobs:
   versioning:
+    name: Versioning
+    environment: versioning
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -16,13 +18,13 @@ jobs:
     steps:
       - name: Create GitHub App token
         id: app-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ secrets.VERSION_BUMPER_APPID }}
           private-key: ${{ secrets.VERSION_BUMPER_SECRET }}
 
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
@@ -56,17 +58,20 @@ jobs:
         run: |
           echo "Version: ${{ steps.version.outputs.version }}" > version.txt
 
-      - name: Commit
+      - name: Commit and push
         shell: bash
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add version.txt
-          git commit -m "Update version to ${{ steps.version.outputs.version }} [skip ci]"
+          set -e
 
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ steps.app-token.outputs.token }}
-          repository: henne49/dbus-opendtu
-          force_with_lease: true
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
+          git add version.txt
+
+          if git diff --cached --quiet; then
+            echo "No version change required"
+            exit 0
+          fi
+
+          git commit -m "Update version to ${{ steps.version.outputs.version }} [skip ci]"
+          git push origin HEAD:main
