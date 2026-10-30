@@ -6,6 +6,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      release_version:
+        description: Version to write to main before creating its release tag (for example 2.2.2)
+        required: false
+        type: string
 
 jobs:
   versioning:
@@ -26,30 +31,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
+          ref: main
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Determine version
         id: version
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_VERSION: ${{ inputs.release_version }}
         run: |
           set -e
 
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            TAG="${{ github.event.release.tag_name }}"
+          if [[ "$EVENT_NAME" == "release" ]]; then
+            TAG="$RELEASE_TAG"
             VERSION="${TAG#v}"
-            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+          elif [[ "$EVENT_NAME" == "workflow_dispatch" && -n "$RELEASE_VERSION" ]]; then
+            VERSION="${RELEASE_VERSION#v}"
+            if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Invalid release version: $RELEASE_VERSION (expected X.Y.Z or vX.Y.Z)" >&2
+              exit 1
+            fi
+          else
+            CURRENT="0.0.0"
+            if [[ -f version.txt ]]; then
+              CURRENT=$(grep -E '^Version:' version.txt | head -n1 | awk '{print $2}' || true)
+            fi
 
-          CURRENT="0.0.0"
-          if [[ -f version.txt ]]; then
-            CURRENT=$(grep -E '^Version:' version.txt | head -n1 | awk '{print $2}' || true)
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+            PATCH=$((PATCH + 1))
+            VERSION="${MAJOR}.${MINOR}.${PATCH}"
           fi
-
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
-          PATCH=$((PATCH + 1))
-          VERSION="${MAJOR}.${MINOR}.${PATCH}"
 
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
